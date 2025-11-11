@@ -67,6 +67,13 @@ function DashboardLayoutContent({
     // Wait until the loading is finished before checking for address
     if (!loading && !address) {
       router.push('/login');
+      return;
+    }
+    if (!loading && address) {
+      const onboardingComplete = localStorage.getItem(`onboarding_complete_${address}`);
+      if (!onboardingComplete) {
+        router.push('/onboarding');
+      }
     }
   }, [address, loading, router]);
 

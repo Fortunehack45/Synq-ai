@@ -26,7 +26,12 @@ function LoginPageContent() {
 
   useEffect(() => {
     if (!loading && address) {
-      router.push("/dashboard");
+      const onboardingComplete = localStorage.getItem(`onboarding_complete_${address}`);
+      if (onboardingComplete) {
+        router.push("/dashboard");
+      } else {
+        router.push("/onboarding");
+      }
     }
   }, [address, loading, router]);
 
