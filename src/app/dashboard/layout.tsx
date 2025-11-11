@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -23,6 +24,8 @@ import {
 import {
   Sheet,
   SheetContent,
+  SheetHeader,
+  SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -167,8 +170,11 @@ function DashboardLayoutContent({
                 <span className="sr-only">Toggle navigation menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="flex flex-col glass">
-              <nav className="grid gap-2 text-lg font-medium">
+            <SheetContent side="left" className="flex flex-col glass p-0">
+               <SheetHeader className="p-6">
+                <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+              </SheetHeader>
+              <nav className="grid gap-2 text-lg font-medium p-6 pt-0">
                 <Link
                   href="#"
                   className="flex items-center gap-2 text-lg font-semibold mb-4"
