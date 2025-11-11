@@ -45,6 +45,7 @@ function SettingsPageContent() {
   const [etherscanKey, setEtherscanKey] = useState('');
   const [alchemyKey, setAlchemyKey] = useState('');
   
+  const [name, setName] = useState("");
   const [username, setUsername] = useState("");
   const [bio, setBio] = useState("");
   const [saveState, saveAction, isSaving] = useActionState(saveProfile, initialProfileState);
@@ -60,8 +61,10 @@ function SettingsPageContent() {
     setAlchemyKey(storedAlchemyKey);
 
     if (address) {
-      const savedUsername = localStorage.getItem(`profile_${address}_username`) || (isDemoUser ? "Vitalik Buterin" : "AnonUser");
+      const savedName = localStorage.getItem(`profile_${address}_name`) || (isDemoUser ? "Vitalik Buterin" : "Anonymous User");
+      const savedUsername = localStorage.getItem(`profile_${address}_username`) || (isDemoUser ? "VitalikButerin" : "anonuser");
       const savedBio = localStorage.getItem(`profile_${address}_bio`) || (isDemoUser ? "Co-founder of Ethereum. Building the future of the decentralized web." : "Web3 Explorer | DeFi Enthusiast | NFT Collector");
+      setName(savedName);
       setUsername(savedUsername);
       setBio(savedBio);
     }
@@ -75,11 +78,12 @@ function SettingsPageContent() {
         variant: saveState.success ? "default" : "destructive",
       });
       if (saveState.success && address) {
+        localStorage.setItem(`profile_${address}_name`, name);
         localStorage.setItem(`profile_${address}_username`, username);
         localStorage.setItem(`profile_${address}_bio`, bio);
       }
     }
-  }, [saveState, address, username, bio]);
+  }, [saveState, address, name, username, bio]);
 
 
   const handleClearCache = () => {
@@ -192,12 +196,22 @@ function SettingsPageContent() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                 <div className="space-y-2">
+                  <Label htmlFor="name">Full Name</Label>
+                  <Input 
+                    id="name" 
+                    name="name"
+                    placeholder="e.g., Vitalik Buterin" 
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                  />
+                </div>
                 <div className="space-y-2">
                   <Label htmlFor="username">Username</Label>
                   <Input 
                     id="username" 
                     name="username"
-                    placeholder="e.g., VitalikButerin" 
+                    placeholder="e.g., vitalik.eth" 
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                   />
@@ -207,7 +221,7 @@ function SettingsPageContent() {
                   <Textarea 
                     id="bio"
                     name="bio" 
-                    placeholder="e.g., Founder of Ethereum. Building the future of the decentralized web."
+                    placeholder="e.g., Co-founder of Ethereum."
                     value={bio}
                     onChange={(e) => setBio(e.target.value)} 
                   />

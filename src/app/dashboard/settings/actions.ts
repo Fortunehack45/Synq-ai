@@ -15,18 +15,19 @@ export async function saveProfile(
   prevState: ProfileState,
   formData: FormData
 ): Promise<ProfileState> {
+  const name = formData.get('name') as string;
   const username = formData.get('username') as string;
   const bio = formData.get('bio') as string;
 
   // Simulate a network delay
   await new Promise(resolve => setTimeout(resolve, 1000));
 
-  if (!username) {
-    return { success: false, message: "Username cannot be empty." };
+  if (!username || !name) {
+    return { success: false, message: "Name and Username cannot be empty." };
   }
 
   // In a real app, you would save this to your database here.
-  console.log("Saving profile:", { username, bio });
+  console.log("Saving profile:", { name, username, bio });
   
   revalidatePath('/dashboard/profile');
   revalidatePath('/dashboard/settings');

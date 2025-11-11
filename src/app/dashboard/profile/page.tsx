@@ -61,7 +61,7 @@ const mockPosts = [
 ];
 
 
-function PostCard({ post, authorName }: { post: typeof mockPosts[0], authorName: string }) {
+function PostCard({ post, authorName, authorHandle }: { post: typeof mockPosts[0], authorName: string, authorHandle: string }) {
   const userAvatar = PlaceHolderImages.find((img) => img.id === "user-avatar");
   return (
     <Card className="glass">
@@ -74,7 +74,7 @@ function PostCard({ post, authorName }: { post: typeof mockPosts[0], authorName:
           <div className="w-full">
             <div className="flex items-center gap-2">
               <p className="font-bold">{authorName}</p>
-              <p className="text-sm text-muted-foreground">{post.handle}</p>
+              <p className="text-sm text-muted-foreground">@{authorHandle}</p>
               <span className="text-sm text-muted-foreground">·</span>
               <p className="text-sm text-muted-foreground">{post.timestamp}</p>
             </div>
@@ -108,6 +108,7 @@ export default function ProfilePage() {
   const router = useRouter();
   const userAvatar = PlaceHolderImages.find((img) => img.id === "user-avatar");
   
+  const [name, setName] = useState("");
   const [username, setUsername] = useState("");
   const [bio, setBio] = useState("");
   
@@ -115,8 +116,10 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (address) {
-      const savedUsername = localStorage.getItem(`profile_${address}_username`) || (isDemoUser ? "Vitalik Buterin" : "AnonUser");
+      const savedName = localStorage.getItem(`profile_${address}_name`) || (isDemoUser ? "Vitalik Buterin" : "Anonymous User");
+      const savedUsername = localStorage.getItem(`profile_${address}_username`) || (isDemoUser ? "VitalikButerin" : "anonuser");
       const savedBio = localStorage.getItem(`profile_${address}_bio`) || (isDemoUser ? "Co-founder of Ethereum. Building the future of the decentralized web." : "Web3 Explorer | DeFi Enthusiast | NFT Collector");
+      setName(savedName);
       setUsername(savedUsername);
       setBio(savedBio);
     }
@@ -154,7 +157,10 @@ export default function ProfilePage() {
               </Avatar>
               <div className="flex-1">
                 <div className="flex items-center gap-2 justify-center md:justify-start">
-                  <h2 className="text-2xl font-bold font-headline">{username}</h2>
+                  <h2 className="text-2xl font-bold font-headline">{name}</h2>
+                </div>
+                 <div className="flex items-center gap-2 mt-1 justify-center md:justify-start">
+                  <p className="text-sm text-muted-foreground">@{username}</p>
                 </div>
                 <div className="flex items-center gap-2 mt-1 justify-center md:justify-start">
                   <p className="text-muted-foreground font-mono text-sm">
@@ -208,7 +214,7 @@ export default function ProfilePage() {
               {isDemoUser ? (
                 <div className="space-y-4">
                   {mockPosts.map((post) => (
-                    <PostCard key={post.id} post={post} authorName={username} />
+                    <PostCard key={post.id} post={post} authorName={name} authorHandle={username} />
                   ))}
                 </div>
               ) : (
