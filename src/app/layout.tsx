@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 export const metadata: Metadata = {
   title: 'SynqAI',
   description: 'Your Secure AI Crypto Wallet Assistant',
+  manifest: '/manifest.json',
 };
 
 export default function RootLayout({
@@ -17,6 +18,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <meta name="theme-color" content="#7c3aed" />
         <link rel="icon" href="/icon.svg" type="image/svg+xml" sizes="any" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
