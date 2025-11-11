@@ -1,0 +1,22 @@
+diff --git a/node_modules/alchemy-sdk/package.json b/node_modules/alchemy-sdk/package.json
+index 54c4415..5b56eee 100644
+--- a/node_modules/alchemy-sdk/package.json
++++ b/node_modules/alchemy-sdk/package.json
+@@ -60,7 +60,7 @@
+     "eslint-plugin-prettier": "4.2.1",
+     "eslint-plugin-promise": "6.1.1",
+     "eslint-plugin-sort-imports-es6-autofix": "0.6.0",
+-    "ethers": "6.3.0",
++    "ethers": ">=6.3.0",
+     "hardhat": "2.14.0",
+     "jest": "29.5.0",
+     "jest-environment-jsdom": "29.5.0",
+@@ -79,7 +79,7 @@
+   },
+   "dependencies": {
+     "axios": "0.27.2",
+-    "ethers": "6.3.0",
++    "ethers": ">=6.3.0",
+     "ws": "8.13.0"
+   },
+   "resolutions": {
