@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -16,10 +17,11 @@ import {
 import Image from "next/image"
 import { useWallet } from "@/hooks/use-wallet";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
-import { ImageIcon } from "lucide-react";
+import { ImageIcon, Wallet } from "lucide-react";
+import { FormattedTokenBalance } from "@/context/wallet-provider";
 
 export function AssetsTabs() {
-  const { balance, nfts, address } = useWallet();
+  const { balance, tokens: realTokens, nfts, address } = useWallet();
   const ethPrice = 3150; // Static price for now
 
   const ethLogo = PlaceHolderImages.find(img => img.id === 'eth-logo');
@@ -29,20 +31,26 @@ export function AssetsTabs() {
 
   const isDemo = address && address.toLowerCase() === "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045".toLowerCase();
 
-  const tokens = balance ? [
-    {
+  const ethToken: FormattedTokenBalance | null = balance ? {
       name: 'Ethereum',
       symbol: 'ETH',
       balance: parseFloat(balance).toFixed(4),
       value: (parseFloat(balance) * ethPrice).toLocaleString('en-US', { style: 'currency', currency: 'USD' }),
       icon: ethLogo,
-    },
-    ...(isDemo ? [
-      { name: 'USD Coin', symbol: 'USDC', balance: '5,000.00', value: '$5,000.00', icon: usdcLogo },
-      { name: 'Wrapped BTC', symbol: 'WBTC', balance: '0.05', value: '$3,500.00', icon: wbtcLogo },
-      { name: 'Uniswap', symbol: 'UNI', balance: '250.00', value: '$2,500.00', icon: uniLogo },
-    ] : [])
-  ] : [];
+      contractAddress: 'eth',
+  } : null;
+
+  const demoTokens: FormattedTokenBalance[] = [
+      { name: 'USD Coin', symbol: 'USDC', balance: '5,000.00', value: '$5,000.00', icon: usdcLogo, contractAddress: 'usdc' },
+      { name: 'Wrapped BTC', symbol: 'WBTC', balance: '0.05', value: '$3,500.00', icon: wbtcLogo, contractAddress: 'wbtc' },
+      { name: 'Uniswap', symbol: 'UNI', balance: '250.00', value: '$2,500.00', icon: uniLogo, contractAddress: 'uni' },
+  ];
+
+  const displayedTokens = [
+    ...(ethToken ? [ethToken] : []),
+    ...(isDemo ? demoTokens : realTokens)
+  ];
+
 
   return (
     <Card className="glass">
@@ -58,9 +66,15 @@ export function AssetsTabs() {
           </TabsList>
           <TabsContent value="tokens">
             <div className="space-y-4 pt-4">
-              {tokens.length > 0 ? tokens.map((token) => (
-                <div key={token.symbol} className="flex items-center">
-                  {token.icon && <Image src={token.icon.imageUrl} alt={`${token.name} logo`} width={40} height={40} className="h-10 w-10 rounded-full" data-ai-hint={token.icon.imageHint}/>}
+              {displayedTokens.length > 0 ? displayedTokens.map((token) => (
+                <div key={token.contractAddress} className="flex items-center">
+                  <div className="h-10 w-10 rounded-full flex items-center justify-center bg-muted">
+                    {token.icon && token.icon.imageUrl ? (
+                      <Image src={token.icon.imageUrl} alt={`${token.name} logo`} width={40} height={40} className="h-10 w-10 rounded-full" data-ai-hint={token.icon.imageHint}/>
+                    ) : (
+                      <Wallet className="h-5 w-5 text-muted-foreground"/>
+                    )}
+                  </div>
                   <div className="ml-4 flex-1">
                     <p className="text-sm font-medium leading-none">{token.name}</p>
                     <p className="text-sm text-muted-foreground">{token.balance} {token.symbol}</p>
@@ -70,7 +84,11 @@ export function AssetsTabs() {
                   </div>
                 </div>
               )) : (
-                <p className="text-sm text-muted-foreground text-center pt-4">No tokens found. Only ETH balance is currently displayed.</p>
+                 <div className="flex flex-col items-center justify-center h-48 text-center">
+                  <Wallet className="h-12 w-12 text-muted-foreground/50 mb-4" />
+                  <p className="text-sm text-muted-foreground">No token balances found.</p>
+                   <p className="text-xs text-muted-foreground mt-1">Only ETH balance may be available.</p>
+                 </div>
               )}
             </div>
           </TabsContent>

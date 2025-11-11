@@ -11,7 +11,7 @@ import React, {
 } from "react";
 import { useRouter } from "next/navigation";
 import { ethers, BrowserProvider } from "ethers";
-import { Alchemy, Network, OwnedNft } from "alchemy-sdk";
+import { Alchemy, Network, OwnedNft, TokenBalance, TokenMetadataResponse } from "alchemy-sdk";
 
 interface FormattedTransaction {
   hash: string;
@@ -27,9 +27,19 @@ interface PortfolioHistoryPoint {
   valueModifier: number;
 }
 
+export interface FormattedTokenBalance {
+  name: string;
+  symbol: string;
+  balance: string;
+  value: string;
+  icon: any; // Can be improved
+  contractAddress: string;
+}
+
 interface WalletContextType {
   address: string | null;
   balance: string | null;
+  tokens: FormattedTokenBalance[];
   transactions: FormattedTransaction[];
   nfts: OwnedNft[];
   portfolioHistory: PortfolioHistoryPoint[];
@@ -85,7 +95,7 @@ const getAlchemy = (chainId: bigint) => {
   
   if (!apiKey || apiKey === "YOUR_API_KEY_HERE" || apiKey.length < 30) {
     if (!userKey) {
-      console.warn("Alchemy API key not found or invalid. NFT data will not be available. Please add NEXT_PUBLIC_ALCHEMY_KEY to your .env file or add your key in the settings page. You can get a free key from https://alchemy.com/");
+      console.warn("Alchemy API key not found or invalid. NFT and token data will not be available. Please add NEXT_PUBLIC_ALCHEMY_KEY to your .env file or add your key in the settings page. You can get a free key from https://alchemy.com/");
     }
     return null;
   }
@@ -101,7 +111,7 @@ const getAlchemy = (chainId: bigint) => {
       network = Network.ETH_SEPOLIA;
       break;
     default:
-      console.warn(`Unsupported network for Alchemy: ${chainIdNumber}. NFT data will not be available.`);
+      console.warn(`Unsupported network for Alchemy: ${chainIdNumber}. NFT and token data will not be available.`);
       return null;
   }
 
@@ -142,6 +152,35 @@ const fetchTransactionHistory = async (address: string, chainId: bigint): Promis
     return [];
   }
 };
+
+const fetchTokenBalances = async (address: string, chainId: bigint): Promise<TokenBalance[]> => {
+  const alchemy = getAlchemy(chainId);
+  if (!alchemy) return [];
+
+  try {
+    const balances = await alchemy.core.getTokenBalances(address);
+    const nonZeroBalances = balances.tokenBalances.filter((token) => {
+      return token.tokenBalance !== '0';
+    });
+    return nonZeroBalances;
+  } catch (error) {
+    console.error("Failed to fetch token balances from Alchemy:", error);
+    return [];
+  }
+}
+
+const fetchTokenMetadata = async (tokenAddresses: string[], chainId: bigint): Promise<TokenMetadataResponse[]> => {
+  const alchemy = getAlchemy(chainId);
+  if (!alchemy) return [];
+
+  try {
+    const metadata = await Promise.all(tokenAddresses.map(address => alchemy.core.getTokenMetadata(address)));
+    return metadata;
+  } catch (error) {
+    console.error("Failed to fetch token metadata from Alchemy:", error);
+    return [];
+  }
+}
 
 const fetchNfts = async (address: string, chainId: bigint): Promise<OwnedNft[]> => {
   const alchemy = getAlchemy(chainId);
@@ -250,6 +289,7 @@ const mockBalance = "12.3456";
 export const WalletProvider = ({ children }: { children: ReactNode }) => {
   const [address, setAddress] = useState<string | null>(null);
   const [balance, setBalance] = useState<string | null>(null);
+  const [tokens, setTokens] = useState<FormattedTokenBalance[]>([]);
   const [transactions, setTransactions] = useState<FormattedTransaction[]>([]);
   const [nfts, setNfts] = useState<OwnedNft[]>([]);
   const [portfolioHistory, setPortfolioHistory] = useState<PortfolioHistoryPoint[]>([]);
@@ -263,6 +303,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
   const handleDisconnect = useCallback(() => {
     setAddress(null);
     setBalance(null);
+    setTokens([]);
     setTransactions([]);
     setNfts([]);
     setPortfolioHistory([]);
@@ -298,6 +339,8 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       setNfts(createMockNfts());
       setPortfolioHistory(mockHistory);
       setPortfolioChange(mockChange);
+      // Tokens are set in AssetsTabs for demo mode
+      setTokens([]); 
       setLoading(false);
       return;
     }
@@ -312,11 +355,29 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       const balanceWei = await provider.getBalance(currentAddress);
       const history = await fetchTransactionHistory(currentAddress, network.chainId);
       const userNfts = await fetchNfts(currentAddress, network.chainId);
+      
+      const tokenBalances = await fetchTokenBalances(currentAddress, network.chainId);
+      const tokenMetadata = await fetchTokenMetadata(tokenBalances.map(t => t.contractAddress), network.chainId);
+
+      const formattedTokens = tokenBalances.map((token, i) => {
+        const metadata = tokenMetadata[i];
+        const balance = parseFloat(token.tokenBalance!) / Math.pow(10, metadata.decimals || 18);
+        return {
+          name: metadata.name || 'Unknown Token',
+          symbol: metadata.symbol || '???',
+          balance: balance.toFixed(4),
+          value: '$0.00', // Placeholder, would need price API
+          icon: { imageUrl: metadata.logo, imageHint: `${metadata.name} logo` },
+          contractAddress: token.contractAddress,
+        }
+      });
+      
       const mockHistory = createMockPortfolioHistory(); // Using mock data for now for all users
       const mockChange = calculatePortfolioChange(mockHistory);
       
       setAddress(currentAddress);
       setBalance(ethers.formatEther(balanceWei));
+      setTokens(formattedTokens);
       setTransactions(history);
       setNfts(userNfts);
       setPortfolioHistory(mockHistory); 
@@ -416,6 +477,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
   const value = useMemo(() => ({ 
     address, 
     balance, 
+    tokens,
     transactions, 
     nfts,
     portfolioHistory,
@@ -427,7 +489,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     error, 
     clearError 
   }), [
-    address, balance, transactions, nfts, portfolioHistory, portfolioChange,
+    address, balance, tokens, transactions, nfts, portfolioHistory, portfolioChange,
     loading, connectWallet, disconnectWallet, startDemoMode, error, clearError
   ]);
 
@@ -437,5 +499,3 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     </WalletContext.Provider>
   );
 };
-
-    
