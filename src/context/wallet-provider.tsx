@@ -32,6 +32,37 @@ export const WalletContext = createContext<WalletContextType | undefined>(
   undefined
 );
 
+// This function now fetches transaction history from the Etherscan API
+const fetchTransactionHistory = async (address: string): Promise<FormattedTransaction[]> => {
+  const apiKey = process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY;
+  if (!apiKey) {
+    console.warn("Etherscan API key is not configured. Transaction history will be empty.");
+    return [];
+  }
+  const url = `https://api.etherscan.io/api?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&sort=desc&page=1&offset=25&apikey=${apiKey}`;
+
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+    if (data.status === "1") {
+      return data.result.map((tx: any) => ({
+        hash: tx.hash,
+        from: tx.from,
+        to: tx.to,
+        value: ethers.formatEther(tx.value),
+        timeStamp: parseInt(tx.timeStamp, 10),
+      }));
+    } else {
+      console.error("Etherscan API error:", data.message);
+      return [];
+    }
+  } catch (error) {
+    console.error("Failed to fetch from Etherscan:", error);
+    return [];
+  }
+};
+
+
 export const WalletProvider = ({ children }: { children: ReactNode }) => {
   const [address, setAddress] = useState<string | null>(null);
   const [balance, setBalance] = useState<string | null>(null);
@@ -60,28 +91,9 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
         const balanceWei = await provider.getBalance(currentAddress);
         setBalance(ethers.formatEther(balanceWei));
 
-        const blockNumber = await provider.getBlockNumber();
-        const txs: FormattedTransaction[] = [];
-        
-        // Fetch last 10 blocks for recent transactions.
-        // This is not a complete history. For that, an API like Etherscan is needed.
-        for (let i = 0; i < 10 && blockNumber - i >= 0; i++) {
-          const block = await provider.getBlock(blockNumber - i, true);
-          if (block) {
-            for (const tx of block.prefetchedTransactions) {
-              if (tx.from === currentAddress || tx.to === currentAddress) {
-                 txs.push({
-                   hash: tx.hash,
-                   from: tx.from,
-                   to: tx.to,
-                   value: ethers.formatEther(tx.value),
-                   timeStamp: block.timestamp,
-                 });
-              }
-            }
-          }
-        }
-        setTransactions(txs);
+        // Fetch history from Etherscan instead of scanning blocks
+        const history = await fetchTransactionHistory(currentAddress);
+        setTransactions(history);
         
       } catch (e) {
         console.error("Error fetching wallet data:", e);
