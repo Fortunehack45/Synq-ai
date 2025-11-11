@@ -12,17 +12,17 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { getWalletAnalysis } from "../actions";
+import { getWalletAnalysis, type WalletAnalysisState } from "../actions";
 import { AlertCircle, BotMessageSquare, CheckCircle2, ChevronRight, Shield, Sparkles, TrendingUp } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 
-const initialState = {
+const initialState: WalletAnalysisState = {
   success: false,
-  data: null,
-  error: null,
+  data: undefined,
+  error: undefined,
 };
 
 function SubmitButton() {

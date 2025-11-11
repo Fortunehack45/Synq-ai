@@ -1,8 +1,17 @@
 'use server'
 
-import { aiCryptoWalletAssistant, AICryptoWalletAssistantInput } from '@/ai/flows/ai-crypto-wallet-assistant';
+import { aiCryptoWalletAssistant, AICryptoWalletAssistantInput, AICryptoWalletAssistantOutput } from '@/ai/flows/ai-crypto-wallet-assistant';
 
-export async function getWalletAnalysis(prevState: any, formData: FormData) {
+export type WalletAnalysisState = {
+  success: boolean;
+  data?: AICryptoWalletAssistantOutput;
+  error?: string;
+}
+
+export async function getWalletAnalysis(
+  prevState: WalletAnalysisState,
+  formData: FormData
+): Promise<WalletAnalysisState> {
   const input = {
     walletAddress: formData.get('walletAddress') as string,
     userQuery: formData.get('userQuery') as string,
