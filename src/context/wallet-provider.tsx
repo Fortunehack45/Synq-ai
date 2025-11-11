@@ -26,6 +26,7 @@ interface WalletContextType {
   loading: boolean;
   connectWallet: () => Promise<void>;
   disconnectWallet: () => void;
+  startDemoMode: () => void;
   error: string | null;
   clearError: () => void;
 }
@@ -95,6 +96,46 @@ const fetchTransactionHistory = async (address: string, chainId: bigint): Promis
   }
 };
 
+const createMockTransactions = (mockAddress: string): FormattedTransaction[] => {
+  const now = Math.floor(Date.now() / 1000);
+  return [
+    {
+      hash: "0x" + [...Array(64)].map(() => Math.floor(Math.random() * 16).toString(16)).join(''),
+      from: "0xDE0B295669a9FD93d5F28D9Ec85E40f4cb697BAe",
+      to: mockAddress,
+      value: "1.25",
+      timeStamp: now - (86400 * 1), // 1 day ago
+    },
+    {
+      hash: "0x" + [...Array(64)].map(() => Math.floor(Math.random() * 16).toString(16)).join(''),
+      from: mockAddress,
+      to: "0x4E3529242b435342d5A6B5377519685A59440533",
+      value: "0.5",
+      timeStamp: now - (86400 * 2), // 2 days ago
+    },
+     {
+      hash: "0x" + [...Array(64)].map(() => Math.floor(Math.random() * 16).toString(16)).join(''),
+      from: "0x1A94fce7ef36Bc9693414995b6A8A572572B4a65",
+      to: mockAddress,
+      value: "3.0",
+      timeStamp: now - (86400 * 5), // 5 days ago
+    },
+    {
+      hash: "0x" + [...Array(64)].map(() => Math.floor(Math.random() * 16).toString(16)).join(''),
+      from: mockAddress,
+      to: "0xDA9dfA130Df4dE4673b89045Cb52726Ab47283fa",
+      value: "0.1",
+      timeStamp: now - (86400 * 7), // 1 week ago
+    },
+     {
+      hash: "0x" + [...Array(64)].map(() => Math.floor(Math.random() * 16).toString(16)).join(''),
+      from: mockAddress,
+      to: "0x2c1ba59d6f58433fb1e1be38058b65d2944b494b",
+      value: "2.75",
+      timeStamp: now - (86400 * 10), // 10 days ago
+    },
+  ];
+};
 
 export const WalletProvider = ({ children }: { children: ReactNode }) => {
   const [address, setAddress] = useState<string | null>(null);
@@ -110,6 +151,9 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     setAddress(null);
     setBalance(null);
     setTransactions([]);
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("walletAddress");
+    }
     setLoading(false);
   }, []);
 
@@ -119,6 +163,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
   }, [router, handleDisconnect]);
 
   const updateWalletState = useCallback(async (currentAddress: string) => {
+    setLoading(true);
     try {
       const provider = new BrowserProvider((window as any).ethereum);
       const network = await provider.getNetwork();
@@ -129,6 +174,9 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       setBalance(ethers.formatEther(balanceWei));
       setTransactions(history);
       setError(null);
+      if (typeof window !== "undefined") {
+        localStorage.setItem("walletAddress", currentAddress);
+      }
     } catch (err) {
        console.error("Failed to update wallet state:", err);
        setError("Failed to fetch wallet data.");
@@ -168,6 +216,22 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [updateWalletState]);
 
+   const startDemoMode = useCallback(() => {
+    setLoading(true);
+    const mockAddress = "0xAbCdEf1234567890AbCdEf1234567890AbCdEf12";
+    const mockBalance = "12.3456";
+    const mockTransactions = createMockTransactions(mockAddress);
+    
+    setAddress(mockAddress);
+    setBalance(mockBalance);
+    setTransactions(mockTransactions);
+    setError(null);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("walletAddress", mockAddress);
+    }
+    setLoading(false);
+  }, []);
+
   useEffect(() => {
     const ethereum = (window as any).ethereum;
     if (ethereum?.isMetaMask) {
@@ -187,16 +251,17 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       ethereum.on("chainChanged", handleChainChanged);
       
       const checkInitialConnection = async () => {
+        const storedAddress = localStorage.getItem("walletAddress");
         try {
           const accounts = await ethereum.request({ method: 'eth_accounts' });
-          if (accounts.length > 0) {
+          if (accounts.length > 0 && accounts[0] === storedAddress) {
             await updateWalletState(accounts[0]);
           } else {
-            setLoading(false);
+            handleDisconnect();
           }
         } catch (err) {
           console.error("Failed to check initial MetaMask connection:", err);
-          setLoading(false);
+          handleDisconnect();
         }
       };
 
@@ -209,7 +274,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
         }
       };
     } else {
-       setLoading(false);
+       handleDisconnect();
     }
   }, [updateWalletState, handleDisconnect]);
 
@@ -219,10 +284,11 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     transactions, 
     loading,
     connectWallet, 
-    disconnectWallet, 
+    disconnectWallet,
+    startDemoMode,
     error, 
     clearError 
-  }), [address, balance, transactions, loading, connectWallet, disconnectWallet, error, clearError]);
+  }), [address, balance, transactions, loading, connectWallet, disconnectWallet, startDemoMode, error, clearError]);
 
   return (
     <WalletContext.Provider value={value}>
