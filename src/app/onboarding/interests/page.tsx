@@ -11,6 +11,7 @@ import { Progress } from '@/components/ui/progress';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { useWallet } from '@/hooks/use-wallet';
+import { ChevronLeft } from 'lucide-react';
 
 const networks = [
   { id: 'bitcoin', name: 'Bitcoin (BTC)' },
@@ -82,8 +83,12 @@ export default function InterestsStep() {
           </Label>
         ))}
       </CardContent>
-      <CardFooter>
-        <Button className="w-full" onClick={handleNext} disabled={selectedNetworks.length === 0}>
+      <CardFooter className="flex justify-between">
+        <Button variant="ghost" onClick={() => router.back()}>
+           <ChevronLeft className="mr-2 h-4 w-4" />
+          Back
+        </Button>
+        <Button onClick={handleNext} disabled={selectedNetworks.length === 0}>
           Continue
         </Button>
       </CardFooter>

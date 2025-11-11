@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useWallet } from '@/hooks/use-wallet';
+import { ChevronLeft } from 'lucide-react';
 
 
 const discoveryOptions = [
@@ -60,8 +61,12 @@ export default function DiscoveryStep() {
           </SelectContent>
         </Select>
       </CardContent>
-      <CardFooter>
-        <Button className="w-full" onClick={handleFinish} disabled={!source}>
+      <CardFooter className="flex justify-between">
+        <Button variant="ghost" onClick={() => router.back()}>
+          <ChevronLeft className="mr-2 h-4 w-4" />
+          Back
+        </Button>
+        <Button onClick={handleFinish} disabled={!source}>
           Finish Setup
         </Button>
       </CardFooter>

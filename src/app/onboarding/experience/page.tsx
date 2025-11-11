@@ -11,6 +11,7 @@ import { Progress } from '@/components/ui/progress';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { useWallet } from '@/hooks/use-wallet';
+import { ChevronLeft } from 'lucide-react';
 
 const experiences = [
   { id: 'beginner', title: 'Beginner', description: 'Just starting out in the crypto world.' },
@@ -55,8 +56,12 @@ export default function ExperienceStep() {
           ))}
         </RadioGroup>
       </CardContent>
-      <CardFooter>
-        <Button className="w-full" onClick={handleNext} disabled={!selectedExperience}>
+      <CardFooter className="flex justify-between">
+        <Button variant="ghost" onClick={() => router.back()}>
+          <ChevronLeft className="mr-2 h-4 w-4" />
+          Back
+        </Button>
+        <Button onClick={handleNext} disabled={!selectedExperience}>
           Continue
         </Button>
       </CardFooter>
