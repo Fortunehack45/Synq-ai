@@ -70,7 +70,6 @@ const getEtherscanApiUrl = (): string | null => {
     return null;
   }
   
-  // V2 API uses a single endpoint for all networks.
   return `https://api.etherscan.io/api`;
 }
 
@@ -129,11 +128,7 @@ const fetchTransactionHistory = async (address: string): Promise<FormattedTransa
         type: tx.from.toLowerCase() === address.toLowerCase() ? 'Send' : 'Receive'
       }));
     } else {
-      if (data.message === 'NOTOK') {
-         console.error("Etherscan API error:", data.message, data.result);
-      } else {
-         console.error("Etherscan API error:", data.message, data.result);
-      }
+       console.error("Etherscan API error:", data.message, data.result);
       return [];
     }
   } catch (error) {
@@ -406,7 +401,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
           iconUrl: ethLogo?.imageUrl, iconHint: ethLogo?.imageHint, contractAddress: 'eth',
       };
       const demoTokens: FormattedTokenBalance[] = [
-          { name: 'USD Coin', symbol: 'USDC', balance: '5,000.00', value: '$5,000.00', iconUrl: usdcLogo?.imageUrl, iconHint: usdcLogo?.imageHint, contractAddress: 'usdc' },
+          { name: 'USD Coin', symbol: 'USDC', balance: '5000.00', value: '$5,000.00', iconUrl: usdcLogo?.imageUrl, iconHint: usdcLogo?.imageHint, contractAddress: 'usdc' },
           { name: 'Wrapped BTC', symbol: 'WBTC', balance: '0.05', value: '$3,500.00', iconUrl: wbtcLogo?.imageUrl, iconHint: wbtcLogo?.imageHint, contractAddress: 'wbtc' },
           { name: 'Uniswap', symbol: 'UNI', balance: '250.00', value: '$2,500.00', iconUrl: uniLogo?.imageUrl, iconHint: uniLogo?.imageHint, contractAddress: 'uni' },
       ];
@@ -452,7 +447,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
 
       const formattedTokens: FormattedTokenBalance[] = tokenBalances.map((token, i) => {
         const metadata = tokenMetadata[i];
-        const balance = parseFloat(token.tokenBalance!) / Math.pow(10, metadata.decimals || 18);
+        const balance = parseFloat(ethers.formatUnits(token.tokenBalance!, metadata.decimals || 18));
         return {
           name: metadata.name || 'Unknown Token',
           symbol: metadata.symbol || '???',
@@ -588,3 +583,5 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     </WalletContext.Provider>
   );
 };
+
+    

@@ -54,7 +54,7 @@ export function AssetsTabs() {
                   </div>
                   <div className="ml-4 flex-1">
                     <p className="text-sm font-medium leading-none">{token.name}</p>
-                    <p className="text-sm text-muted-foreground">{token.balance} {token.symbol}</p>
+                    <p className="text-sm text-muted-foreground">{parseFloat(token.balance).toLocaleString()} {token.symbol}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-medium">{token.value}</p>
@@ -106,3 +106,5 @@ export function AssetsTabs() {
     </Card>
   )
 }
+
+    
