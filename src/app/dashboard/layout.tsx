@@ -4,10 +4,12 @@ import Link from "next/link";
 import {
   Bell,
   BotMessageSquare,
+  CreditCard,
   Home,
   Menu,
   Package,
   Settings,
+  User,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -28,7 +30,17 @@ import { UserNav } from "@/components/user-nav";
 import { WalletProvider } from "@/context/wallet-provider";
 import { useWallet } from "@/hooks/use-wallet";
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
+
+const navItems = [
+  { href: "/dashboard", icon: Home, label: "Dashboard" },
+  { href: "/dashboard/assistant", icon: BotMessageSquare, label: "AI Assistant" },
+  { href: "/dashboard/transactions", icon: Package, label: "Transactions" },
+  { href: "/dashboard/profile", icon: User, label: "Profile" },
+  { href: "/dashboard/billing", icon: CreditCard, label: "Billing" },
+  { href: "/dashboard/settings", icon: Settings, label: "Settings" },
+];
 
 function DashboardLayoutContent({
   children,
@@ -36,6 +48,7 @@ function DashboardLayoutContent({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const { disconnectWallet } = useWallet();
 
   useEffect(() => {
@@ -88,34 +101,21 @@ function DashboardLayoutContent({
           </div>
           <div className="flex-1 overflow-y-auto">
             <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
-              <Link
-                href="/dashboard"
-                className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
-              >
-                <Home className="h-4 w-4" />
-                Dashboard
-              </Link>
-              <Link
-                href="/dashboard/assistant"
-                className="flex items-center gap-3 rounded-lg bg-muted px-3 py-2 text-primary transition-all hover:text-primary"
-              >
-                <BotMessageSquare className="h-4 w-4" />
-                AI Assistant
-              </Link>
-              <Link
-                href="/dashboard/transactions"
-                className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
-              >
-                <Package className="h-4 w-4" />
-                Transactions
-              </Link>
-              <Link
-                href="/dashboard/settings"
-                className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
-              >
-                <Settings className="h-4 w-4" />
-                Settings
-              </Link>
+              {navItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "flex items-center gap-3 rounded-lg px-3 py-2 transition-all active:scale-95",
+                    pathname === item.href
+                      ? "bg-muted text-primary"
+                      : "text-muted-foreground hover:text-primary"
+                  )}
+                >
+                  <item.icon className="h-4 w-4" />
+                  {item.label}
+                </Link>
+              ))}
             </nav>
           </div>
           <div className="mt-auto p-4">
@@ -128,7 +128,7 @@ function DashboardLayoutContent({
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-2 pt-0 md:p-4 md:pt-0">
-                <Button size="sm" className="w-full">
+                <Button size="sm" className="w-full" onClick={() => router.push('/dashboard/billing')}>
                   Upgrade
                 </Button>
               </CardContent>
@@ -158,34 +158,21 @@ function DashboardLayoutContent({
                   <BotMessageSquare className="h-6 w-6 text-primary" />
                   <span className="sr-only">SynqAI</span>
                 </Link>
-                <Link
-                  href="/dashboard"
-                  className="mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground"
-                >
-                  <Home className="h-5 w-5" />
-                  Dashboard
-                </Link>
-                <Link
-                  href="/dashboard/assistant"
-                  className="mx-[-0.65rem] flex items-center gap-4 rounded-xl bg-muted px-3 py-2 text-foreground hover:text-foreground"
-                >
-                  <BotMessageSquare className="h-5 w-5" />
-                  AI Assistant
-                </Link>
-                <Link
-                  href="/dashboard/transactions"
-                  className="mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground"
-                >
-                  <Package className="h-5 w-5" />
-                  Transactions
-                </Link>
-                <Link
-                  href="/dashboard/settings"
-                  className="mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground"
-                >
-                  <Settings className="h-5 w-5" />
-                  Settings
-                </Link>
+                {navItems.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={cn(
+                      "mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 transition-all active:scale-95",
+                      pathname === item.href
+                        ? "bg-muted text-foreground"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    <item.icon className="h-5 w-5" />
+                    {item.label}
+                  </Link>
+                ))}
               </nav>
             </SheetContent>
           </Sheet>
