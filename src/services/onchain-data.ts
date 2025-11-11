@@ -42,6 +42,7 @@ export async function getWalletTransactions(address: string) {
     return [];
   }
 
+  // Use the mainnet API endpoint for all chains, as per Etherscan V2
   const url = `https://api.etherscan.io/api?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=10&sort=desc&apikey=${apiKey}`;
   try {
     const response = await fetch(url);
@@ -91,5 +92,3 @@ export async function getWalletTokenBalances(address: string) {
     return [];
   }
 }
-
-    
