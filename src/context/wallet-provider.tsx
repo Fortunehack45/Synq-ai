@@ -69,26 +69,21 @@ const getEtherscanApiUrl = (chainId: bigint): string | null => {
     }
     return null;
   }
-
+  
   const chainIdNumber = Number(chainId);
-  let baseUrl: string | null = null;
+  // Base URL for Etherscan API V2
+  const baseUrl = "https://api.etherscan.io/api";
 
-  switch (chainIdNumber) {
-    case 1: // Mainnet
-      baseUrl = "https://api.etherscan.io";
-      break;
-    case 11155111: // Sepolia
-      baseUrl = "https://api-sepolia.etherscan.io";
-      break;
-    case 5: // Goerli
-      baseUrl = "https://api-goerli.etherscan.io";
-      break;
-    default:
+  // Supported chains for Etherscan API
+  const supportedChains = [1, 5, 11155111];
+  if (!supportedChains.includes(chainIdNumber)) {
       console.warn(`Unsupported network for Etherscan: ${chainIdNumber}. Transaction history will not be available.`);
       return null;
   }
-  return `${baseUrl}/api?module=account&action=txlist&sort=desc&page=1&offset=25&apikey=${apiKey}`;
+
+  return `${baseUrl}?module=account&action=txlist&sort=desc&page=1&offset=25&apikey=${apiKey}&chainid=${chainIdNumber}`;
 }
+
 
 const getAlchemy = (chainId: bigint) => {
   const userKey = typeof window !== 'undefined' ? localStorage.getItem('alchemyApiKey') : null;
