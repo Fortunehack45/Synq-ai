@@ -91,13 +91,12 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
         const balanceWei = await provider.getBalance(currentAddress);
         setBalance(ethers.formatEther(balanceWei));
 
-        // Fetch history from Etherscan instead of scanning blocks
         const history = await fetchTransactionHistory(currentAddress);
         setTransactions(history);
         
-      } catch (e) {
+      } catch (e: any) {
         console.error("Error fetching wallet data:", e);
-        setError("Could not fetch wallet data.");
+        setError("Could not fetch wallet data. This may be due to network rate limiting. Please wait a moment before trying again.");
       }
     }
   }, []);
@@ -128,7 +127,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       const checkConnection = async () => {
         try {
           const accounts = await ethereum.request({ method: 'eth_accounts' });
-          if (accounts.length > 0) {
+          if (accounts.length > 0 && accounts[0] !== address) {
             const currentAddress = accounts[0];
             setAddress(currentAddress);
             updateWalletState(currentAddress);
@@ -144,7 +143,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
         ethereum.removeListener("chainChanged", handleChainChanged);
       };
     }
-  }, [handleAccountsChanged, handleChainChanged, updateWalletState]);
+  }, [address, handleAccountsChanged, handleChainChanged, updateWalletState]);
 
   const connectWallet = useCallback(async () => {
     const ethereum = getEthereum();
