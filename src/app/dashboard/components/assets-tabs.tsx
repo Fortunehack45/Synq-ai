@@ -19,10 +19,15 @@ import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { ImageIcon } from "lucide-react";
 
 export function AssetsTabs() {
-  const { balance, nfts } = useWallet();
+  const { balance, nfts, address } = useWallet();
   const ethPrice = 3150; // Static price for now
 
   const ethLogo = PlaceHolderImages.find(img => img.id === 'eth-logo');
+  const usdcLogo = PlaceHolderImages.find(img => img.id === 'usdc-logo');
+  const wbtcLogo = PlaceHolderImages.find(img => img.id === 'wbtc-logo');
+  const uniLogo = PlaceHolderImages.find(img => img.id === 'uni-logo');
+
+  const isDemo = address && address.toLowerCase() === "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045".toLowerCase();
 
   const tokens = balance ? [
     {
@@ -31,9 +36,12 @@ export function AssetsTabs() {
       balance: parseFloat(balance).toFixed(4),
       value: (parseFloat(balance) * ethPrice).toLocaleString('en-US', { style: 'currency', currency: 'USD' }),
       icon: ethLogo,
-      change: '',
-      changeType: 'positive',
     },
+    ...(isDemo ? [
+      { name: 'USD Coin', symbol: 'USDC', balance: '5,000.00', value: '$5,000.00', icon: usdcLogo },
+      { name: 'Wrapped BTC', symbol: 'WBTC', balance: '0.05', value: '$3,500.00', icon: wbtcLogo },
+      { name: 'Uniswap', symbol: 'UNI', balance: '250.00', value: '$2,500.00', icon: uniLogo },
+    ] : [])
   ] : [];
 
   return (

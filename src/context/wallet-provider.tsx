@@ -18,6 +18,7 @@ interface FormattedTransaction {
   to: string | null;
   value: string;
   timeStamp: number | undefined;
+  type: 'Send' | 'Receive' | 'Swap';
 }
 
 interface PortfolioHistoryPoint {
@@ -115,6 +116,7 @@ const fetchTransactionHistory = async (address: string, chainId: bigint): Promis
         to: tx.to,
         value: ethers.formatEther(tx.value),
         timeStamp: parseInt(tx.timeStamp, 10),
+        type: tx.from.toLowerCase() === address.toLowerCase() ? 'Send' : 'Receive'
       }));
     } else {
       if (data.message === 'NOTOK' && data.result?.includes('Invalid API Key')) {
@@ -147,12 +149,14 @@ const fetchNfts = async (address: string, chainId: bigint): Promise<OwnedNft[]> 
 
 const createMockTransactions = (mockAddress: string): FormattedTransaction[] => {
   const now = Math.floor(Date.now() / 1000);
+  const randomHex = (length: number) => "0x" + [...Array(length)].map(() => Math.floor(Math.random() * 16).toString(16)).join('');
+
   return [
-    { hash: "0x" + [...Array(64)].map(() => Math.floor(Math.random() * 16).toString(16)).join(''), from: "0xDE0B295669a9FD93d5F28D9Ec85E40f4cb697BAe", to: mockAddress, value: "1.25", timeStamp: now - (86400 * 1), },
-    { hash: "0x" + [...Array(64)].map(() => Math.floor(Math.random() * 16).toString(16)).join(''), from: mockAddress, to: "0x4E3529242b435342d5A6B5377519685A59440533", value: "0.5", timeStamp: now - (86400 * 2), },
-    { hash: "0x" + [...Array(64)].map(() => Math.floor(Math.random() * 16).toString(16)).join(''), from: "0x1A94fce7ef36Bc9693414995b6A8A572572B4a65", to: mockAddress, value: "3.0", timeStamp: now - (86400 * 5), },
-    { hash: "0x" + [...Array(64)].map(() => Math.floor(Math.random() * 16).toString(16)).join(''), from: mockAddress, to: "0xDA9dfA130Df4dE4673b89045Cb52726Ab47283fa", value: "0.1", timeStamp: now - (86400 * 7), },
-    { hash: "0x" + [...Array(64)].map(() => Math.floor(Math.random() * 16).toString(16)).join(''), from: mockAddress, to: "0x2c1ba59d6f58433fb1e1be38058b65d2944b494b", value: "2.75", timeStamp: now - (86400 * 10), },
+    { hash: randomHex(64), from: "0xDE0B295669a9FD93d5F28D9Ec85E40f4cb697BAe", to: mockAddress, value: "1.25", timeStamp: now - (86400 * 1), type: 'Receive' },
+    { hash: randomHex(64), from: mockAddress, to: "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D", value: "0.5", timeStamp: now - (86400 * 2), type: 'Swap' },
+    { hash: randomHex(64), from: "0x1A94fce7ef36Bc9693414995b6A8A572572B4a65", to: mockAddress, value: "3.0", timeStamp: now - (86400 * 5), type: 'Receive' },
+    { hash: randomHex(64), from: mockAddress, to: "0xDA9dfA130Df4dE4673b89045Cb52726Ab47283fa", value: "0.1", timeStamp: now - (86400 * 7), type: 'Send' },
+    { hash: randomHex(64), from: mockAddress, to: "0x2c1ba59d6f58433fb1e1be38058b65d2944b494b", value: "2.75", timeStamp: now - (86400 * 10), type: 'Send' },
   ];
 };
 
@@ -178,16 +182,37 @@ const createMockNfts = (): OwnedNft[] => {
   } as OwnedNft))
 };
 
+// Seeded random number generator
+const mulberry32 = (a: number) => {
+    return function() {
+      a |= 0; a = a + 0x6D2B79F5 | 0;
+      let t = Math.imul(a ^ a >>> 15, 1 | a);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    }
+}
+
 const createMockPortfolioHistory = (): PortfolioHistoryPoint[] => {
   const data: PortfolioHistoryPoint[] = [];
   const today = new Date();
+  const seed = 12345; // Fixed seed for deterministic results
+  const random = mulberry32(seed);
+  
+  let lastValue = 1.0;
+
   for (let i = 29; i >= 0; i--) {
     const date = new Date(today);
     date.setDate(today.getDate() - i);
-    const valueModifier = 1 + (Math.random() - 0.5) * 0.2 + (29 - i) * 0.01; // Simulate slight upward trend
+    
+    // Create a smoother, more realistic random walk
+    const change = (random() - 0.49) * 0.05; // smaller, slightly biased change
+    lastValue += change;
+    if (lastValue < 0.8) lastValue = 0.8; // Prevent it from dropping too low
+    if (lastValue > 1.2) lastValue = 1.2; // Prevent it from rising too high
+
     data.push({
       date: date.toISOString().split('T')[0],
-      valueModifier: parseFloat(valueModifier.toFixed(4)),
+      valueModifier: parseFloat(lastValue.toFixed(4)),
     });
   }
   return data;
@@ -252,7 +277,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     }
     
     // Handle Demo Mode
-    if (currentAddress.toLowerCase() === mockAddress.toLowerCase() && localStorage.getItem('walletAddress') === mockAddress) {
+    if (currentAddress.toLowerCase() === mockAddress.toLowerCase() && localStorage.getItem('walletAddress')?.toLowerCase() === mockAddress.toLowerCase()) {
       const mockHistory = createMockPortfolioHistory();
       const mockChange = calculatePortfolioChange(mockHistory);
       
@@ -276,8 +301,8 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       const balanceWei = await provider.getBalance(currentAddress);
       const history = await fetchTransactionHistory(currentAddress, network.chainId);
       const userNfts = await fetchNfts(currentAddress, network.chainId);
-      const mockHistory = createMockPortfolioHistory(); // Using mock data for now
-      const mockChange = calculatePortfolioChange(mockHistory); // Using mock data for now
+      const mockHistory = createMockPortfolioHistory(); // Using mock data for now for all users
+      const mockChange = calculatePortfolioChange(mockHistory);
       
       setAddress(currentAddress);
       setBalance(ethers.formatEther(balanceWei));
@@ -334,31 +359,27 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     if (typeof window !== "undefined") {
       localStorage.setItem("walletAddress", mockAddress);
     }
-    // We only need to set the address and trigger a route change.
-    // The main useEffect will handle fetching the mock data.
-    setAddress(mockAddress);
+    // We just need to call updateWalletState with the mock address
+    updateWalletState(mockAddress);
     router.push('/dashboard');
-  }, [router]);
+  }, [router, updateWalletState]);
 
   useEffect(() => {
-    const checkInitialConnection = async () => {
-      const storedAddress = localStorage.getItem("walletAddress");
-      if (storedAddress && ethers.isAddress(storedAddress)) {
-        await updateWalletState(storedAddress);
-      } else {
-        handleDisconnect();
-      }
-    };
+    setLoading(true);
+    const storedAddress = localStorage.getItem("walletAddress");
     
-    checkInitialConnection();
-    
+    if (storedAddress && ethers.isAddress(storedAddress)) {
+      updateWalletState(storedAddress);
+    } else {
+      handleDisconnect();
+    }
+
     const ethereum = (window as any).ethereum;
     if (ethereum?.isMetaMask) {
       const handleAccountsChanged = (accounts: string[]) => {
-        if (accounts.length > 0) {
+        if (accounts.length > 0 && ethers.isAddress(accounts[0])) {
           updateWalletState(accounts[0]);
         } else {
-          // This case means the user disconnected from the MetaMask UI.
           handleDisconnect();
           router.push('/login');
         }
@@ -405,5 +426,3 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     </WalletContext.Provider>
   );
 };
-
-    
