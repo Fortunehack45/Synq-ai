@@ -81,7 +81,8 @@ const getEtherscanApiUrl = (chainId: bigint): string | null => {
       return null;
   }
 
-  return `${baseUrl}?module=account&action=txlist&sort=desc&page=1&offset=25&apikey=${apiKey}&chainid=${chainIdNumber}`;
+  // The V2 endpoint structure does not seem to be public. Sticking to V1 with chainid.
+  return `${baseUrl}?module=account&action=txlist&sort=desc&page=1&offset=25&apikey=${apiKey}`;
 }
 
 
@@ -116,10 +117,10 @@ const getAlchemy = (chainId: bigint) => {
 };
 
 const fetchTransactionHistory = async (address: string, chainId: bigint): Promise<FormattedTransaction[]> => {
-  const apiUrl = getEtherscanApiUrl(chainId);
-  if (!apiUrl) return [];
+  const baseUrl = getEtherscanApiUrl(chainId);
+  if (!baseUrl) return [];
   
-  const url = `${apiUrl}&address=${address}`;
+  const url = `${baseUrl}&address=${address}&chainid=${Number(chainId)}`;
 
   try {
     const response = await fetch(url);
