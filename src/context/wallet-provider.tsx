@@ -70,6 +70,7 @@ const getEtherscanApiUrl = (): string | null => {
     return null;
   }
   
+  // V2 API uses a single endpoint for all networks.
   return `https://api.etherscan.io/api`;
 }
 
@@ -104,7 +105,7 @@ const getAlchemy = (chainId: bigint) => {
   return new Alchemy({ apiKey, network });
 };
 
-const fetchTransactionHistory = async (address: string, chainId: bigint): Promise<FormattedTransaction[]> => {
+const fetchTransactionHistory = async (address: string): Promise<FormattedTransaction[]> => {
   const baseUrl = getEtherscanApiUrl();
   if (!baseUrl) return [];
   
@@ -431,7 +432,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       const alchemy = getAlchemy(network.chainId);
       const balanceWei = await provider.getBalance(currentAddress);
       const balanceEth = ethers.formatEther(balanceWei);
-      const history = await fetchTransactionHistory(currentAddress, network.chainId);
+      const history = await fetchTransactionHistory(currentAddress);
       const userNfts = await fetchNfts(currentAddress, alchemy);
       const portfolioHistoryData = await fetchPortfolioHistory(currentAddress, alchemy);
       
