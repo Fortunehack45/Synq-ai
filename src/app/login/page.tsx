@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect } from "react";
@@ -130,6 +131,17 @@ function LoginPageContent() {
               Privacy Policy
             </Link>
             .
+          </p>
+          <p className="mt-4 px-8 text-center text-xs text-muted-foreground">
+            Made by{" "}
+            <a
+              href="https://x.com/Diform_io?t=egikhcsUlvjmIIxESdD6Wg&s=09"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline underline-offset-4 hover:text-primary"
+            >
+              Diform
+            </a>
           </p>
         </CardContent>
       </Card>
