@@ -22,22 +22,65 @@ import { useTheme } from "next-themes";
 import { useWallet } from "@/hooks/use-wallet";
 import { toast } from "@/hooks/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Bell, KeyRound, Palette, ShieldCheck, Trash2, LogOut, Info } from 'lucide-react';
+import { Bell, KeyRound, Palette, ShieldCheck, Trash2, LogOut, Info, User, Save } from 'lucide-react';
 import { Separator } from "@/components/ui/separator";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useActionState, Suspense } from "react";
+import { Textarea } from "@/components/ui/textarea";
+import { saveProfile, type ProfileState } from "./actions";
+import { useSearchParams } from "next/navigation";
 
-export default function SettingsPage() {
+
+const initialProfileState: ProfileState = {
+  success: false,
+  message: "",
+};
+const mockAddress = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045";
+
+
+function SettingsPageContent() {
+  const searchParams = useSearchParams();
   const { setTheme, theme } = useTheme();
   const { address, disconnectWallet } = useWallet();
+  
   const [etherscanKey, setEtherscanKey] = useState('');
   const [alchemyKey, setAlchemyKey] = useState('');
+  
+  const [username, setUsername] = useState("");
+  const [bio, setBio] = useState("");
+  const [saveState, saveAction, isSaving] = useActionState(saveProfile, initialProfileState);
+  
+  const isDemoUser = address?.toLowerCase() === mockAddress.toLowerCase();
+
+  const activeTab = searchParams.get('tab') || 'general';
 
   useEffect(() => {
     const storedEtherscanKey = localStorage.getItem('etherscanApiKey') || '';
     const storedAlchemyKey = localStorage.getItem('alchemyApiKey') || '';
     setEtherscanKey(storedEtherscanKey);
     setAlchemyKey(storedAlchemyKey);
-  }, []);
+
+    if (address) {
+      const savedUsername = localStorage.getItem(`profile_${address}_username`) || (isDemoUser ? "Vitalik Buterin" : "AnonUser");
+      const savedBio = localStorage.getItem(`profile_${address}_bio`) || (isDemoUser ? "Co-founder of Ethereum. Building the future of the decentralized web." : "Web3 Explorer | DeFi Enthusiast | NFT Collector");
+      setUsername(savedUsername);
+      setBio(savedBio);
+    }
+  }, [address, isDemoUser]);
+  
+  useEffect(() => {
+    if (saveState.message) {
+      toast({
+        title: saveState.success ? "Success" : "Error",
+        description: saveState.message,
+        variant: saveState.success ? "default" : "destructive",
+      });
+      if (saveState.success && address) {
+        localStorage.setItem(`profile_${address}_username`, username);
+        localStorage.setItem(`profile_${address}_bio`, bio);
+      }
+    }
+  }, [saveState, address, username, bio]);
+
 
   const handleClearCache = () => {
     try {
@@ -91,9 +134,10 @@ export default function SettingsPage() {
         </p>
       </div>
 
-      <Tabs defaultValue="general" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-6">
-          <TabsTrigger value="general"><Palette className="mr-2 h-4 w-4"/>General</TabsTrigger>
+      <Tabs defaultValue={activeTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 mb-6">
+          <TabsTrigger value="general"><Palette className="mr-2 h-4 w-4"/>Appearance</TabsTrigger>
+          <TabsTrigger value="profile"><User className="mr-2 h-4 w-4"/>Profile</TabsTrigger>
           <TabsTrigger value="security"><ShieldCheck className="mr-2 h-4 w-4"/>Security</TabsTrigger>
           <TabsTrigger value="api"><KeyRound className="mr-2 h-4 w-4"/>API Keys</TabsTrigger>
           <TabsTrigger value="advanced"><Trash2 className="mr-2 h-4 w-4"/>Advanced</TabsTrigger>
@@ -136,6 +180,46 @@ export default function SettingsPage() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+        
+        <TabsContent value="profile">
+           <form action={saveAction}>
+            <Card className="glass">
+              <CardHeader>
+                <CardTitle>Public Profile</CardTitle>
+                <CardDescription>
+                  Customize your public profile information. This is stored locally in your browser.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="username">Username</Label>
+                  <Input 
+                    id="username" 
+                    name="username"
+                    placeholder="e.g., VitalikButerin" 
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="bio">Bio</Label>
+                  <Textarea 
+                    id="bio"
+                    name="bio" 
+                    placeholder="e.g., Founder of Ethereum. Building the future of the decentralized web."
+                    value={bio}
+                    onChange={(e) => setBio(e.target.value)} 
+                  />
+                </div>
+              </CardContent>
+              <CardFooter className="border-t px-6 py-4">
+                <Button type="submit" disabled={isSaving}>
+                  {isSaving ? "Saving..." : <><Save className="mr-2 h-4 w-4"/>Save Changes</>}
+                </Button>
+              </CardFooter>
+            </Card>
+          </form>
         </TabsContent>
 
         <TabsContent value="security">
@@ -219,6 +303,14 @@ export default function SettingsPage() {
   );
 }
 
+export default function SettingsPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <SettingsPageContent />
+    </Suspense>
+  )
+}
+
 function LaptopIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg
@@ -283,5 +375,3 @@ function SunIcon(props: React.SVGProps<SVGSVGElement>) {
     </svg>
   )
 }
-
-    

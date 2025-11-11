@@ -1,4 +1,3 @@
-
 'use server';
 
 import { revalidatePath } from "next/cache";
@@ -30,6 +29,7 @@ export async function saveProfile(
   console.log("Saving profile:", { username, bio });
   
   revalidatePath('/dashboard/profile');
+  revalidatePath('/dashboard/settings');
 
   return { success: true, message: "Profile saved successfully!" };
 }

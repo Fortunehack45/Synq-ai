@@ -1,31 +1,21 @@
 "use client";
 
-import { useEffect, useState, useActionState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
-  CardTitle,
-  CardFooter,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { useWallet } from "@/hooks/use-wallet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
-import { Copy, Image as ImageIcon, Sparkles, User, Save, MessageSquare, Repeat, UserPlus, Heart, MessageCircle, BarChart2 } from "lucide-react";
+import { Copy, Image as ImageIcon, Sparkles, User, MessageSquare, Repeat, UserPlus, Heart, MessageCircle, BarChart2, Pencil } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { saveProfile, type ProfileState } from "./actions";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 
-const initialProfileState: ProfileState = {
-  success: false,
-  message: "",
-};
 
 const mockAddress = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045";
 
@@ -113,11 +103,11 @@ function PostCard({ post }: { post: typeof mockPosts[0] }) {
 
 export default function ProfilePage() {
   const { address } = useWallet();
+  const router = useRouter();
   const userAvatar = PlaceHolderImages.find((img) => img.id === "user-avatar");
   
   const [username, setUsername] = useState("");
   const [bio, setBio] = useState("");
-  const [saveState, saveAction, isSaving] = useActionState(saveProfile, initialProfileState);
   
   const isDemoUser = address?.toLowerCase() === mockAddress.toLowerCase();
 
@@ -129,20 +119,6 @@ export default function ProfilePage() {
       setBio(savedBio);
     }
   }, [address, isDemoUser]);
-
-  useEffect(() => {
-    if (saveState.message) {
-      toast({
-        title: saveState.success ? "Success" : "Error",
-        description: saveState.message,
-        variant: saveState.success ? "default" : "destructive",
-      });
-      if (saveState.success && address) {
-        localStorage.setItem(`profile_${address}_username`, username);
-        localStorage.setItem(`profile_${address}_bio`, bio);
-      }
-    }
-  }, [saveState, address, username, bio]);
 
   const copyAddress = () => {
     if (address) {
@@ -186,7 +162,10 @@ export default function ProfilePage() {
                 </div>
                 <p className="text-muted-foreground pt-2 max-w-xl text-center md:text-left">{bio}</p>
               </div>
-               <Button variant="outline" disabled><UserPlus className="mr-2 h-4 w-4"/>Follow</Button>
+              <div className="flex gap-2">
+                 <Button variant="outline" disabled><UserPlus className="mr-2 h-4 w-4"/>Follow</Button>
+                 <Button onClick={() => router.push('/dashboard/settings?tab=profile')}><Pencil className="mr-2 h-4 w-4"/>Edit Profile</Button>
+              </div>
             </div>
              <div className="flex gap-6 pt-4 justify-center md:justify-start">
                 <div className="text-center md:text-left">
@@ -265,44 +244,6 @@ export default function ProfilePage() {
             </Card>
           </TabsContent>
         </Tabs>
-
-        <form action={saveAction}>
-          <Card className="glass">
-            <CardHeader>
-              <CardTitle>Edit Profile</CardTitle>
-              <CardDescription>
-                Customize your public profile information. This is stored locally in your browser.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
-                <Input 
-                  id="username" 
-                  name="username"
-                  placeholder="e.g., VitalikButerin" 
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="bio">Bio</Label>
-                <Textarea 
-                  id="bio"
-                  name="bio" 
-                  placeholder="e.g., Founder of Ethereum. Building the future of the decentralized web."
-                  value={bio}
-                  onChange={(e) => setBio(e.target.value)} 
-                />
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button type="submit" disabled={isSaving}>
-                {isSaving ? "Saving..." : <><Save className="mr-2 h-4 w-4"/>Save Changes</>}
-              </Button>
-            </CardFooter>
-          </Card>
-        </form>
       </div>
     </>
   );
