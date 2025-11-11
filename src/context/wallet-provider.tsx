@@ -71,20 +71,20 @@ const getEtherscanApiUrl = (chainId: bigint): string | null => {
   }
 
   const chainIdNumber = Number(chainId);
-  let networkPath = '';
+  let networkSubdomain = '';
   switch (chainIdNumber) {
     case 1:
-      networkPath = 'mainnet';
+      networkSubdomain = 'api';
       break;
     case 11155111:
-      networkPath = 'sepolia';
+      networkSubdomain = 'api-sepolia';
       break;
     default:
       console.warn(`Unsupported network for Etherscan: ${chainIdNumber}. Transaction history will not be available.`);
       return null;
   }
   
-  return `https://api.etherscan.io/v2?chainid=${chainIdNumber}`;
+  return `https://${networkSubdomain}.etherscan.io/api`;
 }
 
 
@@ -123,7 +123,7 @@ const fetchTransactionHistory = async (address: string, chainId: bigint): Promis
   if (!baseUrl) return [];
   
   const apiKey = (typeof window !== 'undefined' ? localStorage.getItem('etherscanApiKey') : null) || process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY;
-  const url = `${baseUrl}&module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=25&sort=desc&apikey=${apiKey}`;
+  const url = `${baseUrl}?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=25&sort=desc&apikey=${apiKey}`;
 
   try {
     const response = await fetch(url);
@@ -131,7 +131,7 @@ const fetchTransactionHistory = async (address: string, chainId: bigint): Promis
         throw new Error(`Etherscan API request failed with status ${response.status}`);
     }
     const data = await response.json();
-    if (data.status === "1" || data.status === "success") {
+    if (data.status === "1") {
       return data.result.map((tx: any) => ({
         hash: tx.hash,
         from: tx.from,
