@@ -72,7 +72,7 @@ const getEtherscanApiUrl = (chainId: bigint): string | null => {
   
   const chainIdNumber = Number(chainId);
   // Base URL for Etherscan API V2
-  const baseUrl = "https://api.etherscan.io/api";
+  const baseUrl = "https://api.etherscan.io/v2";
 
   // Supported chains for Etherscan API
   const supportedChains = [1, 5, 11155111];

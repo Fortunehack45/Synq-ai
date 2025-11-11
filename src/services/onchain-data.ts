@@ -42,7 +42,7 @@ export async function getWalletTransactions(address: string) {
     return [];
   }
   // V2 requires chainid, so we default to mainnet (1) for this server-side context.
-  const url = `https://api.etherscan.io/api?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=10&sort=desc&apikey=${apiKey}&chainid=1`;
+  const url = `https://api.etherscan.io/v2?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=10&sort=desc&apikey=${apiKey}&chainid=1`;
   try {
     const response = await fetch(url);
     const data = await response.json();
