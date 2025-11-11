@@ -36,8 +36,9 @@ const plans = [
       "Real-time Alerts",
       "Priority Email Support",
     ],
-    cta: "Upgrade to Pro",
+    cta: "Coming Soon",
     primary: true,
+    disabled: true,
   },
   {
     name: "Pro Plus",
@@ -51,7 +52,8 @@ const plans = [
       "Dedicated Account Manager",
       "24/7 Phone Support",
     ],
-    cta: "Upgrade to Pro Plus",
+    cta: "Coming Soon",
+    disabled: true,
   },
 ];
 
