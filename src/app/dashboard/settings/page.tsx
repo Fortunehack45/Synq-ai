@@ -24,21 +24,39 @@ import { toast } from "@/hooks/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Bell, KeyRound, Palette, ShieldCheck, Trash2, LogOut, Info } from 'lucide-react';
 import { Separator } from "@/components/ui/separator";
+import { useEffect, useState } from "react";
 
 export default function SettingsPage() {
   const { setTheme, theme } = useTheme();
   const { address, disconnectWallet } = useWallet();
+  const [etherscanKey, setEtherscanKey] = useState('');
+  const [alchemyKey, setAlchemyKey] = useState('');
+
+  useEffect(() => {
+    const storedEtherscanKey = localStorage.getItem('etherscanApiKey') || '';
+    const storedAlchemyKey = localStorage.getItem('alchemyApiKey') || '';
+    setEtherscanKey(storedEtherscanKey);
+    setAlchemyKey(storedAlchemyKey);
+  }, []);
 
   const handleClearCache = () => {
     try {
       const walletAddress = localStorage.getItem("walletAddress");
+      // Preserve API keys and theme
+      const etherscanApiKey = localStorage.getItem("etherscanApiKey");
+      const alchemyApiKey = localStorage.getItem("alchemyApiKey");
+      const nextTheme = localStorage.getItem("theme");
+
       localStorage.clear();
-      if (walletAddress) {
-        localStorage.setItem("walletAddress", walletAddress);
-      }
+
+      if (walletAddress) localStorage.setItem("walletAddress", walletAddress);
+      if (etherscanApiKey) localStorage.setItem("etherscanApiKey", etherscanApiKey);
+      if (alchemyApiKey) localStorage.setItem("alchemyApiKey", alchemyApiKey);
+      if (nextTheme) localStorage.setItem("theme", nextTheme);
+
       toast({
         title: "Cache Cleared",
-        description: "Application cache has been successfully cleared.",
+        description: "Application cache (excluding keys and theme) has been cleared.",
       });
       setTimeout(() => window.location.reload(), 1000);
     } catch (error) {
@@ -48,6 +66,15 @@ export default function SettingsPage() {
         description: "Failed to clear cache.",
       });
     }
+  }
+
+  const handleSaveApiKeys = () => {
+    localStorage.setItem('etherscanApiKey', etherscanKey);
+    localStorage.setItem('alchemyApiKey', alchemyKey);
+    toast({
+      title: "API Keys Saved",
+      description: "Your API keys have been saved locally. Please refresh for changes to take effect.",
+    });
   }
 
   const formatAddress = (addr: string | null) => {
@@ -138,21 +165,21 @@ export default function SettingsPage() {
             <CardHeader>
               <CardTitle>API Keys</CardTitle>
               <CardDescription>
-                Manage your API keys for third-party services. These are stored locally in your browser.
+                Manage your API keys for third-party services. These are stored securely in your browser's local storage.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="etherscan-key">Etherscan API Key</Label>
-                <Input id="etherscan-key" placeholder="Your Etherscan API Key" defaultValue="************_DEMO_************" />
+                <Input id="etherscan-key" placeholder="Your Etherscan API Key" value={etherscanKey} onChange={(e) => setEtherscanKey(e.target.value)} type="password"/>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="alchemy-key">Alchemy API Key</Label>
-                <Input id="alchemy-key" placeholder="Your Alchemy API Key" defaultValue="************_DEMO_************" />
+                <Input id="alchemy-key" placeholder="Your Alchemy API Key" value={alchemyKey} onChange={(e) => setAlchemyKey(e.target.value)} type="password"/>
               </div>
             </CardContent>
             <CardFooter className="border-t px-6 py-4">
-              <Button>Save Changes</Button>
+              <Button onClick={handleSaveApiKeys}>Save Changes</Button>
             </CardFooter>
           </Card>
         </TabsContent>
@@ -169,7 +196,7 @@ export default function SettingsPage() {
                <div className="flex items-center justify-between rounded-lg border border-border p-4">
                 <div>
                   <h3 className="text-base font-medium">Clear Local Cache</h3>
-                  <p className="text-sm text-muted-foreground">This will clear all locally cached application data.</p>
+                  <p className="text-sm text-muted-foreground">This will clear application data, but preserve API keys and theme.</p>
                 </div>
                 <Button variant="outline" onClick={handleClearCache}>
                   Clear Cache

@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, {
@@ -46,9 +47,14 @@ export const WalletContext = createContext<WalletContextType | undefined>(
 );
 
 const getEtherscanApiUrl = (chainId: bigint): string | null => {
-  const apiKey = process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY;
+  const userKey = typeof window !== 'undefined' ? localStorage.getItem('etherscanApiKey') : null;
+  const envKey = process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY;
+  const apiKey = userKey || envKey;
+
   if (!apiKey || apiKey === "YOUR_API_KEY_HERE" || apiKey.length < 30) {
-    console.warn("Etherscan API key not found or invalid. Transaction history will not be available. Please add NEXT_PUBLIC_ETHERSCAN_API_KEY to your .env.example file and rename it to .env. You can get a free key from https://etherscan.io/myapikey.");
+    if (!userKey) {
+      console.warn("Etherscan API key not found or invalid. Transaction history will not be available. Please add NEXT_PUBLIC_ETHERSCAN_API_KEY to your .env file or add your key in the settings page. You can get a free key from https://etherscan.io/myapikey.");
+    }
     return null;
   }
 
@@ -73,9 +79,14 @@ const getEtherscanApiUrl = (chainId: bigint): string | null => {
 }
 
 const getAlchemy = (chainId: bigint) => {
-  const apiKey = process.env.NEXT_PUBLIC_ALCHEMY_KEY;
+  const userKey = typeof window !== 'undefined' ? localStorage.getItem('alchemyApiKey') : null;
+  const envKey = process.env.NEXT_PUBLIC_ALCHEMY_KEY;
+  const apiKey = userKey || envKey;
+  
   if (!apiKey || apiKey === "YOUR_API_KEY_HERE" || apiKey.length < 30) {
-    console.warn("Alchemy API key not found or invalid. NFT data will not be available. Please add NEXT_PUBLIC_ALCHEMY_KEY to your .env.example file and rename it to .env. You can get a free key from https://alchemy.com/");
+    if (!userKey) {
+      console.warn("Alchemy API key not found or invalid. NFT data will not be available. Please add NEXT_PUBLIC_ALCHEMY_KEY to your .env file or add your key in the settings page. You can get a free key from https://alchemy.com/");
+    }
     return null;
   }
 
@@ -120,7 +131,7 @@ const fetchTransactionHistory = async (address: string, chainId: bigint): Promis
       }));
     } else {
       if (data.message === 'NOTOK' && data.result?.includes('Invalid API Key')) {
-         console.error("Etherscan API error: Invalid API Key. Please ensure NEXT_PUBLIC_ETHERSCAN_API_KEY is set correctly in your .env file.");
+         console.error("Etherscan API error: Invalid API Key. Please ensure your key is set correctly in .env or on the settings page.");
       } else {
          console.error("Etherscan API error:", data.message, data.result);
       }
@@ -426,3 +437,5 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     </WalletContext.Provider>
   );
 };
+
+    
