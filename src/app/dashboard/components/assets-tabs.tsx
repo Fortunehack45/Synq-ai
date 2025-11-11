@@ -17,9 +17,12 @@ import {
 import Image from "next/image"
 import { useWallet } from "@/hooks/use-wallet";
 import { ImageIcon, Wallet } from "lucide-react";
+import { PlaceHolderImages } from "@/lib/placeholder-images";
 
 export function AssetsTabs() {
   const { tokens, nfts } = useWallet();
+
+  const btcLogo = PlaceHolderImages.find(img => img.id === 'wbtc-logo');
 
   return (
     <Card className="glass">
@@ -63,7 +66,7 @@ export function AssetsTabs() {
           </TabsContent>
           <TabsContent value="nfts">
             {nfts.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 pt-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 pt-4">
                 {nfts.slice(0, 8).map((nft, index) => (
                   <div key={index} className="group relative aspect-square overflow-hidden rounded-lg">
                     <Image 
