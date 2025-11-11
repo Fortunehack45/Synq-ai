@@ -118,7 +118,7 @@ export default function ProfilePage() {
     if (address) {
       const savedName = localStorage.getItem(`profile_${address}_name`) || (isDemoUser ? "Vitalik Buterin" : "Anonymous User");
       const savedUsername = localStorage.getItem(`profile_${address}_username`) || (isDemoUser ? "VitalikButerin" : "anonuser");
-      const savedBio = localStorage.getItem(`profile_${address}_bio`) || (isDemoUser ? "Co-founder of Ethereum. Building the future of the decentralized web." : "Web3 Explorer | DeFi Enthusiast | NFT Collector");
+      const savedBio = localStorage.getItem(`profile_${address}_bio`) || (isDemoUser ? "Co-founder of Ethereum. Building the future of the decentralized web." : "");
       setName(savedName);
       setUsername(savedUsername);
       setBio(savedBio);

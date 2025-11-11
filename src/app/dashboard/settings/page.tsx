@@ -23,12 +23,23 @@ import { useTheme } from "next-themes";
 import { useWallet } from "@/hooks/use-wallet";
 import { toast } from "@/hooks/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Bell, KeyRound, Palette, ShieldCheck, Trash2, LogOut, Info, User, Save } from 'lucide-react';
+import { Bell, KeyRound, Palette, ShieldCheck, Trash2, LogOut, Info, User, Save, AlertTriangle } from 'lucide-react';
 import { Separator } from "@/components/ui/separator";
 import { useEffect, useState, useActionState, Suspense } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { saveProfile, type ProfileState } from "./actions";
 import { useSearchParams } from "next/navigation";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 
 const initialProfileState: ProfileState = {
@@ -64,7 +75,7 @@ function SettingsPageContent() {
     if (address) {
       const savedName = localStorage.getItem(`profile_${address}_name`) || (isDemoUser ? "Vitalik Buterin" : "Anonymous User");
       const savedUsername = localStorage.getItem(`profile_${address}_username`) || (isDemoUser ? "VitalikButerin" : "anonuser");
-      const savedBio = localStorage.getItem(`profile_${address}_bio`) || (isDemoUser ? "Co-founder of Ethereum. Building the future of the decentralized web." : "Web3 Explorer | DeFi Enthusiast | NFT Collector");
+      const savedBio = localStorage.getItem(`profile_${address}_bio`) || (isDemoUser ? "Co-founder of Ethereum. Building the future of the decentralized web." : "");
       setName(savedName);
       setUsername(savedUsername);
       setBio(savedBio);
@@ -112,6 +123,39 @@ function SettingsPageContent() {
         variant: "destructive",
         title: "Error",
         description: "Failed to clear cache.",
+      });
+    }
+  }
+
+  const handleDeleteAccount = () => {
+    if (!address) return;
+    try {
+      // List all possible keys related to the user
+      const keysToRemove = [
+        `profile_${address}_name`,
+        `profile_${address}_username`,
+        `profile_${address}_bio`,
+        `profile_${address}_experience`,
+        `profile_${address}_interests`,
+        `profile_${address}_discovery`,
+        `onboarding_complete_${address}`,
+      ];
+
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+      
+      toast({
+        title: "Account Data Deleted",
+        description: "All your local account data has been removed.",
+      });
+
+      // Disconnect and redirect
+      disconnectWallet();
+      
+    } catch (error) {
+       toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete account data.",
       });
     }
   }
@@ -303,12 +347,32 @@ function SettingsPageContent() {
               </div>
                <div className="flex items-center justify-between rounded-lg border border-destructive/50 p-4">
                 <div>
-                  <h3 className="text-base font-medium text-destructive">Disconnect and Log Out</h3>
-                  <p className="text-sm text-muted-foreground">You will be logged out and your wallet will be disconnected.</p>
+                  <h3 className="text-base font-medium text-destructive">Delete Account</h3>
+                  <p className="text-sm text-muted-foreground">Permanently delete all your local data and log out.</p>
                 </div>
-                <Button variant="destructive" onClick={disconnectWallet}>
-                  Log Out
-                </Button>
+                 <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive">
+                      <Trash2 className="mr-2 h-4 w-4" /> Delete Account
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete all your
+                        profile and settings data stored in this browser. Your on-chain
+                        assets will not be affected.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleDeleteAccount}>
+                        Yes, delete my data
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             </CardContent>
           </Card>
