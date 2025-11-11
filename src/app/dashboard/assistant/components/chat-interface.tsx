@@ -37,8 +37,8 @@ export function ChatInterface() {
   const [state, formAction] = useActionState(getWalletAnalysis, initialState);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-      <div className="lg:col-span-1">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+      <div className="md:col-span-1">
         <Card className="glass sticky top-20">
           <CardHeader>
             <CardTitle>Wallet Analysis</CardTitle>
@@ -76,7 +76,7 @@ export function ChatInterface() {
         </Card>
       </div>
 
-      <div className="lg:col-span-2">
+      <div className="md:col-span-2">
         <Card className="min-h-[600px] glass">
           <CardHeader>
             <CardTitle>Analysis Result</CardTitle>
@@ -96,7 +96,7 @@ export function ChatInterface() {
                 <p className="text-sm">{state.error}</p>
               </div>
             )}
-            {state.data && (
+            {state.success && state.data && (
               <div className="space-y-6 animate-in fade-in-50">
                 <div>
                   <h3 className="font-semibold text-lg flex items-center mb-2"><Shield className="w-5 h-5 mr-2 text-primary"/>Risk Score</h3>

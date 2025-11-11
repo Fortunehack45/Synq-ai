@@ -14,6 +14,10 @@ export async function getWalletAnalysis(prevState: any, formData: FormData) {
 
   try {
     const result = await aiCryptoWalletAssistant(input);
+    if (!result) {
+      // This happens if the model doesn't return valid JSON or has another output issue.
+      return { success: false, error: 'The AI model failed to return a valid analysis. Please try again.' };
+    }
     return { success: true, data: result };
   } catch (error) {
     console.error(error);
