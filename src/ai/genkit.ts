@@ -4,17 +4,6 @@ import {googleAI} from '@genkit-ai/google-genai';
 export const ai = genkit({
   plugins: [
     googleAI({
-      // When the model returns an error, it will be thrown as an error
-      // with a status code.
-      errorHandler: (err: any) => {
-        if (err.response?.candidates?.[0]?.finishReason === 'SAFETY') {
-          const e = new Error(
-            'Temporarily unable to generate content. Please try again.'
-          );
-          (e as any).status = 'INVALID_ARGUMENT' as GenkitError['status'];
-          return e;
-        }
-      },
       defaultGenerationConfig: {
         // Disabling the safety settings for the demo.
         // This is not recommended for production apps.
@@ -39,6 +28,17 @@ export const ai = genkit({
       }
     }),
   ],
+  // When the model returns an error, it will be thrown as an error
+  // with a status code.
+  errorHandler: (err: any) => {
+    if (err.response?.candidates?.[0]?.finishReason === 'SAFETY') {
+      const e = new Error(
+        'Temporarily unable to generate content. Please try again.'
+      );
+      (e as any).status = 'INVALID_ARGUMENT' as GenkitError['status'];
+      return e;
+    }
+  },
   // Log all errors to the console.
   logLevel: 'debug',
   // By default, Genkit will try to buffer all logs and write them to a file.
