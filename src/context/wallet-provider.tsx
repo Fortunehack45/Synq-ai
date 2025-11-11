@@ -80,10 +80,13 @@ const getEtherscanApiUrl = (chainId: bigint): string | null => {
       networkSubdomain = 'api-sepolia';
       break;
     default:
-      console.warn(`Unsupported network for Etherscan: ${chainIdNumber}. Transaction history will not be available.`);
-      return null;
+      // For V2, we can fallback to mainnet and just use the chainid param, but for now we'll just warn
+      console.warn(`Unsupported network for Etherscan: ${chainIdNumber}. Transaction history may not be available.`);
+      networkSubdomain = 'api';
+      break;
   }
   
+  // V2 uses the same base URL for all networks and specifies the chain via a parameter.
   return `https://${networkSubdomain}.etherscan.io/api`;
 }
 

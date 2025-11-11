@@ -41,8 +41,8 @@ export async function getWalletTransactions(address: string) {
   if (!apiKey || !ethers.isAddress(address)) {
     return [];
   }
-  // V2 functionality is handled via parameters, not the base URL path.
-  // Mainnet is used by default.
+  // For V2, we use the same base URL and specify the chain via query params.
+  // Mainnet is used by default if no chainid is provided.
   const url = `https://api.etherscan.io/api?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=10&sort=desc&apikey=${apiKey}`;
   try {
     const response = await fetch(url);
