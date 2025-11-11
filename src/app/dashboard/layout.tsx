@@ -49,15 +49,14 @@ function DashboardLayoutContent({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { disconnectWallet, address } = useWallet();
+  const { disconnectWallet, address, loading } = useWallet();
 
   useEffect(() => {
-    // If there's no address, the user is not connected. Redirect to login.
-    // This is a simple way to protect routes.
-    if (!address) {
+    // Wait until the loading is finished before checking for address
+    if (!loading && !address) {
       router.push('/login');
     }
-  }, [address, router]);
+  }, [address, loading, router]);
 
 
   useEffect(() => {
@@ -94,10 +93,14 @@ function DashboardLayoutContent({
     };
   }, [router, disconnectWallet]);
 
-  // Don't render the dashboard if the user is not authenticated.
-  // This prevents a flash of content before the redirect.
-  if (!address) {
-    return null; // Or a loading spinner
+  // While loading, show a loader or null to prevent flashing content
+  if (loading || !address) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center">
+        {/* You can replace this with a more sophisticated spinner/skeleton component */}
+        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
   }
 
   return (

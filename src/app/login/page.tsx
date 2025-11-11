@@ -19,14 +19,14 @@ import { WalletProvider } from "@/context/wallet-provider";
 
 function LoginPageContent() {
   const router = useRouter();
-  const { connectWallet, address, error, clearError } = useWallet();
+  const { connectWallet, address, error, clearError, loading } = useWallet();
   const { toast } = useToast();
 
   useEffect(() => {
-    if (address) {
+    if (!loading && address) {
       router.push("/dashboard");
     }
-  }, [address, router]);
+  }, [address, loading, router]);
 
   useEffect(() => {
     if (error) {
@@ -50,6 +50,14 @@ function LoginPageContent() {
     await connectWallet();
   };
 
+  if (loading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-4">
       <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px] dark:bg-[radial-gradient(hsl(var(--border))_1px,transparent_1px)]"></div>
@@ -68,9 +76,8 @@ function LoginPageContent() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <Button className="w-full" size="lg" onClick={() => handleConnect('metaMask')}>
-              <Icons.metaMask className="mr-2 h-6 w-6" />
-              Connect with MetaMask
+            <Button className="w-full" size="lg" onClick={() => handleConnect('metaMask')} disabled={loading}>
+              {loading ? "Connecting..." : <> <Icons.metaMask className="mr-2 h-6 w-6" /> Connect with MetaMask</>}
             </Button>
             <Button
               variant="secondary"

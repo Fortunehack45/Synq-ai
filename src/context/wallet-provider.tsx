@@ -23,6 +23,7 @@ interface WalletContextType {
   address: string | null;
   balance: string | null;
   transactions: FormattedTransaction[];
+  loading: boolean;
   connectWallet: () => Promise<void>;
   disconnectWallet: () => void;
   error: string | null;
@@ -100,19 +101,22 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
   const [balance, setBalance] = useState<string | null>(null);
   const [transactions, setTransactions] = useState<FormattedTransaction[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   const clearError = useCallback(() => setError(null), []);
 
-  const disconnectWallet = useCallback(() => {
+  const handleDisconnect = useCallback(() => {
     setAddress(null);
     setBalance(null);
     setTransactions([]);
-    if (typeof window !== "undefined") {
-      // Optional: Clear any session-related data if needed
-    }
+    setLoading(false);
+  }, []);
+
+  const disconnectWallet = useCallback(() => {
+    handleDisconnect();
     router.push("/login");
-  }, [router]);
+  }, [router, handleDisconnect]);
 
   const updateWalletState = useCallback(async (currentAddress: string) => {
     try {
@@ -128,18 +132,21 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     } catch (err) {
        console.error("Failed to update wallet state:", err);
        setError("Failed to fetch wallet data.");
-       // Disconnect if we can't get basic data, as the state is inconsistent
-       disconnectWallet();
+       handleDisconnect();
+    } finally {
+      setLoading(false);
     }
-  }, [disconnectWallet]);
+  }, [handleDisconnect]);
 
 
   const connectWallet = useCallback(async () => {
     if (typeof window === "undefined" || !(window as any).ethereum) {
       setError("MetaMask not detected. Please install the extension.");
+      setLoading(false);
       return;
     }
     
+    setLoading(true);
     try {
       const provider = new BrowserProvider((window as any).ethereum);
       const accounts = await provider.send("eth_requestAccounts", []);
@@ -148,6 +155,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
         await updateWalletState(accounts[0]);
       } else {
         setError("No accounts found. Please connect an account in MetaMask.");
+        setLoading(false);
       }
     } catch (err: any) {
       if (err.code === 4001) {
@@ -156,6 +164,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
         console.error("Failed to connect to MetaMask:", err);
         setError("Failed to connect to MetaMask.");
       }
+      setLoading(false);
     }
   }, [updateWalletState]);
 
@@ -164,31 +173,30 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     if (ethereum?.isMetaMask) {
       const handleAccountsChanged = (accounts: string[]) => {
         if (accounts.length > 0) {
-          // Re-fetch all data for the new account
           updateWalletState(accounts[0]);
         } else {
-          // User has disconnected all accounts in MetaMask
-          disconnectWallet();
+          handleDisconnect();
         }
       };
       
       const handleChainChanged = () => {
-        // Reload to re-initialize with the new network
         window.location.reload();
       };
 
       ethereum.on("accountsChanged", handleAccountsChanged);
       ethereum.on("chainChanged", handleChainChanged);
       
-      // Check for existing connection on initial load
       const checkInitialConnection = async () => {
         try {
           const accounts = await ethereum.request({ method: 'eth_accounts' });
           if (accounts.length > 0) {
             await updateWalletState(accounts[0]);
+          } else {
+            setLoading(false);
           }
         } catch (err) {
           console.error("Failed to check initial MetaMask connection:", err);
+          setLoading(false);
         }
       };
 
@@ -200,18 +208,21 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
           ethereum.removeListener("chainChanged", handleChainChanged);
         }
       };
+    } else {
+       setLoading(false);
     }
-  }, [updateWalletState, disconnectWallet]);
+  }, [updateWalletState, handleDisconnect]);
 
   const value = useMemo(() => ({ 
     address, 
     balance, 
     transactions, 
+    loading,
     connectWallet, 
     disconnectWallet, 
     error, 
     clearError 
-  }), [address, balance, transactions, connectWallet, disconnectWallet, error, clearError]);
+  }), [address, balance, transactions, loading, connectWallet, disconnectWallet, error, clearError]);
 
   return (
     <WalletContext.Provider value={value}>
