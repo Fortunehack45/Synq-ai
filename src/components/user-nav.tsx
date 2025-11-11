@@ -15,10 +15,13 @@ import {
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { useWallet } from "@/hooks/use-wallet";
 import { LogOut } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export function UserNav() {
   const userAvatar = PlaceHolderImages.find((img) => img.id === "user-avatar");
   const { address, disconnectWallet } = useWallet();
+  const router = useRouter();
 
   const formatAddress = (addr: string | null) => {
     if (!addr) return "Not Connected";
@@ -52,15 +55,15 @@ export function UserNav() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem>
+          <DropdownMenuItem onClick={() => router.push('/dashboard/profile')}>
             Profile
             <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
           </DropdownMenuItem>
-          <DropdownMenuItem>
+          <DropdownMenuItem onClick={() => router.push('/dashboard/billing')}>
             Billing
             <DropdownMenuShortcut>⌘B</DropdownMenuShortcut>
           </DropdownMenuItem>
-          <DropdownMenuItem>
+          <DropdownMenuItem onClick={() => router.push('/dashboard/settings')}>
             Settings
             <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
           </DropdownMenuItem>
