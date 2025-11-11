@@ -17,9 +17,17 @@ import {
 import Image from "next/image"
 import { useWallet } from "@/hooks/use-wallet";
 import { ImageIcon, Wallet } from "lucide-react";
+import { PlaceHolderImages } from "@/lib/placeholder-images";
 
 export function AssetsTabs() {
   const { tokens, nfts } = useWallet();
+
+  const mockNftImages = [
+    PlaceHolderImages.find((img) => img.id === "nft-1"),
+    PlaceHolderImages.find((img) => img.id === "nft-2"),
+    PlaceHolderImages.find((img) => img.id === "nft-3"),
+    PlaceHolderImages.find((img) => img.id === "nft-4"),
+  ].filter(Boolean);
 
   return (
     <Card className="glass">
@@ -64,21 +72,27 @@ export function AssetsTabs() {
           <TabsContent value="nfts">
             {nfts.length > 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 pt-4">
-                {nfts.slice(0, 8).map((nft, index) => (
-                  <div key={index} className="group relative aspect-square overflow-hidden rounded-lg">
-                    <Image 
-                      src={nft.image?.cachedUrl ?? "https://picsum.photos/seed/1/300/300"} 
-                      alt={nft.name ?? 'NFT Image'}
-                      width={150}
-                      height={150}
-                      className="h-full w-full object-cover transition-transform group-hover:scale-110"
-                      data-ai-hint="abstract art"
-                    />
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
-                       <p className="text-white text-xs font-bold truncate">{nft.name}</p>
+                {nfts.slice(0, 8).map((nft, index) => {
+                   const demoImage = mockNftImages[index % mockNftImages.length];
+                   const imageUrl = nft.image?.cachedUrl ?? demoImage?.imageUrl ?? "https://picsum.photos/seed/1/300/300";
+                   const imageHint = demoImage?.imageHint ?? "abstract art";
+                  
+                  return (
+                    <div key={index} className="group relative aspect-square overflow-hidden rounded-lg">
+                      <Image 
+                        src={imageUrl} 
+                        alt={nft.name ?? 'NFT Image'}
+                        width={150}
+                        height={150}
+                        className="h-full w-full object-cover transition-transform group-hover:scale-110"
+                        data-ai-hint={imageHint}
+                      />
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
+                         <p className="text-white text-xs font-bold truncate">{nft.name}</p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             ) : (
              <div className="flex flex-col items-center justify-center h-48">

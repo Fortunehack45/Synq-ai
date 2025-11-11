@@ -155,8 +155,7 @@ const fetchTransactionHistory = async (address: string, chainId: bigint): Promis
   }
 };
 
-const fetchTokenBalances = async (address: string, chainId: bigint): Promise<TokenBalance[]> => {
-  const alchemy = getAlchemy(chainId);
+const fetchTokenBalances = async (address: string, alchemy: Alchemy | null): Promise<TokenBalance[]> => {
   if (!alchemy) return [];
 
   try {
@@ -171,8 +170,7 @@ const fetchTokenBalances = async (address: string, chainId: bigint): Promise<Tok
   }
 }
 
-const fetchTokenMetadata = async (tokenAddresses: string[], chainId: bigint): Promise<TokenMetadataResponse[]> => {
-  const alchemy = getAlchemy(chainId);
+const fetchTokenMetadata = async (tokenAddresses: string[], alchemy: Alchemy | null): Promise<TokenMetadataResponse[]> => {
   if (!alchemy) return [];
 
   try {
@@ -184,8 +182,7 @@ const fetchTokenMetadata = async (tokenAddresses: string[], chainId: bigint): Pr
   }
 }
 
-const fetchNfts = async (address: string, chainId: bigint): Promise<OwnedNft[]> => {
-  const alchemy = getAlchemy(chainId);
+const fetchNfts = async (address: string, alchemy: Alchemy | null): Promise<OwnedNft[]> => {
   if (!alchemy) return [];
 
   try {
@@ -370,13 +367,14 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       }
       
       const network = await provider.getNetwork();
+      const alchemy = getAlchemy(network.chainId);
       const balanceWei = await provider.getBalance(currentAddress);
       const balanceEth = ethers.formatEther(balanceWei);
       const history = await fetchTransactionHistory(currentAddress, network.chainId);
-      const userNfts = await fetchNfts(currentAddress, network.chainId);
+      const userNfts = await fetchNfts(currentAddress, alchemy);
       
-      const tokenBalances = await fetchTokenBalances(currentAddress, network.chainId);
-      const tokenMetadata = await fetchTokenMetadata(tokenBalances.map(t => t.contractAddress), network.chainId);
+      const tokenBalances = await fetchTokenBalances(currentAddress, alchemy);
+      const tokenMetadata = await fetchTokenMetadata(tokenBalances.map(t => t.contractAddress), alchemy);
 
       const ethLogo = PlaceHolderImages.find(img => img.id === 'eth-logo');
       const ethToken: FormattedTokenBalance = {
