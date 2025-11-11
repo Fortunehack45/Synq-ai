@@ -229,6 +229,14 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
   }, [router, handleDisconnect]);
 
   const updateWalletState = useCallback(async (currentAddress: string) => {
+    setLoading(true);
+
+    if (!ethers.isAddress(currentAddress)) {
+      console.error("Attempted to update with invalid address:", currentAddress);
+      handleDisconnect();
+      return;
+    }
+    
     if (currentAddress.toLowerCase() === mockAddress.toLowerCase() && localStorage.getItem('walletAddress') === mockAddress) {
       setAddress(mockAddress);
       setBalance(mockBalance);
@@ -240,7 +248,6 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    setLoading(true);
     try {
       if (!(window as any).ethereum) {
         throw new Error("MetaMask not detected.");
