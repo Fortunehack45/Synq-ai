@@ -228,7 +228,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     router.push("/login");
   }, [router, handleDisconnect]);
 
-  const updateWalletState = useCallback(async (currentAddress: string) => {
+  const updateWalletState = useCallback(async (currentAddress: string, provider?: BrowserProvider) => {
     setLoading(true);
 
     if (!ethers.isAddress(currentAddress)) {
@@ -237,6 +237,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
     
+    // Handle Demo Mode
     if (currentAddress.toLowerCase() === mockAddress.toLowerCase() && localStorage.getItem('walletAddress') === mockAddress) {
       setAddress(mockAddress);
       setBalance(mockBalance);
@@ -249,10 +250,11 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
-      if (!(window as any).ethereum) {
-        throw new Error("MetaMask not detected.");
+      if (!provider) {
+        if (!(window as any).ethereum) throw new Error("MetaMask not detected.");
+        provider = new BrowserProvider((window as any).ethereum);
       }
-      const provider = new BrowserProvider((window as any).ethereum);
+      
       const network = await provider.getNetwork();
       const balanceWei = await provider.getBalance(currentAddress);
       const history = await fetchTransactionHistory(currentAddress, network.chainId);
@@ -292,7 +294,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       const accounts = await provider.send("eth_requestAccounts", []);
       
       if (accounts && accounts.length > 0) {
-        await updateWalletState(accounts[0]);
+        await updateWalletState(accounts[0], provider);
       } else {
         setError("No accounts found. Please connect an account in MetaMask.");
         setLoading(false);
@@ -313,13 +315,16 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     if (typeof window !== "undefined") {
       localStorage.setItem("walletAddress", mockAddress);
     }
-    updateWalletState(mockAddress);
-  }, [updateWalletState]);
+    // We only need to set the address and trigger a route change.
+    // The main useEffect will handle fetching the mock data.
+    setAddress(mockAddress);
+    router.push('/dashboard');
+  }, [router]);
 
   useEffect(() => {
     const checkInitialConnection = async () => {
       const storedAddress = localStorage.getItem("walletAddress");
-      if (storedAddress) {
+      if (storedAddress && ethers.isAddress(storedAddress)) {
         await updateWalletState(storedAddress);
       } else {
         handleDisconnect();
@@ -334,7 +339,9 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
         if (accounts.length > 0) {
           updateWalletState(accounts[0]);
         } else {
+          // This case means the user disconnected from the MetaMask UI.
           handleDisconnect();
+          router.push('/login');
         }
       };
       
@@ -352,7 +359,8 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
         }
       };
     }
-  }, []); // Should run only once on mount
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run only once on mount
 
   const value = useMemo(() => ({ 
     address, 
