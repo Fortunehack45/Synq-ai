@@ -129,7 +129,36 @@ const aiCryptoWalletAssistantFlow = ai.defineFlow(
     outputSchema: AICryptoWalletAssistantOutputSchema,
   },
   async input => {
-    const { output } = await prompt(input);
+    const llmResponse = await ai.generate({
+      model: 'googleai/gemini-2.5-flash',
+      prompt: `You are Synq.AI, an expert crypto wallet analyst. Your role is to provide a clear, concise, and accurate risk assessment of the provided wallet address based on on-chain data.
+
+User Query: "${input.userQuery}"
+Wallet Address: "${input.walletAddress}"
+
+Instructions:
+1.  Use the available tools to fetch the wallet's balance, recent transactions, and token holdings.
+2.  Analyze the data to identify potential risks and noteworthy activities. Consider factors like:
+    - Transaction frequency and volume.
+    - Interactions with known risky or malicious contracts (if identifiable from data).
+    - Holdings of suspicious or spam tokens.
+    - Large inflows or outflows.
+    - Age of the wallet and its activity patterns.
+3.  Calculate a risk score from 0 (very low risk) to 100 (very high risk).
+4.  Provide a few clear, bullet-pointed reasons for your assigned risk score.
+5.  Suggest 2-3 actionable steps the user could take to mitigate risks.
+6.  List any on-chain data points you used as citations for your analysis.
+7.  Provide a brief, professional overall summary.
+
+Output the final analysis in the specified JSON format. Do not add any commentary outside of the JSON structure.`,
+      tools: [getBalanceTool, getTransactionsTool, getTokenBalancesTool],
+      output: {
+        format: 'json',
+        schema: AICryptoWalletAssistantOutputSchema,
+      },
+    });
+
+    const output = llmResponse.output();
     if (!output) {
       throw new Error('The AI model did not return a valid analysis.');
     }
