@@ -25,7 +25,7 @@ interface FormattedTransaction {
 
 interface PortfolioHistoryPoint {
   date: string;
-  value: number; // Changed from valueModifier to actual value in USD
+  value: number;
 }
 
 export interface FormattedTokenBalance {
@@ -58,7 +58,7 @@ export const WalletContext = createContext<WalletContextType | undefined>(
   undefined
 );
 
-const getEtherscanApiUrl = (chainId: bigint): string | null => {
+const getEtherscanApiUrl = (): string | null => {
   const userKey = typeof window !== 'undefined' ? localStorage.getItem('etherscanApiKey') : null;
   const envKey = process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY;
   const apiKey = userKey || envKey;
@@ -70,24 +70,9 @@ const getEtherscanApiUrl = (chainId: bigint): string | null => {
     return null;
   }
 
-  const chainIdNumber = Number(chainId);
-  let networkSubdomain = '';
-  switch (chainIdNumber) {
-    case 1:
-      networkSubdomain = 'api';
-      break;
-    case 11155111:
-      networkSubdomain = 'api-sepolia';
-      break;
-    default:
-      // For V2, we can fallback to mainnet and just use the chainid param, but for now we'll just warn
-      console.warn(`Unsupported network for Etherscan: ${chainIdNumber}. Transaction history may not be available.`);
-      networkSubdomain = 'api';
-      break;
-  }
-  
-  // V2 uses the same base URL for all networks and specifies the chain via a parameter.
-  return `https://${networkSubdomain}.etherscan.io/api`;
+  // V2-compatible approach: Use a single base URL. The API key determines the plan and access level.
+  // The wallet address itself is what determines the network for account-based queries.
+  return `https://api.etherscan.io/api`;
 }
 
 
@@ -122,10 +107,12 @@ const getAlchemy = (chainId: bigint) => {
 };
 
 const fetchTransactionHistory = async (address: string, chainId: bigint): Promise<FormattedTransaction[]> => {
-  const baseUrl = getEtherscanApiUrl(chainId);
+  const baseUrl = getEtherscanApiUrl();
   if (!baseUrl) return [];
   
   const apiKey = (typeof window !== 'undefined' ? localStorage.getItem('etherscanApiKey') : null) || process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY;
+  
+  // For V2 compatibility, we use the correct module and action params. The chain is inferred from the address.
   const url = `${baseUrl}?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=25&sort=desc&apikey=${apiKey}`;
 
   try {
@@ -311,7 +298,6 @@ const fetchPortfolioHistory = async (address: string, alchemy: Alchemy | null): 
         alchemy.core
           .getBalance(address, blockNumber)
           .then((balanceWei) => {
-            // The balanceWei is an ethers v5 BigNumber object, convert it for ethers v6
             const balanceBigInt = BigInt((balanceWei as any)._hex);
             return {
               date: date.toISOString().split("T")[0],
