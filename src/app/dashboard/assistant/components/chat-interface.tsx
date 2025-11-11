@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useTransition } from "react";
 import { useFormStatus } from "react-dom";
 import {
   Card,
@@ -13,7 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { getWalletAnalysis } from "../actions";
-import { AlertCircle, BotMessageSquare, CheckCircle2, ChevronRight, Shield, TrendingUp } from "lucide-react";
+import { AlertCircle, BotMessageSquare, CheckCircle2, ChevronRight, Shield, Sparkles, TrendingUp } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
@@ -28,8 +28,8 @@ const initialState = {
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" disabled={pending}>
-      {pending ? "Analyzing..." : "Analyze Wallet"}
+    <Button type="submit" disabled={pending} className="w-full">
+      {pending ? "Analyzing..." : <> <Sparkles className="mr-2 h-4 w-4"/>Analyze Wallet</>}
     </Button>
   );
 }
@@ -40,7 +40,7 @@ export function ChatInterface() {
   return (
     <div className="grid md:grid-cols-3 gap-8">
       <div className="md:col-span-1">
-        <Card>
+        <Card className="glass sticky top-20">
           <CardHeader>
             <CardTitle>Wallet Analysis</CardTitle>
             <CardDescription>
@@ -78,32 +78,34 @@ export function ChatInterface() {
       </div>
 
       <div className="md:col-span-2">
-        <Card className="min-h-[400px]">
+        <Card className="min-h-[600px] glass">
           <CardHeader>
             <CardTitle>Analysis Result</CardTitle>
           </CardHeader>
           <CardContent>
             {!state.data && !state.error && (
-              <div className="flex flex-col items-center justify-center text-center text-muted-foreground h-64">
-                <BotMessageSquare className="h-12 w-12 mb-4" />
-                <p>Your analysis will appear here.</p>
+              <div className="flex flex-col items-center justify-center text-center text-muted-foreground h-96">
+                <BotMessageSquare className="h-16 w-16 mb-4 text-primary/50" />
+                <p className="text-lg">Your analysis will appear here.</p>
+                <p className="text-sm">Submit a query to get started.</p>
               </div>
             )}
             {state.error && (
-              <div className="text-red-500 flex flex-col items-center justify-center text-center h-64">
-                <AlertCircle className="h-12 w-12 mb-4"/>
-                <p>Error: {state.error}</p>
+              <div className="text-red-500 flex flex-col items-center justify-center text-center h-96">
+                <AlertCircle className="h-16 w-16 mb-4"/>
+                <p className="text-lg font-semibold">An Error Occurred</p>
+                <p className="text-sm">{state.error}</p>
               </div>
             )}
             {state.data && (
-              <div className="space-y-6">
+              <div className="space-y-6 animate-in fade-in-50">
                 <div>
                   <h3 className="font-semibold text-lg flex items-center mb-2"><Shield className="w-5 h-5 mr-2 text-primary"/>Risk Score</h3>
                   <div className="flex items-center gap-4">
                     <Progress value={state.data.riskScore} className="w-full h-3" />
                     <span className="font-bold text-xl">{state.data.riskScore}/100</span>
                   </div>
-                  <p className="text-sm text-muted-foreground mt-1">{state.data.overallSummary}</p>
+                  <p className="text-sm text-muted-foreground mt-2">{state.data.overallSummary}</p>
                 </div>
                 
                 <Separator />
@@ -138,7 +140,7 @@ export function ChatInterface() {
 
                 <div>
                   <h3 className="font-semibold text-lg flex items-center mb-2"><TrendingUp className="w-5 h-5 mr-2 text-primary"/>On-chain Citations</h3>
-                  <div className="space-y-2 text-sm text-muted-foreground">
+                  <div className="space-y-2 text-sm text-muted-foreground font-mono">
                     {state.data.citations.map((citation: string, index: number) => (
                       <p key={index} className="truncate">{citation}</p>
                     ))}

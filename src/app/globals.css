@@ -2,79 +2,73 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: Arial, Helvetica, sans-serif;
-}
-
 @layer base {
   :root {
-    --background: 260 33% 95%;
-    --foreground: 256 10% 20%;
-    --card: 260 40% 98%;
-    --card-foreground: 256 10% 20%;
-    --popover: 260 40% 98%;
-    --popover-foreground: 256 10% 20%;
-    --primary: 256 34% 48%;
-    --primary-foreground: 260 33% 98%;
-    --secondary: 260 33% 90%;
-    --secondary-foreground: 256 10% 20%;
-    --muted: 260 33% 90%;
+    --background: 256 20% 95%;
+    --foreground: 256 10% 10%;
+    
+    --card: 256 20% 100%;
+    --card-foreground: 256 10% 10%;
+
+    --popover: 256 20% 100%;
+    --popover-foreground: 256 10% 10%;
+
+    --primary: 258 92% 66%;
+    --primary-foreground: 256 10% 100%;
+
+    --secondary: 256 20% 91%;
+    --secondary-foreground: 256 10% 10%;
+
+    --muted: 256 20% 91%;
     --muted-foreground: 256 10% 45%;
-    --accent: 159 35% 48%;
-    --accent-foreground: 20 0% 100%;
+
+    --accent: 256 20% 91%;
+    --accent-foreground: 256 10% 10%;
+    
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 260 20% 88%;
-    --input: 260 20% 92%;
-    --ring: 256 34% 48%;
-    --chart-1: 256 34% 48%;
-    --chart-2: 159 35% 48%;
-    --chart-3: 256 34% 68%;
-    --chart-4: 159 35% 68%;
-    --chart-5: 256 34% 88%;
-    --radius: 0.5rem;
-    --sidebar-background: 256 10% 16%;
-    --sidebar-foreground: 260 33% 85%;
-    --sidebar-primary: 256 34% 58%;
-    --sidebar-primary-foreground: 256 10% 10%;
-    --sidebar-accent: 256 10% 24%;
-    --sidebar-accent-foreground: 260 33% 95%;
-    --sidebar-border: 256 10% 24%;
-    --sidebar-ring: 256 34% 58%;
+
+    --border: 256 20% 88%;
+    --input: 256 20% 97%;
+    --ring: 258 92% 66%;
+    
+    --radius: 0.75rem;
+
+    --chart-1: 258 92% 66%;
+    --chart-2: 180 82% 66%;
+    --chart-3: 40 92% 66%;
+    --chart-4: 290 92% 66%;
+    --chart-5: 220 92% 66%;
   }
+
   .dark {
-    --background: 256 10% 12%;
-    --foreground: 260 33% 95%;
-    --card: 256 10% 16%;
-    --card-foreground: 260 33% 95%;
-    --popover: 256 10% 16%;
-    --popover-foreground: 260 33% 95%;
-    --primary: 256 34% 58%;
-    --primary-foreground: 256 10% 10%;
-    --secondary: 256 10% 24%;
-    --secondary-foreground: 260 33% 95%;
-    --muted: 256 10% 24%;
-    --muted-foreground: 260 20% 65%;
-    --accent: 159 35% 55%;
-    --accent-foreground: 159 10% 10%;
+    --background: 256 10% 4%;
+    --foreground: 256 10% 96%;
+
+    --card: 256 10% 10%;
+    --card-foreground: 256 10% 96%;
+
+    --popover: 256 10% 4%;
+    --popover-foreground: 256 10% 96%;
+
+    --primary: 258 92% 66%;
+    --primary-foreground: 256 10% 100%;
+
+    --secondary: 256 10% 12%;
+    --secondary-foreground: 256 10% 96%;
+
+    --muted: 256 10% 12%;
+    --muted-foreground: 256 10% 65%;
+
+    --accent: 256 10% 12%;
+    --accent-foreground: 256 10% 96%;
+
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 256 10% 24%;
-    --input: 256 10% 24%;
-    --ring: 256 34% 58%;
-    --chart-1: 256 34% 58%;
-    --chart-2: 159 35% 55%;
-    --chart-3: 256 34% 78%;
-    --chart-4: 159 35% 75%;
-    --chart-5: 256 34% 98%;
-    --sidebar-background: 256 10% 16%;
-    --sidebar-foreground: 260 33% 85%;
-    --sidebar-primary: 256 34% 58%;
-    --sidebar-primary-foreground: 256 10% 10%;
-    --sidebar-accent: 256 10% 24%;
-    --sidebar-accent-foreground: 260 33% 95%;
-    --sidebar-border: 256 10% 24%;
-    --sidebar-ring: 256 34% 58%;
+
+    --border: 256 10% 15%;
+    --input: 256 10% 15%;
+    --ring: 258 92% 76%;
   }
 }
 
@@ -84,5 +78,25 @@ body {
   }
   body {
     @apply bg-background text-foreground;
+    min-height: 100vh;
+  }
+  
+  .dark body {
+    background-image: radial-gradient(circle at 1px 1px, hsl(var(--border)) 1px, transparent 0);
+    background-size: 2rem 2rem;
+  }
+}
+
+@layer components {
+  .glass {
+    @apply backdrop-blur-lg;
+  }
+  .dark .glass {
+     background-color: hsl(var(--card) / 0.5);
+     @apply border border-white/10;
+  }
+  .light .glass {
+     background-color: hsl(var(--card) / 0.7);
+     @apply border border-black/10;
   }
 }

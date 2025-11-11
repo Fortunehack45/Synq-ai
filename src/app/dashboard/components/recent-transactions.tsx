@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge"
 
 export function RecentTransactions() {
   return (
-    <Card>
+    <Card className="glass">
       <CardHeader>
         <CardTitle>Recent Transactions</CardTitle>
         <CardDescription>

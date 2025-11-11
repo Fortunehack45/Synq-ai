@@ -19,7 +19,7 @@ const chartConfig = {
 
 export function PortfolioChart() {
   return (
-    <Card>
+    <Card className="glass">
       <CardHeader>
         <CardTitle>Portfolio Value</CardTitle>
         <CardDescription>Your portfolio value over the last 12 months.</CardDescription>
@@ -31,13 +31,13 @@ export function PortfolioChart() {
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis
                 dataKey="month"
-                stroke="#888888"
+                stroke="hsl(var(--muted-foreground))"
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}
               />
               <YAxis
-                stroke="#888888"
+                stroke="hsl(var(--muted-foreground))"
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}
@@ -47,7 +47,7 @@ export function PortfolioChart() {
                 cursor={{ fill: 'hsl(var(--muted))' }}
                 content={<ChartTooltipContent />}
               />
-              <Bar dataKey="totalValue" fill="var(--color-totalValue)" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="totalValue" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </ChartContainer>

@@ -51,24 +51,23 @@ function LoginPageContent() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md shadow-2xl">
+    <div className="flex min-h-screen flex-col items-center justify-center p-4">
+      <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px] dark:bg-[radial-gradient(hsl(var(--border))_1px,transparent_1px)]"></div>
+       <div className="absolute top-1/2 left-1/2 -z-10 -translate-x-1/2 -translate-y-1/2">
+        <div className="animate-blob h-[30rem] w-[30rem] rounded-full bg-primary/20 blur-3xl filter" />
+      </div>
+      <Card className="w-full max-w-md glass shadow-2xl">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4">
             <Logo />
           </div>
-          <CardTitle className="text-3xl font-bold">SynqAI</CardTitle>
+          <CardTitle className="text-3xl font-bold tracking-tight">SynqAI</CardTitle>
           <CardDescription>
             Your Secure AI Crypto Wallet Assistant
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <p className="text-center text-sm text-muted-foreground">
-              Connect your wallet to continue.
-              <br />
-              We will never ask for your private keys.
-            </p>
             <Button className="w-full" size="lg" onClick={() => handleConnect('metaMask')}>
               <Icons.metaMask className="mr-2 h-6 w-6" />
               Connect with MetaMask
@@ -84,14 +83,14 @@ function LoginPageContent() {
             </Button>
           </div>
           <p className="mt-6 px-8 text-center text-xs text-muted-foreground">
-            By connecting your wallet, you agree to our{" "}
+            By connecting, you agree to our{" "}
             <Link
               href="/terms"
               className="underline underline-offset-4 hover:text-primary"
             >
-              Terms of Service
+              Terms
             </Link>{" "}
-            and{" "}
+            &{" "}
             <Link
               href="/privacy"
               className="underline underline-offset-4 hover:text-primary"
