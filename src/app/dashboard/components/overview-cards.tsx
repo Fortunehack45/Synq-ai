@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -6,7 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { ArrowDown, ArrowUp, Wallet, Image as ImageIcon } from "lucide-react"
+import { ArrowDown, ArrowUp, Wallet, Image as ImageIcon, Minus } from "lucide-react"
 import { useWallet } from "@/hooks/use-wallet";
 import { cn } from "@/lib/utils";
 
@@ -17,7 +18,8 @@ export function OverviewCards() {
   const ethPrice = 3150; // Using a static price for now
   const totalValue = balance ? (parseFloat(balance) * ethPrice).toLocaleString('en-US', { style: 'currency', currency: 'USD' }) : '$0.00';
 
-  const isChangePositive = portfolioChange >= 0;
+  const isChangePositive = portfolioChange > 0;
+  const isChangeNegative = portfolioChange < 0;
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -54,17 +56,19 @@ export function OverviewCards() {
           <CardTitle className="text-sm font-medium">
             Portfolio Change (24h)
           </CardTitle>
-           {isChangePositive ? <ArrowUp className="h-4 w-4 text-green-500" /> : <ArrowDown className="h-4 w-4 text-red-500" />}
+           {isChangePositive ? <ArrowUp className="h-4 w-4 text-green-500" /> : isChangeNegative ? <ArrowDown className="h-4 w-4 text-red-500" /> : <Minus className="h-4 w-4 text-muted-foreground"/>}
         </CardHeader>
         <CardContent>
-          <div className={cn("text-2xl font-bold", isChangePositive ? "text-green-500" : "text-red-500")}>
-            {portfolioChange > 0 ? "+" : ""}{portfolioChange.toFixed(2)}%
+          <div className={cn("text-2xl font-bold", isChangePositive ? "text-green-500" : isChangeNegative ? "text-red-500" : "text-muted-foreground")}>
+            {portfolioChange !== 0 ? `${portfolioChange > 0 ? "+" : ""}${portfolioChange.toFixed(2)}%` : 'N/A'}
             </div>
           <p className="text-xs text-muted-foreground">
-            Based on mock data
+             {portfolioChange !== 0 ? 'Based on mock data' : 'Real historical data coming soon'}
           </p>
         </CardContent>
       </Card>
     </div>
   )
 }
+
+    

@@ -372,16 +372,14 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
         }
       });
       
-      const mockHistory = createMockPortfolioHistory(); // Using mock data for now for all users
-      const mockChange = calculatePortfolioChange(mockHistory);
-      
       setAddress(currentAddress);
       setBalance(ethers.formatEther(balanceWei));
       setTokens(formattedTokens);
       setTransactions(history);
       setNfts(userNfts);
-      setPortfolioHistory(mockHistory); 
-      setPortfolioChange(mockChange);
+      // For real accounts, we clear mock data. A real implementation would fetch real historical data.
+      setPortfolioHistory([]);
+      setPortfolioChange(0);
       setError(null);
 
       if (typeof window !== "undefined") {
@@ -499,3 +497,5 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     </WalletContext.Provider>
   );
 };
+
+    
