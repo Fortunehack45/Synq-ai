@@ -75,19 +75,19 @@ const getEtherscanApiUrl = (chainId: bigint): string | null => {
 
   switch (chainIdNumber) {
     case 1: // Mainnet
-      baseUrl = "https://api.etherscan.io";
+      baseUrl = "https://api.etherscan.io/api";
       break;
     case 11155111: // Sepolia
-      baseUrl = "https://api-sepolia.etherscan.io";
+      baseUrl = "https://api-sepolia.etherscan.io/api";
       break;
     case 5: // Goerli
-      baseUrl = "https://api-goerli.etherscan.io";
+      baseUrl = "https://api-goerli.etherscan.io/api";
       break;
     default:
       console.warn(`Unsupported network for Etherscan: ${chainIdNumber}. Transaction history will not be available.`);
       return null;
   }
-  return `${baseUrl}/api?module=account&action=txlist&sort=desc&page=1&offset=25&apikey=${apiKey}`;
+  return `${baseUrl}?module=account&action=txlist&sort=desc&page=1&offset=25&apikey=${apiKey}`;
 }
 
 const getAlchemy = (chainId: bigint) => {
@@ -142,8 +142,8 @@ const fetchTransactionHistory = async (address: string, chainId: bigint): Promis
         type: tx.from.toLowerCase() === address.toLowerCase() ? 'Send' : 'Receive'
       }));
     } else {
-      if (data.message === 'NOTOK' && data.result?.includes('Invalid API Key')) {
-         console.error("Etherscan API error: Invalid API Key. Please ensure your key is set correctly in .env or on the settings page.");
+      if (data.message === 'NOTOK' && (data.result?.includes('Invalid API Key') || data.result?.includes('deprecated'))) {
+         console.error("Etherscan API error:", data.message, data.result);
       } else {
          console.error("Etherscan API error:", data.message, data.result);
       }

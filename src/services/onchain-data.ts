@@ -53,7 +53,7 @@ export async function getWalletTransactions(address: string) {
         timeStamp: tx.timeStamp,
       }));
     } else {
-      console.error("Etherscan API error:", data.message);
+      console.error("Etherscan API error:", data.message, data.result);
       return [];
     }
   } catch (error) {
