@@ -104,7 +104,7 @@ const getAlchemy = (chainId: bigint) => {
   return new Alchemy({ apiKey, network });
 };
 
-const fetchTransactionHistory = async (address: string): Promise<FormattedTransaction[]> => {
+const fetchTransactionHistory = async (address: string, chainId: bigint): Promise<FormattedTransaction[]> => {
   const baseUrl = getEtherscanApiUrl();
   if (!baseUrl) return [];
   
@@ -291,7 +291,7 @@ const fetchPortfolioHistory = async (address: string, alchemy: Alchemy | null): 
         alchemy.core
           .getBalance(address, blockNumber)
           .then((balanceWei) => {
-            const balanceBigInt = BigInt((balanceWei as any)._hex);
+            const balanceBigInt = (balanceWei as any)._hex ? BigInt((balanceWei as any)._hex) : BigInt(0);
             return {
               date: date.toISOString().split("T")[0],
               balance: parseFloat(ethers.formatEther(balanceBigInt)),
@@ -427,7 +427,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       const alchemy = getAlchemy(network.chainId);
       const balanceWei = await provider.getBalance(currentAddress);
       const balanceEth = ethers.formatEther(balanceWei);
-      const history = await fetchTransactionHistory(currentAddress);
+      const history = await fetchTransactionHistory(currentAddress, network.chainId);
       const userNfts = await fetchNfts(currentAddress, alchemy);
       const portfolioHistoryData = await fetchPortfolioHistory(currentAddress, alchemy);
       
@@ -448,11 +448,13 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       const formattedTokens: FormattedTokenBalance[] = tokenBalances.map((token, i) => {
         const metadata = tokenMetadata[i];
         const balance = parseFloat(ethers.formatUnits(token.tokenBalance!, metadata.decimals || 18));
+        // Placeholder for token value - requires price API
+        const tokenValue = metadata.symbol === 'USDC' || metadata.symbol === 'USDT' ? balance : 0; 
         return {
           name: metadata.name || 'Unknown Token',
           symbol: metadata.symbol || '???',
           balance: balance.toFixed(4),
-          value: '$0.00', // Placeholder, would need price API
+          value: tokenValue > 0 ? tokenValue.toLocaleString('en-US', { style: 'currency', currency: 'USD' }) : '$0.00',
           iconUrl: metadata.logo,
           iconHint: `${metadata.name} logo`,
           contractAddress: token.contractAddress,
@@ -558,20 +560,20 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Run only once on mount
 
-  const value = useMemo(() => ({ 
-    address, 
-    balance, 
+  const value = useMemo(() => ({
+    address,
+    balance,
     tokens,
-    transactions, 
+    transactions,
     nfts,
     portfolioHistory,
     portfolioChange,
     loading,
-    connectWallet, 
+    connectWallet,
     disconnectWallet,
     startDemoMode,
-    error, 
-    clearError 
+    error,
+    clearError
   }), [
     address, balance, tokens, transactions, nfts, portfolioHistory, portfolioChange,
     loading, connectWallet, disconnectWallet, startDemoMode, error, clearError
@@ -583,5 +585,3 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     </WalletContext.Provider>
   );
 };
-
-    
