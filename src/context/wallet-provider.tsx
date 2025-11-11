@@ -34,38 +34,43 @@ export const WalletContext = createContext<WalletContextType | undefined>(
 );
 
 const getEtherscanApiUrl = (chainId: bigint): string | null => {
+  const apiKey = process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY;
+  if (!apiKey || apiKey === 'YOUR_API_KEY_HERE') {
+    console.warn("Etherscan API key not found. Please add NEXT_PUBLIC_ETHERSCAN_API_KEY to your .env.local file to fetch transaction history. You can get a free key from https://etherscan.io/myapikey.");
+    return null;
+  }
+
   const chainIdNumber = Number(chainId);
+  let baseUrl: string | null = null;
+
   switch (chainIdNumber) {
     case 1: // Mainnet
-      return "https://api.etherscan.io";
+      baseUrl = "https://api.etherscan.io";
+      break;
     case 11155111: // Sepolia
-      return "https://api-sepolia.etherscan.io";
+      baseUrl = "https://api-sepolia.etherscan.io";
+      break;
     case 5: // Goerli
-      return "https://api-goerli.etherscan.io";
+      baseUrl = "https://api-goerli.etherscan.io";
+      break;
     default:
       console.warn(`Unsupported network for Etherscan: ${chainIdNumber}. Transaction history will not be available.`);
       return null;
   }
+  return `${baseUrl}/api?module=account&action=txlist&sort=desc&page=1&offset=25&apikey=${apiKey}`;
 }
 
 const fetchTransactionHistory = async (address: string, chainId: bigint): Promise<FormattedTransaction[]> => {
-  const apiKey = process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY;
+  const apiUrl = getEtherscanApiUrl(chainId);
+  if (!apiUrl) return [];
   
-  if (!apiKey || apiKey === 'YOUR_API_KEY_HERE' || apiKey === "VFUK5IW3WT9FS58TY4ZNZGJFVDAQVAB6GE") {
-    console.warn("Etherscan API key not found or is invalid. Please add NEXT_PUBLIC_ETHERSCAN_API_KEY to your .env file to fetch transaction history. You can get a free key from https://etherscan.io/myapikey.");
-    return [];
-  }
-  
-  const baseUrl = getEtherscanApiUrl(chainId);
-
-  if (!baseUrl) {
-    return [];
-  }
-  
-  const url = `${baseUrl}/api?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&sort=desc&page=1&offset=25&apikey=${apiKey}`;
+  const url = `${apiUrl}&address=${address}`;
 
   try {
     const response = await fetch(url);
+    if (!response.ok) {
+        throw new Error(`Etherscan API request failed with status ${response.status}`);
+    }
     const data = await response.json();
     if (data.status === "1") {
       return data.result.map((tx: any) => ({
@@ -76,7 +81,12 @@ const fetchTransactionHistory = async (address: string, chainId: bigint): Promis
         timeStamp: parseInt(tx.timeStamp, 10),
       }));
     } else {
-      console.error("Etherscan API error:", data.message);
+      // Etherscan returns status "0" with a "message" and "result" explaining the issue.
+      if (data.message === 'NOTOK' && data.result?.includes('Invalid API Key')) {
+         console.error("Etherscan API error: Invalid API Key. Please ensure NEXT_PUBLIC_ETHERSCAN_API_KEY is set correctly in your .env.local file.");
+      } else {
+         console.error("Etherscan API error:", data.message, data.result);
+      }
       return [];
     }
   } catch (error) {
@@ -102,18 +112,28 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
   };
   
   const jsonRpcProvider = useMemo(() => {
+    // Using a reliable public RPC to avoid MetaMask rate limits for read-only calls.
     return new JsonRpcProvider("https://ethereum.publicnode.com");
   }, []);
 
-  const updateWalletState = useCallback(async (currentAddress: string) => {
-    if (!currentAddress) return;
+  const updateWalletState = useCallback(async (currentAddress: string | null) => {
+    if (!currentAddress) {
+      setAddress(null);
+      setBalance(null);
+      setTransactions([]);
+      return;
+    }
+
     try {
       const ethereum = getEthereum();
-      if (!ethereum) return;
-      
+      if (!ethereum) {
+        setError("MetaMask not detected.");
+        return;
+      };
+
       const provider = new BrowserProvider(ethereum);
       const network = await provider.getNetwork();
-
+      
       const balanceWei = await jsonRpcProvider.getBalance(currentAddress);
       const history = await fetchTransactionHistory(currentAddress, network.chainId);
       
@@ -122,11 +142,11 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       setTransactions(history);
       setError(null);
     } catch (e: any) {
-      console.error("Error fetching wallet data:", e);
-      if (e.code === -32002 || (e.error && e.error.code === -32002) ) {
+      console.error("Error updating wallet state:", e);
+       if (e.code === -32002 || (e.error && e.error.code === -32002) ) {
            setError("Too many requests sent to the network. Please wait a moment and try again.");
       } else {
-          setError("Could not fetch wallet data.");
+          setError("Could not fetch wallet data. Check the console for more details.");
       }
     }
   }, [jsonRpcProvider]);
@@ -136,14 +156,17 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     if (!ethereum || initialCheckDone) return;
 
     const handleAccountsChanged = (accounts: string[]) => {
-        if (accounts.length === 0) {
+      const newAddress = accounts.length > 0 ? accounts[0] : null;
+      if (newAddress !== address) {
+        if (newAddress) {
+          updateWalletState(newAddress);
+        } else {
           setAddress(null);
           setBalance(null);
           setTransactions([]);
           router.push("/login");
-        } else if (accounts[0] !== address) {
-          updateWalletState(accounts[0]);
         }
+      }
     };
 
     const handleChainChanged = () => {
@@ -151,6 +174,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const checkInitialConnection = async () => {
+      if(initialCheckDone) return;
       try {
         const accounts = await ethereum.request({ method: 'eth_accounts' });
         if (accounts.length > 0) {
@@ -185,11 +209,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
 
     try {
       const accounts = await ethereum.request({ method: "eth_requestAccounts" });
-      if (accounts && accounts.length > 0) {
-        await updateWalletState(accounts[0]);
-      } else {
-         setError("No accounts found. Please create an account in MetaMask.");
-      }
+      await updateWalletState(accounts[0]);
     } catch (err: any) {
       if (err.code === 4001) {
         setError("Connection rejected by user.");
@@ -201,20 +221,26 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
   }, [updateWalletState]);
 
   const disconnectWallet = useCallback(() => {
-    setAddress(null);
-    setBalance(null);
-    setTransactions([]);
+    updateWalletState(null);
     router.push("/login");
-  }, [router]);
+  }, [router, updateWalletState]);
 
   const clearError = useCallback(() => {
     setError(null);
   }, []);
 
+  const value = useMemo(() => ({ 
+    address, 
+    balance, 
+    transactions, 
+    connectWallet, 
+    disconnectWallet, 
+    error, 
+    clearError 
+  }), [address, balance, transactions, connectWallet, disconnectWallet, error, clearError]);
+
   return (
-    <WalletContext.Provider
-      value={{ address, balance, transactions, connectWallet, disconnectWallet, error, clearError }}
-    >
+    <WalletContext.Provider value={value}>
       {children}
     </WalletContext.Provider>
   );
