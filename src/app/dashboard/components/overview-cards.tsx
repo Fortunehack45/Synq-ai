@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Card,
   CardContent,
@@ -5,8 +7,15 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { ArrowUp, Wallet, Image as ImageIcon } from "lucide-react"
+import { useWallet } from "@/hooks/use-wallet";
 
 export function OverviewCards() {
+  const { balance } = useWallet();
+
+  const totalBalance = balance ? parseFloat(balance).toFixed(4) : "0.00";
+  const ethPrice = 3150; // Using a static price for now
+  const totalValue = balance ? (parseFloat(balance) * ethPrice).toLocaleString('en-US', { style: 'currency', currency: 'USD' }) : '$0.00';
+
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       <Card className="glass">
@@ -17,9 +26,9 @@ export function OverviewCards() {
           <Wallet className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">$39,037.50</div>
+          <div className="text-2xl font-bold">{totalValue}</div>
           <p className="text-xs text-muted-foreground">
-            Across Ethereum and Base networks
+            {totalBalance} ETH
           </p>
         </CardContent>
       </Card>

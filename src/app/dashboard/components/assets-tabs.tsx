@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Card,
   CardContent,
@@ -11,10 +13,27 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs"
-import { tokens, nfts } from "@/lib/data"
+import { nfts, tokens as staticTokens } from "@/lib/data"
 import Image from "next/image"
+import { useWallet } from "@/hooks/use-wallet";
 
 export function AssetsTabs() {
+  const { balance } = useWallet();
+  const ethPrice = 3150; // Static price
+
+  const tokens = balance ? [
+    {
+      name: 'Ethereum',
+      symbol: 'ETH',
+      balance: parseFloat(balance).toFixed(4),
+      value: (parseFloat(balance) * ethPrice).toLocaleString('en-US', { style: 'currency', currency: 'USD' }),
+      icon: staticTokens[0].icon,
+      change: '+2.5%', // Static for now
+      changeType: 'positive',
+    },
+    // Other tokens would be fetched and listed here
+  ] : [];
+
   return (
     <Card className="glass">
       <CardHeader>
@@ -29,7 +48,7 @@ export function AssetsTabs() {
           </TabsList>
           <TabsContent value="tokens">
             <div className="space-y-4 pt-4">
-              {tokens.map((token) => (
+              {tokens.length > 0 ? tokens.map((token) => (
                 <div key={token.symbol} className="flex items-center">
                   {token.icon && <Image src={token.icon.imageUrl} alt={`${token.name} logo`} width={40} height={40} className="h-10 w-10 rounded-full" data-ai-hint={token.icon.imageHint}/>}
                   <div className="ml-4 flex-1">
@@ -41,7 +60,9 @@ export function AssetsTabs() {
                     <p className={`text-sm ${token.changeType === 'positive' ? 'text-green-500' : 'text-red-500'}`}>{token.change}</p>
                   </div>
                 </div>
-              ))}
+              )) : (
+                <p className="text-sm text-muted-foreground text-center pt-4">No tokens found in this wallet.</p>
+              )}
             </div>
           </TabsContent>
           <TabsContent value="nfts">
