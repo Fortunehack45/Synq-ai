@@ -25,7 +25,7 @@ const networks = [
   { id: 'algorand', name: 'Algorand (ALGO)' },
   { id: 'tezos', name: 'Tezos (XTZ)' },
   { id: 'tron', name: 'Tron (TRX)' },
-  { id: 'ethereum-classic', name: 'Ethereum Classic (ETC)' },
+  { id: 'ethereum-classic', name: 'ETC' },
   { id: 'nervos', name: 'Nervos Network' },
   { id: 'ton', name: 'TON' },
   { id: 'other', name: 'Other' },
