@@ -1,3 +1,4 @@
+
 # SynqAI - Your Secure AI Crypto Wallet Assistant
 
 SynqAI is a next-generation web application designed to demystify the world of cryptocurrency wallet management. It provides a secure, intuitive, and AI-powered dashboard to help users analyze wallet activity, assess risks, and gain actionable insights into their on-chain assets.
