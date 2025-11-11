@@ -1,8 +1,7 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
-import { useActionState } from "react-dom";
+import { useEffect, useState, useActionState } from "react";
 import {
   Card,
   CardContent,
@@ -48,7 +47,7 @@ export default function ProfilePage() {
   }, [address]);
 
   useEffect(() => {
-    if (saveState.message) {
+    if (saveState.message && (saveState.success || !saveState.success)) {
       toast({
         title: saveState.success ? "Success" : "Error",
         description: saveState.message,
@@ -184,7 +183,7 @@ export default function ProfilePage() {
                   <p className="text-sm text-muted-foreground">Images and videos posted by this user will appear here.</p>
                 </div>
               </CardContent>
-            </Card>
+            </card>
           </TabsContent>
         </Tabs>
 
