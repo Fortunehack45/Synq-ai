@@ -40,9 +40,9 @@ export function OverviewCards() {
           <ImageIcon className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">4</div>
+          <div className="text-2xl font-bold">N/A</div>
           <p className="text-xs text-muted-foreground">
-            Valued at ~$2,350.87
+            Feature coming soon
           </p>
         </CardContent>
       </Card>
@@ -54,9 +54,9 @@ export function OverviewCards() {
           <ArrowUp className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-green-500">+1.2%</div>
+          <div className="text-2xl font-bold">N/A</div>
           <p className="text-xs text-muted-foreground">
-            +$463.45 from yesterday
+            Feature coming soon
           </p>
         </CardContent>
       </Card>
