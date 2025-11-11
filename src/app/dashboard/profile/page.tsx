@@ -131,6 +131,11 @@ export default function ProfilePage() {
     }
   };
 
+  const formatAddress = (addr: string | null) => {
+    if (!addr) return "Not Connected";
+    return `${addr.substring(0, 6)}...${addr.substring(addr.length - 4)}`;
+  };
+
   return (
     <>
       <div className="flex items-center mb-4">
@@ -151,8 +156,8 @@ export default function ProfilePage() {
                   <h2 className="text-2xl font-bold font-headline">{username}</h2>
                 </div>
                 <div className="flex items-center gap-2 mt-1 justify-center md:justify-start">
-                  <p className="text-muted-foreground font-mono text-sm break-all">
-                    {address}
+                  <p className="text-muted-foreground font-mono text-sm">
+                    {formatAddress(address)}
                   </p>
                   {address && (
                     <Button variant="ghost" size="icon" className="h-7 w-7" onClick={copyAddress}>
