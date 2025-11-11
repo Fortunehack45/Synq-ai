@@ -28,7 +28,7 @@ const networks = [
   { id: 'ethereum-classic', name: 'ETC' },
   { id: 'nervos', name: 'Nervos Network' },
   { id: 'ton', name: 'TON' },
-  { id: 'other', name: 'Other' },
+  { id: 'other', name: 'Others' },
 ];
 
 
