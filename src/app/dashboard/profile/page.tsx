@@ -26,6 +26,8 @@ const initialProfileState: ProfileState = {
   message: "",
 };
 
+const mockAddress = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045";
+
 export default function ProfilePage() {
   const { address } = useWallet();
   const userAvatar = PlaceHolderImages.find((img) => img.id === "user-avatar");
@@ -33,6 +35,8 @@ export default function ProfilePage() {
   const [username, setUsername] = useState("");
   const [bio, setBio] = useState("");
   const [saveState, saveAction, isSaving] = useActionState(saveProfile, initialProfileState);
+  
+  const isDemoUser = address?.toLowerCase() === mockAddress.toLowerCase();
 
   useEffect(() => {
     if (address) {
@@ -103,15 +107,15 @@ export default function ProfilePage() {
             </div>
              <div className="flex gap-6 pt-4 justify-center md:justify-start">
                 <div className="text-center md:text-left">
-                  <p className="font-bold">1,234</p>
+                  <p className="font-bold">{isDemoUser ? '1,234' : '0'}</p>
                   <p className="text-sm text-muted-foreground">Following</p>
                 </div>
                 <div className="text-center md:text-left">
-                  <p className="font-bold">5,678</p>
+                  <p className="font-bold">{isDemoUser ? '5,678' : '0'}</p>
                   <p className="text-sm text-muted-foreground">Followers</p>
                 </div>
                  <div className="text-center md:text-left">
-                  <p className="font-bold">89</p>
+                  <p className="font-bold">{isDemoUser ? '89' : '0'}</p>
                   <p className="text-sm text-muted-foreground">Posts</p>
                 </div>
               </div>
