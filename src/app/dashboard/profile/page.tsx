@@ -29,10 +29,10 @@ const initialProfileState: ProfileState = {
 export default function ProfilePage() {
   const { address } = useWallet();
   const userAvatar = PlaceHolderImages.find((img) => img.id === "user-avatar");
-  const [saveState, saveAction, isSaving] = useActionState(saveProfile, initialProfileState);
-
+  
   const [username, setUsername] = useState("");
   const [bio, setBio] = useState("");
+  const [saveState, saveAction, isSaving] = useActionState(saveProfile, initialProfileState);
 
   useEffect(() => {
     if (address) {
@@ -42,7 +42,7 @@ export default function ProfilePage() {
       setBio(savedBio);
     }
   }, [address]);
-  
+
   useEffect(() => {
     if (saveState.message) {
       toast({
@@ -55,9 +55,7 @@ export default function ProfilePage() {
         localStorage.setItem(`profile_${address}_bio`, bio);
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [saveState]);
-
+  }, [saveState, address, username, bio]);
 
   const copyAddress = () => {
     if (address) {
