@@ -6,11 +6,15 @@ import {
   Bell,
   BotMessageSquare,
   CreditCard,
+  Dog,
   Home,
   Menu,
   Package,
+  Repeat,
+  ScanLine,
   Settings,
   User,
+  Users,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -40,6 +44,10 @@ const navItems = [
   { href: "/dashboard", icon: Home, label: "Dashboard" },
   { href: "/dashboard/assistant", icon: BotMessageSquare, label: "AI Assistant" },
   { href: "/dashboard/transactions", icon: Package, label: "Transactions" },
+  { href: "/dashboard/trade", icon: Repeat, label: "Trade" },
+  { href: "/dashboard/coin-scan", icon: ScanLine, label: "Coin Scan" },
+  { href: "/dashboard/meme-coins", icon: Dog, label: "Meme Coins" },
+  { href: "/dashboard/community", icon: Users, label: "Community" },
   { href: "/dashboard/profile", icon: User, label: "Profile" },
   { href: "/dashboard/billing", icon: CreditCard, label: "Billing" },
   { href: "/dashboard/settings", icon: Settings, label: "Settings" },

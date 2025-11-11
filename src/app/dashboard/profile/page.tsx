@@ -1,6 +1,8 @@
 
 "use client";
 
+import { useEffect, useState } from "react";
+import { useActionState } from "react-dom";
 import {
   Card,
   CardContent,
@@ -17,20 +19,42 @@ import { useWallet } from "@/hooks/use-wallet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { Badge } from "@/components/ui/badge";
-import { Copy, History, Image as ImageIcon, Sparkles, User, AlertTriangle } from "lucide-react";
+import { Copy, History, Image as ImageIcon, Sparkles, User, AlertTriangle, Save } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
+import { saveProfile, type ProfileState } from "./actions";
+
+const initialProfileState: ProfileState = {
+  success: false,
+  message: "",
+};
 
 export default function ProfilePage() {
   const { address, transactions, nfts } = useWallet();
   const userAvatar = PlaceHolderImages.find((img) => img.id === "user-avatar");
+  const [saveState, saveAction, isSaving] = useActionState(saveProfile, initialProfileState);
 
-  const formatAddress = (addr: string | null, length: number = 8) => {
-    if (!addr) return "Not Connected";
-    return `${addr.substring(0, length)}...${addr.substring(
-      addr.length - (length - 2)
-    )}`;
-  };
+  const [username, setUsername] = useState("");
+  const [bio, setBio] = useState("");
+
+  useEffect(() => {
+    if (address) {
+      const savedUsername = localStorage.getItem(`profile_${address}_username`) || "AnonUser";
+      const savedBio = localStorage.getItem(`profile_${address}_bio`) || "Web3 Explorer | DeFi Enthusiast";
+      setUsername(savedUsername);
+      setBio(savedBio);
+    }
+  }, [address]);
+
+  useEffect(() => {
+    if (saveState.message) {
+      toast({
+        title: saveState.success ? "Success" : "Error",
+        description: saveState.message,
+        variant: saveState.success ? "default" : "destructive",
+      });
+    }
+  }, [saveState]);
 
   const copyAddress = () => {
     if (address) {
@@ -49,7 +73,7 @@ export default function ProfilePage() {
       return current.timeStamp < oldest.timeStamp ? current : oldest;
     });
     return oldestTx.timeStamp ? new Date(oldestTx.timeStamp * 1000).toLocaleDateString() : "N/A";
-  }
+  };
 
   return (
     <>
@@ -68,17 +92,18 @@ export default function ProfilePage() {
               </Avatar>
               <div className="flex-1">
                 <div className="flex items-center gap-2 justify-center md:justify-start">
-                  <h2 className="text-2xl font-bold font-headline">Wallet Profile</h2>
-                  <Badge variant="outline" className="border-primary text-primary">Pro Member</Badge>
+                  <h2 className="text-2xl font-bold font-headline">{username}</h2>
                 </div>
                 <div className="flex items-center gap-2 mt-2 justify-center md:justify-start">
                   <p className="text-muted-foreground font-mono text-sm break-all">
                     {address}
                   </p>
-                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={copyAddress}>
-                    <Copy className="h-4 w-4" />
-                    <span className="sr-only">Copy Address</span>
-                  </Button>
+                  {address && (
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={copyAddress}>
+                      <Copy className="h-4 w-4" />
+                      <span className="sr-only">Copy Address</span>
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
@@ -105,27 +130,43 @@ export default function ProfilePage() {
            </CardContent>
         </Card>
 
-        <Card className="glass">
-          <CardHeader>
-            <CardTitle>Profile Information</CardTitle>
-            <CardDescription>
-              This information is for display purposes only and is not yet saved.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
-              <Input id="username" placeholder="VitalikButerin" disabled />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="bio">Bio</Label>
-              <Textarea id="bio" placeholder="Founder of Ethereum. Building the future of the decentralized web." disabled />
-            </div>
-          </CardContent>
-          <CardFooter>
-            <Button disabled>Save Changes (Coming Soon)</Button>
-          </CardFooter>
-        </Card>
+        <form action={saveAction}>
+          <Card className="glass">
+            <CardHeader>
+              <CardTitle>Profile Information</CardTitle>
+              <CardDescription>
+                Customize your public profile information. This is stored locally in your browser.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="username">Username</Label>
+                <Input 
+                  id="username" 
+                  name="username"
+                  placeholder="VitalikButerin" 
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="bio">Bio</Label>
+                <Textarea 
+                  id="bio"
+                  name="bio" 
+                  placeholder="Founder of Ethereum. Building the future of the decentralized web."
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)} 
+                />
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button type="submit" disabled={isSaving}>
+                {isSaving ? "Saving..." : <><Save className="mr-2 h-4 w-4"/>Save Changes</>}
+              </Button>
+            </CardFooter>
+          </Card>
+        </form>
         
         <Card className="glass border-destructive">
             <CardHeader>
@@ -138,10 +179,10 @@ export default function ProfilePage() {
                <div className="flex items-center justify-between rounded-lg border border-destructive/50 p-4">
                 <div>
                   <h3 className="text-base font-medium text-destructive flex items-center gap-2"><AlertTriangle className="h-4 w-4"/>Reset Profile</h3>
-                  <p className="text-sm text-muted-foreground">This will reset your profile customizations (feature coming soon).</p>
+                  <p className="text-sm text-muted-foreground">This will reset your profile customizations.</p>
                 </div>
                 <Button variant="destructive" disabled>
-                  Reset Profile
+                  Reset Profile (Coming Soon)
                 </Button>
               </div>
             </CardContent>
