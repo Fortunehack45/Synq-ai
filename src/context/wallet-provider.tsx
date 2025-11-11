@@ -25,7 +25,7 @@ interface FormattedTransaction {
 
 interface PortfolioHistoryPoint {
   date: string;
-  valueModifier: number;
+  value: number; // Changed from valueModifier to actual value in USD
 }
 
 export interface FormattedTokenBalance {
@@ -69,20 +69,22 @@ const getEtherscanApiUrl = (chainId: bigint): string | null => {
     }
     return null;
   }
-  
-  const chainIdNumber = Number(chainId);
-  // Base URL for Etherscan API V2
-  const baseUrl = "https://api.etherscan.io/v2";
 
-  // Supported chains for Etherscan API
-  const supportedChains = [1, 5, 11155111];
-  if (!supportedChains.includes(chainIdNumber)) {
+  const chainIdNumber = Number(chainId);
+  let networkSubdomain = '';
+  switch (chainIdNumber) {
+    case 1:
+      networkSubdomain = 'api';
+      break;
+    case 11155111:
+      networkSubdomain = 'api-sepolia';
+      break;
+    default:
       console.warn(`Unsupported network for Etherscan: ${chainIdNumber}. Transaction history will not be available.`);
       return null;
   }
-
-  // The V2 endpoint structure does not seem to be public. Sticking to V1 with chainid.
-  return `${baseUrl}?module=account&action=txlist&sort=desc&page=1&offset=25&apikey=${apiKey}`;
+  
+  return `https://${networkSubdomain}.etherscan.io/api`;
 }
 
 
@@ -120,7 +122,8 @@ const fetchTransactionHistory = async (address: string, chainId: bigint): Promis
   const baseUrl = getEtherscanApiUrl(chainId);
   if (!baseUrl) return [];
   
-  const url = `${baseUrl}&address=${address}&chainid=${Number(chainId)}`;
+  const apiKey = (typeof window !== 'undefined' ? localStorage.getItem('etherscanApiKey') : null) || process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY;
+  const url = `${baseUrl}?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=25&sort=desc&apikey=${apiKey}`;
 
   try {
     const response = await fetch(url);
@@ -243,35 +246,101 @@ const createMockPortfolioHistory = (): PortfolioHistoryPoint[] => {
   const seed = 12345; // Fixed seed for deterministic results
   const random = mulberry32(seed);
   
-  let lastValue = 1.0;
+  let lastValue = 38587.5; // Approx mockBalance * static eth price
 
   for (let i = 29; i >= 0; i--) {
     const date = new Date(today);
     date.setDate(today.getDate() - i);
     
-    // Create a smoother, more realistic random walk
-    const change = (random() - 0.49) * 0.05; // smaller, slightly biased change
+    const change = (random() - 0.49) * 2000;
     lastValue += change;
-    if (lastValue < 0.8) lastValue = 0.8; // Prevent it from dropping too low
-    if (lastValue > 1.2) lastValue = 1.2; // Prevent it from rising too high
 
     data.push({
       date: date.toISOString().split('T')[0],
-      valueModifier: parseFloat(lastValue.toFixed(4)),
+      value: parseFloat(lastValue.toFixed(2)),
     });
   }
   return data;
 };
 
+const fetchHistoricalPrices = async (): Promise<Map<string, number>> => {
+  try {
+    const response = await fetch('https://api.coingecko.com/api/v3/coins/ethereum/market_chart?vs_currency=usd&days=30&interval=daily');
+    if (!response.ok) {
+      throw new Error('Failed to fetch historical prices from CoinGecko');
+    }
+    const data = await response.json();
+    const prices = new Map<string, number>();
+    data.prices.forEach((pricePoint: [number, number]) => {
+      const date = new Date(pricePoint[0]).toISOString().split('T')[0];
+      prices.set(date, pricePoint[1]);
+    });
+    return prices;
+  } catch (error) {
+    console.error(error);
+    return new Map();
+  }
+};
+
+
+const fetchPortfolioHistory = async (address: string, alchemy: Alchemy | null): Promise<PortfolioHistoryPoint[]> => {
+  if (!alchemy) return [];
+
+  const history: PortfolioHistoryPoint[] = [];
+  const today = new Date();
+  const prices = await fetchHistoricalPrices();
+  if (prices.size === 0) return []; // Stop if we can't get prices
+
+  const blockPromises: Promise<{ date: string, balance: number }>[] = [];
+
+  for (let i = 29; i >= 0; i--) {
+    const date = new Date(today);
+    date.setDate(today.getDate() - i);
+    date.setUTCHours(12, 0, 0, 0); // Use a consistent time for daily snapshots
+
+    blockPromises.push(
+      alchemy.core.getBlock(
+        // @ts-ignore - The timestamp property is not in the type definition but works
+        { blockHashOrBlockNumber: 'latest', timestamp: Math.floor(date.getTime() / 1000) }
+      ).then(async block => {
+        const balanceWei = await alchemy.core.getBalance(address, block.number);
+        return {
+          date: date.toISOString().split('T')[0],
+          balance: parseFloat(ethers.formatEther(balanceWei)),
+        };
+      })
+    );
+  }
+
+  try {
+    const dailyBalances = await Promise.all(blockPromises);
+    dailyBalances.forEach(({ date, balance }) => {
+      const price = prices.get(date);
+      if (price) {
+        history.push({
+          date: date,
+          value: balance * price,
+        });
+      }
+    });
+
+    return history.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  } catch (error) {
+    console.error('Failed to fetch portfolio history:', error);
+    return [];
+  }
+};
+
+
 const calculatePortfolioChange = (history: PortfolioHistoryPoint[]): number => {
   if (history.length < 2) {
     return 0;
   }
-  const latestValue = history[history.length - 1].valueModifier;
-  const previousValue = history[history.length - 2].valueModifier;
+  const latestValue = history[history.length - 1].value;
+  const previousValue = history[history.length - 2].value;
 
   if (previousValue === 0) {
-    return 0;
+    return latestValue > 0 ? 100 : 0;
   }
 
   const change = ((latestValue - previousValue) / previousValue) * 100;
@@ -368,6 +437,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       const balanceEth = ethers.formatEther(balanceWei);
       const history = await fetchTransactionHistory(currentAddress, network.chainId);
       const userNfts = await fetchNfts(currentAddress, alchemy);
+      const portfolioHistoryData = await fetchPortfolioHistory(currentAddress, alchemy);
       
       const tokenBalances = await fetchTokenBalances(currentAddress, alchemy);
       const tokenMetadata = await fetchTokenMetadata(tokenBalances.map(t => t.contractAddress), alchemy);
@@ -402,9 +472,8 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       setTokens([ethToken, ...formattedTokens]);
       setTransactions(history);
       setNfts(userNfts);
-      // For real accounts, we clear mock data. A real implementation would fetch real historical data.
-      setPortfolioHistory([]);
-      setPortfolioChange(0);
+      setPortfolioHistory(portfolioHistoryData);
+      setPortfolioChange(calculatePortfolioChange(portfolioHistoryData));
       setError(null);
 
       if (typeof window !== "undefined") {

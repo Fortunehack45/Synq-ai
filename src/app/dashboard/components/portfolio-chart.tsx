@@ -1,3 +1,4 @@
+
 "use client"
 import {
   Card,
@@ -12,7 +13,9 @@ import { BarChart, LineChart as LineChartIcon } from "lucide-react"
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
 
 export function PortfolioChart() {
-  const { portfolioHistory, balance } = useWallet();
+  const { portfolioHistory, address } = useWallet();
+  const isDemo = address?.toLowerCase() === "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045".toLowerCase() && localStorage.getItem('walletAddress')?.toLowerCase() === "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045".toLowerCase();
+
 
   const chartConfig = {
     value: {
@@ -20,14 +23,8 @@ export function PortfolioChart() {
       color: "hsl(var(--primary))",
     },
   }
-
-  const ethPrice = 3150; // Static price for now
-  const totalValue = balance ? (parseFloat(balance) * ethPrice) : 0;
   
-  const chartData = portfolioHistory.map(item => ({
-    date: item.date,
-    value: Math.round(totalValue * item.valueModifier),
-  }));
+  const chartData = portfolioHistory;
 
   if (chartData.length === 0) {
     return (
@@ -39,8 +36,8 @@ export function PortfolioChart() {
         <CardContent className="h-[350px] flex items-center justify-center">
           <div className="flex flex-col items-center justify-center text-center text-muted-foreground">
             <BarChart className="h-16 w-16 mb-4 text-primary/50" />
-            <p className="text-lg">Historical data is not yet available.</p>
-            <p className="text-sm">Connect your wallet to see your portfolio.</p>
+            <p className="text-lg">Historical data is not available.</p>
+            <p className="text-sm">Real historical data is only available for Ethereum Mainnet.</p>
           </div>
         </CardContent>
       </Card>
@@ -52,7 +49,7 @@ export function PortfolioChart() {
       <CardHeader>
         <CardTitle>Portfolio Value</CardTitle>
         <CardDescription>
-          Your portfolio value over the last 30 days (mock data).
+          Your portfolio's native asset value over the last 30 days {isDemo ? "(mock data)" : ""}.
         </CardDescription>
       </CardHeader>
       <CardContent className="h-[350px] p-0 pr-4">
@@ -89,6 +86,8 @@ export function PortfolioChart() {
                     value.toLocaleString("en-US", {
                       style: "currency",
                       currency: "USD",
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
                     })
                   }
                 />

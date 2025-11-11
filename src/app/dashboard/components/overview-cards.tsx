@@ -12,11 +12,15 @@ import { useWallet } from "@/hooks/use-wallet";
 import { cn } from "@/lib/utils";
 
 export function OverviewCards() {
-  const { balance, nfts, portfolioChange } = useWallet();
+  const { balance, nfts, portfolioChange, portfolioHistory } = useWallet();
 
   const totalBalance = balance ? parseFloat(balance).toFixed(4) : "0.00";
-  const ethPrice = 3150; // Using a static price for now
-  const totalValue = balance ? (parseFloat(balance) * ethPrice).toLocaleString('en-US', { style: 'currency', currency: 'USD' }) : '$0.00';
+  
+  const latestValue = portfolioHistory.length > 0 ? portfolioHistory[portfolioHistory.length - 1].value : 0;
+  
+  // Use a static ETH price only as a fallback if there's no history
+  const ethPrice = 3150; 
+  const totalValue = latestValue > 0 ? latestValue.toLocaleString('en-US', { style: 'currency', currency: 'USD' }) : (balance ? (parseFloat(balance) * ethPrice).toLocaleString('en-US', { style: 'currency', currency: 'USD' }) : '$0.00');
 
   const isChangePositive = portfolioChange > 0;
   const isChangeNegative = portfolioChange < 0;
@@ -63,12 +67,10 @@ export function OverviewCards() {
             {portfolioChange !== 0 ? `${portfolioChange > 0 ? "+" : ""}${portfolioChange.toFixed(2)}%` : 'N/A'}
             </div>
           <p className="text-xs text-muted-foreground">
-             {portfolioChange !== 0 ? 'Based on mock data' : 'Real historical data coming soon'}
+             {portfolioHistory.length > 0 ? 'vs. previous day' : 'Historical data unavailable'}
           </p>
         </CardContent>
       </Card>
     </div>
   )
 }
-
-    
