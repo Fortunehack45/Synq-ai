@@ -38,8 +38,8 @@ export function ChatInterface() {
   const [state, formAction] = useActionState(getWalletAnalysis, initialState);
 
   return (
-    <div className="grid md:grid-cols-3 gap-8">
-      <div className="md:col-span-1">
+    <div className="grid lg:grid-cols-3 gap-8">
+      <div className="lg:col-span-1">
         <Card className="glass sticky top-20">
           <CardHeader>
             <CardTitle>Wallet Analysis</CardTitle>
@@ -77,7 +77,7 @@ export function ChatInterface() {
         </Card>
       </div>
 
-      <div className="md:col-span-2">
+      <div className="lg:col-span-2">
         <Card className="min-h-[600px] glass">
           <CardHeader>
             <CardTitle>Analysis Result</CardTitle>
