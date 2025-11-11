@@ -1,4 +1,4 @@
-import {genkit, type GenkitErrorCode} from 'genkit';
+import {genkit, type GenkitError} from 'genkit';
 import {googleAI} from '@genkit-ai/google-genai';
 
 export const ai = genkit({
@@ -31,7 +31,7 @@ export const ai = genkit({
           const e = new Error(
             'Temporarily unable to generate content. Please try again.'
           );
-          (e as any).status = 'INVALID_ARGUMENT' as GenkitErrorCode;
+          (e as any).status = 'INVALID_ARGUMENT' as GenkitError['status'];
           return e;
         }
       },
