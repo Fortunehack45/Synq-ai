@@ -13,13 +13,15 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs"
-import { nfts, tokens as staticTokens } from "@/lib/data"
 import Image from "next/image"
 import { useWallet } from "@/hooks/use-wallet";
+import { PlaceHolderImages } from "@/lib/placeholder-images";
 
 export function AssetsTabs() {
   const { balance } = useWallet();
-  const ethPrice = 3150; // Static price
+  const ethPrice = 3150; // Static price for now
+
+  const ethLogo = PlaceHolderImages.find(img => img.id === 'eth-logo');
 
   const tokens = balance ? [
     {
@@ -27,11 +29,11 @@ export function AssetsTabs() {
       symbol: 'ETH',
       balance: parseFloat(balance).toFixed(4),
       value: (parseFloat(balance) * ethPrice).toLocaleString('en-US', { style: 'currency', currency: 'USD' }),
-      icon: staticTokens[0].icon,
-      change: '+2.5%', // Static for now
+      icon: ethLogo,
+      change: '', // Real-time change requires an oracle or API
       changeType: 'positive',
     },
-    // Other tokens would be fetched and listed here
+    // Other token balances would be fetched from an API
   ] : [];
 
   return (
@@ -57,37 +59,18 @@ export function AssetsTabs() {
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-medium">{token.value}</p>
-                    <p className={`text-sm ${token.changeType === 'positive' ? 'text-green-500' : 'text-red-500'}`}>{token.change}</p>
+                    {token.change && <p className={`text-sm ${token.changeType === 'positive' ? 'text-green-500' : 'text-red-500'}`}>{token.change}</p>}
                   </div>
                 </div>
               )) : (
-                <p className="text-sm text-muted-foreground text-center pt-4">No tokens found in this wallet.</p>
+                <p className="text-sm text-muted-foreground text-center pt-4">No tokens found. Only ETH balance is currently displayed.</p>
               )}
             </div>
           </TabsContent>
           <TabsContent value="nfts">
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 pt-4">
-              {nfts.map((nft) => (
-                <div key={nft.name} className="space-y-2 group">
-                  {nft.image && 
-                    <div className="overflow-hidden rounded-md">
-                      <Image
-                        src={nft.image.imageUrl}
-                        alt={nft.name}
-                        width={150}
-                        height={150}
-                        className="rounded-md object-cover aspect-square w-full h-auto transition-transform duration-300 group-hover:scale-105"
-                        data-ai-hint={nft.image.imageHint}
-                      />
-                    </div>
-                  }
-                  <div>
-                    <p className="text-sm font-medium leading-none">{nft.name}</p>
-                    <p className="text-xs text-muted-foreground">{nft.collection}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+             <div className="flex items-center justify-center h-48">
+                <p className="text-sm text-muted-foreground text-center">NFT fetching is not yet implemented.</p>
+             </div>
           </TabsContent>
         </Tabs>
       </CardContent>
