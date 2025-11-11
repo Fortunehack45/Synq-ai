@@ -66,7 +66,7 @@ export default function BillingPage() {
           Manage your subscription and find the perfect plan for your needs.
         </p>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {plans.map((plan) => {
           const hasDecimal = plan.price.includes('.');
           const [dollars, cents] = hasDecimal ? plan.price.split('.') : [plan.price];

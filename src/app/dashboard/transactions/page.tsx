@@ -28,7 +28,7 @@ export default function TransactionsPage() {
           <div className="divide-y divide-border">
             {transactions.length > 0 ? transactions.map((tx, index) => (
               <div key={index} className="flex flex-col sm:flex-row items-start sm:items-center justify-between py-4 gap-2">
-                <div className="grid gap-1 overflow-hidden w-full sm:w-auto">
+                <div className="grid gap-1 overflow-hidden w-full sm:w-auto min-w-0">
                   <p className="text-sm font-medium truncate">{tx.hash}</p>
                    <p className="text-sm text-muted-foreground truncate">
                     From: {tx.from}
