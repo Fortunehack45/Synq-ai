@@ -26,7 +26,7 @@ const plans = [
   },
   {
     name: "Pro",
-    price: "$29",
+    price: "$14.99",
     period: "/month",
     description: "For professionals and power users who need advanced insights.",
     features: [
@@ -41,7 +41,7 @@ const plans = [
   },
   {
     name: "Pro Plus",
-    price: "$79",
+    price: "$49.99",
     period: "/month",
     description: "For institutions and users who need the absolute best.",
     features: [
