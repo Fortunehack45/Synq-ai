@@ -1,6 +1,7 @@
 "use client";
 
-import { useFormState, useFormStatus } from "react-dom";
+import { useActionState } from "react";
+import { useFormStatus } from "react-dom";
 import {
   Card,
   CardContent,
@@ -34,7 +35,7 @@ function SubmitButton() {
 }
 
 export function ChatInterface() {
-  const [state, formAction] = useFormState(getWalletAnalysis, initialState);
+  const [state, formAction] = useActionState(getWalletAnalysis, initialState);
 
   return (
     <div className="grid md:grid-cols-3 gap-8">
