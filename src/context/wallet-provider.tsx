@@ -137,6 +137,9 @@ const createMockTransactions = (mockAddress: string): FormattedTransaction[] => 
   ];
 };
 
+const mockAddress = "0xAbCdEf1234567890AbCdEf1234567890AbCdEf12";
+const mockBalance = "12.3456";
+
 export const WalletProvider = ({ children }: { children: ReactNode }) => {
   const [address, setAddress] = useState<string | null>(null);
   const [balance, setBalance] = useState<string | null>(null);
@@ -163,6 +166,14 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
   }, [router, handleDisconnect]);
 
   const updateWalletState = useCallback(async (currentAddress: string) => {
+    if (currentAddress === mockAddress) {
+      setAddress(mockAddress);
+      setBalance(mockBalance);
+      setTransactions(createMockTransactions(mockAddress));
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     try {
       const provider = new BrowserProvider((window as any).ethereum);
@@ -218,21 +229,26 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
 
    const startDemoMode = useCallback(() => {
     setLoading(true);
-    const mockAddress = "0xAbCdEf1234567890AbCdEf1234567890AbCdEf12";
-    const mockBalance = "12.3456";
-    const mockTransactions = createMockTransactions(mockAddress);
-    
-    setAddress(mockAddress);
-    setBalance(mockBalance);
-    setTransactions(mockTransactions);
-    setError(null);
     if (typeof window !== "undefined") {
       localStorage.setItem("walletAddress", mockAddress);
     }
-    setLoading(false);
-  }, []);
+    updateWalletState(mockAddress);
+  }, [updateWalletState]);
 
   useEffect(() => {
+    const checkInitialConnection = async () => {
+      const storedAddress = localStorage.getItem("walletAddress");
+      if (storedAddress) {
+        // This covers both real and demo addresses
+        await updateWalletState(storedAddress);
+      } else {
+        // No stored address, so we are not connected.
+        handleDisconnect();
+      }
+    };
+    
+    checkInitialConnection();
+    
     const ethereum = (window as any).ethereum;
     if (ethereum?.isMetaMask) {
       const handleAccountsChanged = (accounts: string[]) => {
@@ -249,23 +265,6 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
 
       ethereum.on("accountsChanged", handleAccountsChanged);
       ethereum.on("chainChanged", handleChainChanged);
-      
-      const checkInitialConnection = async () => {
-        const storedAddress = localStorage.getItem("walletAddress");
-        try {
-          const accounts = await ethereum.request({ method: 'eth_accounts' });
-          if (accounts.length > 0 && accounts[0] === storedAddress) {
-            await updateWalletState(accounts[0]);
-          } else {
-            handleDisconnect();
-          }
-        } catch (err) {
-          console.error("Failed to check initial MetaMask connection:", err);
-          handleDisconnect();
-        }
-      };
-
-      checkInitialConnection();
 
       return () => {
         if (ethereum.removeListener) {
@@ -273,8 +272,6 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
           ethereum.removeListener("chainChanged", handleChainChanged);
         }
       };
-    } else {
-       handleDisconnect();
     }
   }, [updateWalletState, handleDisconnect]);
 
