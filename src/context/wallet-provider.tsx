@@ -84,33 +84,35 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     return null;
   };
 
-  const updateWalletState = useCallback(async (currentAddress: string) => {
+  const updateWalletState = useCallback(async (currentAddress: string | null) => {
+    if (!currentAddress) {
+      setAddress(null);
+      setBalance(null);
+      setTransactions([]);
+      return;
+    }
+
     const provider = getProvider();
-    if (provider && currentAddress) {
+    if (provider) {
       try {
         const balanceWei = await provider.getBalance(currentAddress);
-        setBalance(ethers.formatEther(balanceWei));
-
         const history = await fetchTransactionHistory(currentAddress);
+        setAddress(currentAddress);
+        setBalance(ethers.formatEther(balanceWei));
         setTransactions(history);
-        
       } catch (e: any) {
         console.error("Error fetching wallet data:", e);
-        setError("Could not fetch wallet data. This may be due to network rate limiting. Please wait a moment before trying again.");
+        setError("Could not fetch wallet data. This may be due to network rate limiting.");
       }
     }
   }, []);
 
   const handleAccountsChanged = useCallback((accounts: string[]) => {
     if (accounts.length === 0) {
-      setAddress(null);
-      setBalance(null);
-      setTransactions([]);
+      updateWalletState(null);
       router.push("/login");
     } else {
-      const newAddress = accounts[0];
-      setAddress(newAddress);
-      updateWalletState(newAddress);
+      updateWalletState(accounts[0]);
     }
   }, [router, updateWalletState]);
   
@@ -127,13 +129,11 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       const checkConnection = async () => {
         try {
           const accounts = await ethereum.request({ method: 'eth_accounts' });
-          if (accounts.length > 0 && accounts[0] !== address) {
-            const currentAddress = accounts[0];
-            setAddress(currentAddress);
-            updateWalletState(currentAddress);
+          if (accounts.length > 0) {
+            updateWalletState(accounts[0]);
           }
         } catch (err: any) {
-          console.error("Failed to check accounts", err)
+          console.error("Failed to check accounts on initial load", err)
         }
       };
       checkConnection();
@@ -143,7 +143,8 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
         ethereum.removeListener("chainChanged", handleChainChanged);
       };
     }
-  }, [address, handleAccountsChanged, handleChainChanged, updateWalletState]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const connectWallet = useCallback(async () => {
     const ethereum = getEthereum();
@@ -155,9 +156,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     try {
       const accounts = await ethereum.request({ method: "eth_requestAccounts" });
       if (accounts && accounts.length > 0) {
-        const newAddress = accounts[0];
-        setAddress(newAddress);
-        updateWalletState(newAddress);
+        updateWalletState(accounts[0]);
         setError(null);
       } else {
          setError("No accounts found. Please create an account in MetaMask.");
@@ -173,11 +172,9 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
   }, [updateWalletState]);
 
   const disconnectWallet = useCallback(() => {
-    setAddress(null);
-    setBalance(null);
-    setTransactions([]);
+    updateWalletState(null);
     router.push("/login");
-  }, [router]);
+  }, [router, updateWalletState]);
 
   const clearError = useCallback(() => {
     setError(null);
