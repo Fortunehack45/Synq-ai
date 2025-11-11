@@ -10,7 +10,7 @@ import React, {
   useMemo,
 } from "react";
 import { useRouter } from "next/navigation";
-import { ethers, BrowserProvider } from "ethers";
+import { ethers, BrowserProvider, BigNumberish } from "ethers";
 import { Alchemy, Network, OwnedNft, TokenBalance, TokenMetadataResponse } from "alchemy-sdk";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 
@@ -74,17 +74,17 @@ const getEtherscanApiUrl = (chainId: bigint): string | null => {
   let networkPath = '';
   switch (chainIdNumber) {
     case 1:
-      networkPath = 'api';
+      networkPath = 'mainnet';
       break;
     case 11155111:
-      networkPath = 'api-sepolia';
+      networkPath = 'sepolia';
       break;
     default:
       console.warn(`Unsupported network for Etherscan: ${chainIdNumber}. Transaction history will not be available.`);
       return null;
   }
   
-  return `https://${networkPath}.etherscan.io/api`;
+  return `https://api.etherscan.io/v2?chainid=${chainIdNumber}`;
 }
 
 
@@ -123,7 +123,7 @@ const fetchTransactionHistory = async (address: string, chainId: bigint): Promis
   if (!baseUrl) return [];
   
   const apiKey = (typeof window !== 'undefined' ? localStorage.getItem('etherscanApiKey') : null) || process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY;
-  const url = `${baseUrl}?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=25&sort=desc&apikey=${apiKey}`;
+  const url = `${baseUrl}&module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=25&sort=desc&apikey=${apiKey}`;
 
   try {
     const response = await fetch(url);
@@ -131,7 +131,7 @@ const fetchTransactionHistory = async (address: string, chainId: bigint): Promis
         throw new Error(`Etherscan API request failed with status ${response.status}`);
     }
     const data = await response.json();
-    if (data.status === "1") {
+    if (data.status === "1" || data.status === "success") {
       return data.result.map((tx: any) => ({
         hash: tx.hash,
         from: tx.from,
@@ -308,9 +308,11 @@ const fetchPortfolioHistory = async (address: string, alchemy: Alchemy | null): 
         alchemy.core
           .getBalance(address, blockNumber)
           .then((balanceWei) => {
+            // The balanceWei is an ethers v5 BigNumber object, convert it for ethers v6
+            const balanceBigInt = BigInt((balanceWei as any)._hex);
             return {
               date: date.toISOString().split("T")[0],
-              balance: parseFloat(ethers.formatEther(balanceWei)),
+              balance: parseFloat(ethers.formatEther(balanceBigInt)),
             };
           })
           .catch((e) => {
