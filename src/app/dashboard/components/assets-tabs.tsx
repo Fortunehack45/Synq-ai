@@ -16,9 +16,10 @@ import {
 import Image from "next/image"
 import { useWallet } from "@/hooks/use-wallet";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
+import { ImageIcon } from "lucide-react";
 
 export function AssetsTabs() {
-  const { balance } = useWallet();
+  const { balance, nfts } = useWallet();
   const ethPrice = 3150; // Static price for now
 
   const ethLogo = PlaceHolderImages.find(img => img.id === 'eth-logo');
@@ -30,10 +31,9 @@ export function AssetsTabs() {
       balance: parseFloat(balance).toFixed(4),
       value: (parseFloat(balance) * ethPrice).toLocaleString('en-US', { style: 'currency', currency: 'USD' }),
       icon: ethLogo,
-      change: '', // Real-time change requires an oracle or API
+      change: '',
       changeType: 'positive',
     },
-    // Other token balances would be fetched from an API
   ] : [];
 
   return (
@@ -59,7 +59,6 @@ export function AssetsTabs() {
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-medium">{token.value}</p>
-                    {token.change && <p className={`text-sm ${token.changeType === 'positive' ? 'text-green-500' : 'text-red-500'}`}>{token.change}</p>}
                   </div>
                 </div>
               )) : (
@@ -68,9 +67,30 @@ export function AssetsTabs() {
             </div>
           </TabsContent>
           <TabsContent value="nfts">
-             <div className="flex items-center justify-center h-48">
-                <p className="text-sm text-muted-foreground text-center">NFT fetching is not yet implemented.</p>
+            {nfts.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 pt-4">
+                {nfts.slice(0, 8).map((nft, index) => (
+                  <div key={index} className="group relative aspect-square overflow-hidden rounded-lg">
+                    <Image 
+                      src={nft.image?.cachedUrl ?? "https://picsum.photos/seed/1/300/300"} 
+                      alt={nft.name ?? 'NFT Image'}
+                      width={150}
+                      height={150}
+                      className="h-full w-full object-cover transition-transform group-hover:scale-110"
+                      data-ai-hint="abstract art"
+                    />
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
+                       <p className="text-white text-xs font-bold truncate">{nft.name}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+             <div className="flex flex-col items-center justify-center h-48">
+                <ImageIcon className="h-12 w-12 text-muted-foreground/50 mb-4" />
+                <p className="text-sm text-muted-foreground text-center">No NFTs found or could not be fetched.</p>
              </div>
+            )}
           </TabsContent>
         </Tabs>
       </CardContent>

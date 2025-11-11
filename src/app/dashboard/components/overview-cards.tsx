@@ -6,15 +6,18 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { ArrowUp, Wallet, Image as ImageIcon } from "lucide-react"
+import { ArrowDown, ArrowUp, Wallet, Image as ImageIcon } from "lucide-react"
 import { useWallet } from "@/hooks/use-wallet";
+import { cn } from "@/lib/utils";
 
 export function OverviewCards() {
-  const { balance } = useWallet();
+  const { balance, nfts, portfolioChange } = useWallet();
 
   const totalBalance = balance ? parseFloat(balance).toFixed(4) : "0.00";
   const ethPrice = 3150; // Using a static price for now
   const totalValue = balance ? (parseFloat(balance) * ethPrice).toLocaleString('en-US', { style: 'currency', currency: 'USD' }) : '$0.00';
+
+  const isChangePositive = portfolioChange >= 0;
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -40,9 +43,9 @@ export function OverviewCards() {
           <ImageIcon className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">N/A</div>
-          <p className="text-xs text-muted-foreground">
-            Feature coming soon
+          <div className="text-2xl font-bold">{nfts.length > 0 ? nfts.length : "0"}</div>
+           <p className="text-xs text-muted-foreground">
+            {nfts.length > 0 ? "unique items" : "No NFTs found"}
           </p>
         </CardContent>
       </Card>
@@ -51,12 +54,14 @@ export function OverviewCards() {
           <CardTitle className="text-sm font-medium">
             Portfolio Change (24h)
           </CardTitle>
-          <ArrowUp className="h-4 w-4 text-muted-foreground" />
+           {isChangePositive ? <ArrowUp className="h-4 w-4 text-green-500" /> : <ArrowDown className="h-4 w-4 text-red-500" />}
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">N/A</div>
+          <div className={cn("text-2xl font-bold", isChangePositive ? "text-green-500" : "text-red-500")}>
+            {portfolioChange > 0 ? "+" : ""}{portfolioChange.toFixed(2)}%
+            </div>
           <p className="text-xs text-muted-foreground">
-            Feature coming soon
+            Based on mock data
           </p>
         </CardContent>
       </Card>
