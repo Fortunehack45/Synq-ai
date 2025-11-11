@@ -40,7 +40,7 @@ const plans = [
     primary: true,
   },
   {
-    name: "Pro Plus",
+    name: "Enterprise",
     price: "$79",
     period: "/month",
     description: "For institutions and users who need the absolute best.",
@@ -51,7 +51,7 @@ const plans = [
       "Dedicated Account Manager",
       "24/7 Phone Support",
     ],
-    cta: "Upgrade to Pro Plus",
+    cta: "Contact Sales",
   },
 ];
 
