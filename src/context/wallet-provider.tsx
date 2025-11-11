@@ -71,20 +71,20 @@ const getEtherscanApiUrl = (chainId: bigint): string | null => {
   }
 
   const chainIdNumber = Number(chainId);
-  let networkSubdomain = '';
+  let networkPath = '';
   switch (chainIdNumber) {
     case 1:
-      networkSubdomain = 'api';
+      networkPath = 'api';
       break;
     case 11155111:
-      networkSubdomain = 'api-sepolia';
+      networkPath = 'api-sepolia';
       break;
     default:
       console.warn(`Unsupported network for Etherscan: ${chainIdNumber}. Transaction history will not be available.`);
       return null;
   }
   
-  return `https://${networkSubdomain}.etherscan.io/api`;
+  return `https://${networkPath}.etherscan.io/api`;
 }
 
 
@@ -291,29 +291,37 @@ const fetchPortfolioHistory = async (address: string, alchemy: Alchemy | null): 
   const prices = await fetchHistoricalPrices();
   if (prices.size === 0) return []; // Stop if we can't get prices
 
-  const blockPromises: Promise<{ date: string, balance: number }>[] = [];
-
-  for (let i = 29; i >= 0; i--) {
-    const date = new Date(today);
-    date.setDate(today.getDate() - i);
-    date.setUTCHours(12, 0, 0, 0); // Use a consistent time for daily snapshots
-
-    blockPromises.push(
-      alchemy.core.getBlock(
-        // @ts-ignore - The timestamp property is not in the type definition but works
-        { blockHashOrBlockNumber: 'latest', timestamp: Math.floor(date.getTime() / 1000) }
-      ).then(async block => {
-        const balanceWei = await alchemy.core.getBalance(address, block.number);
-        return {
-          date: date.toISOString().split('T')[0],
-          balance: parseFloat(ethers.formatEther(balanceWei)),
-        };
-      })
-    );
-  }
+  const blockPromises: Promise<{ date: string; balance: number } | null>[] = [];
+  const blocksPerDay = 7200; // Approx blocks per day on Ethereum
 
   try {
-    const dailyBalances = await Promise.all(blockPromises);
+    const latestBlock = await alchemy.core.getBlockNumber();
+
+    for (let i = 29; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(today.getDate() - i);
+      date.setUTCHours(12, 0, 0, 0);
+
+      const blockNumber = latestBlock - i * blocksPerDay;
+
+      blockPromises.push(
+        alchemy.core
+          .getBalance(address, blockNumber)
+          .then((balanceWei) => {
+            return {
+              date: date.toISOString().split("T")[0],
+              balance: parseFloat(ethers.formatEther(balanceWei)),
+            };
+          })
+          .catch((e) => {
+            console.error(`Failed to get balance for block ${blockNumber}`, e);
+            return null;
+          })
+      );
+    }
+    
+    const dailyBalances = (await Promise.all(blockPromises)).filter((b): b is { date: string; balance: number } => b !== null);
+
     dailyBalances.forEach(({ date, balance }) => {
       const price = prices.get(date);
       if (price) {
