@@ -10,7 +10,6 @@ import {
   Settings,
 } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -26,7 +25,8 @@ import {
 } from "@/components/ui/sheet";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserNav } from "@/components/user-nav";
-import { WalletProvider, useWallet } from "@/context/wallet-provider";
+import { WalletProvider } from "@/context/wallet-provider";
+import { useWallet } from "@/hooks/use-wallet";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
