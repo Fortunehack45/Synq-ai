@@ -16,10 +16,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useWallet } from "@/hooks/use-wallet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
-import { Badge } from "@/components/ui/badge";
-import { Copy, History, Image as ImageIcon, Sparkles, User, AlertTriangle, Save, MessageSquare, Repeat, Heart, UserPlus } from "lucide-react";
+import { Copy, Image as ImageIcon, Sparkles, User, Save, MessageSquare, Repeat, UserPlus } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { Separator } from "@/components/ui/separator";
 import { saveProfile, type ProfileState } from "./actions";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -29,7 +27,7 @@ const initialProfileState: ProfileState = {
 };
 
 export default function ProfilePage() {
-  const { address, transactions, nfts } = useWallet();
+  const { address } = useWallet();
   const userAvatar = PlaceHolderImages.find((img) => img.id === "user-avatar");
   const [saveState, saveAction, isSaving] = useActionState(saveProfile, initialProfileState);
 
@@ -44,24 +42,22 @@ export default function ProfilePage() {
       setBio(savedBio);
     }
   }, [address]);
-
+  
   useEffect(() => {
-    if (saveState.message && (saveState.success || !saveState.success)) {
+    if (saveState.message) {
       toast({
         title: saveState.success ? "Success" : "Error",
         description: saveState.message,
         variant: saveState.success ? "default" : "destructive",
       });
-      if (saveState.success) {
-        // Persist to localStorage on successful save
-        if(address) {
-          localStorage.setItem(`profile_${address}_username`, username);
-          localStorage.setItem(`profile_${address}_bio`, bio);
-        }
+      if (saveState.success && address) {
+        localStorage.setItem(`profile_${address}_username`, username);
+        localStorage.setItem(`profile_${address}_bio`, bio);
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [saveState]);
+
 
   const copyAddress = () => {
     if (address) {
@@ -71,15 +67,6 @@ export default function ProfilePage() {
         description: "Wallet address copied to clipboard.",
       });
     }
-  };
-
-  const firstTransactionDate = () => {
-    if (transactions.length === 0) return "N/A";
-    const oldestTx = transactions.reduce((oldest, current) => {
-      if (!current.timeStamp || !oldest.timeStamp) return oldest;
-      return current.timeStamp < oldest.timeStamp ? current : oldest;
-    });
-    return oldestTx.timeStamp ? new Date(oldestTx.timeStamp * 1000).toLocaleDateString() : "N/A";
   };
 
   return (
@@ -223,26 +210,6 @@ export default function ProfilePage() {
             </CardFooter>
           </Card>
         </form>
-        
-        <Card className="glass border-destructive">
-            <CardHeader>
-              <CardTitle>Danger Zone</CardTitle>
-              <CardDescription>
-                These actions may have unintended consequences.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-               <div className="flex items-center justify-between rounded-lg border border-destructive/50 p-4">
-                <div>
-                  <h3 className="text-base font-medium text-destructive flex items-center gap-2"><AlertTriangle className="h-4 w-4"/>Reset Profile</h3>
-                  <p className="text-sm text-muted-foreground">This will reset your profile customizations to the default.</p>
-                </div>
-                <Button variant="destructive" disabled>
-                  Reset Profile (Coming Soon)
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
       </div>
     </>
   );
