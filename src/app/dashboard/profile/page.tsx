@@ -167,7 +167,7 @@ export default function ProfilePage() {
                   <p className="text-sm text-muted-foreground">Images and videos posted by this user will appear here.</p>
                 </div>
               </CardContent>
-            </card>
+            </Card>
           </TabsContent>
         </Tabs>
 
