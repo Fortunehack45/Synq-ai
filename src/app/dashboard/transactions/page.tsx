@@ -28,16 +28,16 @@ export default function TransactionsPage() {
           <div className="divide-y divide-border">
             {transactions.length > 0 ? transactions.map((tx, index) => (
               <div key={index} className="flex flex-col sm:flex-row items-start sm:items-center justify-between py-4 gap-2">
-                <div className="grid gap-1">
-                  <p className="text-sm font-medium truncate w-60 sm:w-auto">{tx.hash}</p>
-                   <p className="text-sm text-muted-foreground">
-                    From: {tx.from.substring(0, 10)}...{tx.from.substring(tx.from.length - 8)}
+                <div className="grid gap-1 overflow-hidden">
+                  <p className="text-sm font-medium truncate">{tx.hash}</p>
+                   <p className="text-sm text-muted-foreground truncate">
+                    From: {tx.from}
                   </p>
-                  <p className="text-sm text-muted-foreground">
-                    To: {tx.to ? `${tx.to.substring(0,10)}...${tx.to.substring(tx.to.length-8)}` : 'Contract Creation'}
+                  <p className="text-sm text-muted-foreground truncate">
+                    To: {tx.to ? tx.to : 'Contract Creation'}
                   </p>
                 </div>
-                <div className="text-right sm:text-right w-full sm:w-auto">
+                <div className="text-right sm:text-right w-full sm:w-auto shrink-0">
                   <p className="text-sm font-semibold">{parseFloat(tx.value).toFixed(5)} ETH</p>
                    {tx.timeStamp && <p className="text-sm text-muted-foreground">{new Date(tx.timeStamp * 1000).toLocaleString()}</p>}
                 </div>

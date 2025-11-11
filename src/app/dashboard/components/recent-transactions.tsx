@@ -29,7 +29,7 @@ export function RecentTransactions() {
               <div className="flex items-center gap-4">
                  <div className="flex-1">
                     <p className="text-sm font-medium truncate w-60 sm:w-auto">{tx.hash}</p>
-                    <p className="text-sm text-muted-foreground">To: {tx.to ? `${tx.to.substring(0,10)}...${tx.to.substring(tx.to.length-8)}`: 'Contract Creation'}</p>
+                    <p className="text-sm text-muted-foreground truncate">To: {tx.to ? `${tx.to.substring(0,10)}...${tx.to.substring(tx.to.length-8)}`: 'Contract Creation'}</p>
                  </div>
               </div>
               <div className="text-right sm:text-right w-full sm:w-auto">
