@@ -41,8 +41,7 @@ export async function getWalletTransactions(address: string) {
   if (!apiKey || !ethers.isAddress(address)) {
     return [];
   }
-  // V2-compatible approach: Use a single base URL. The API key determines the plan and access level.
-  // The wallet address itself is what determines the network for account-based queries.
+
   const url = `https://api.etherscan.io/api?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=10&sort=desc&apikey=${apiKey}`;
   try {
     const response = await fetch(url);

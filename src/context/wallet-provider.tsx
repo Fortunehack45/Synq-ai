@@ -69,7 +69,7 @@ const getEtherscanApiUrl = (): string | null => {
     }
     return null;
   }
-
+  
   // V2-compatible approach: Use a single base URL. The API key determines the plan and access level.
   // The wallet address itself is what determines the network for account-based queries.
   return `https://api.etherscan.io/api`;
@@ -112,7 +112,6 @@ const fetchTransactionHistory = async (address: string, chainId: bigint): Promis
   
   const apiKey = (typeof window !== 'undefined' ? localStorage.getItem('etherscanApiKey') : null) || process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY;
   
-  // For V2 compatibility, we use the correct module and action params. The chain is inferred from the address.
   const url = `${baseUrl}?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=25&sort=desc&apikey=${apiKey}`;
 
   try {
