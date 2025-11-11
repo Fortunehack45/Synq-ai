@@ -99,7 +99,7 @@ export default function ProfilePage() {
                 </div>
                 <p className="text-muted-foreground pt-2 max-w-xl text-center md:text-left">{bio}</p>
               </div>
-               <Button variant="outline"><UserPlus className="mr-2 h-4 w-4"/>Follow</Button>
+               <Button variant="outline" disabled><UserPlus className="mr-2 h-4 w-4"/>Follow</Button>
             </div>
              <div className="flex gap-6 pt-4 justify-center md:justify-start">
                 <div className="text-center md:text-left">
