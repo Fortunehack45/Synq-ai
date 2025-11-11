@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -163,7 +164,6 @@ export default function ProfilePage() {
                 <p className="text-muted-foreground pt-2 max-w-xl text-center md:text-left">{bio}</p>
               </div>
               <div className="flex gap-2">
-                 <Button variant="outline" disabled><UserPlus className="mr-2 h-4 w-4"/>Follow</Button>
                  <Button onClick={() => router.push('/dashboard/settings?tab=profile')}><Pencil className="mr-2 h-4 w-4"/>Edit Profile</Button>
               </div>
             </div>
@@ -248,3 +248,5 @@ export default function ProfilePage() {
     </>
   );
 }
+
+    
