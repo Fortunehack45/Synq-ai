@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -60,7 +61,7 @@ const mockPosts = [
 ];
 
 
-function PostCard({ post }: { post: typeof mockPosts[0] }) {
+function PostCard({ post, authorName }: { post: typeof mockPosts[0], authorName: string }) {
   const userAvatar = PlaceHolderImages.find((img) => img.id === "user-avatar");
   return (
     <Card className="glass">
@@ -72,7 +73,7 @@ function PostCard({ post }: { post: typeof mockPosts[0] }) {
           </Avatar>
           <div className="w-full">
             <div className="flex items-center gap-2">
-              <p className="font-bold">{post.author}</p>
+              <p className="font-bold">{authorName}</p>
               <p className="text-sm text-muted-foreground">{post.handle}</p>
               <span className="text-sm text-muted-foreground">·</span>
               <p className="text-sm text-muted-foreground">{post.timestamp}</p>
@@ -200,7 +201,7 @@ export default function ProfilePage() {
             {isDemoUser ? (
               <div className="space-y-4">
                 {mockPosts.map((post) => (
-                  <PostCard key={post.id} post={post} />
+                  <PostCard key={post.id} post={post} authorName={username} />
                 ))}
               </div>
             ) : (
