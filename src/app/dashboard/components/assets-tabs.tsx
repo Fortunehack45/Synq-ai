@@ -36,14 +36,15 @@ export function AssetsTabs() {
       symbol: 'ETH',
       balance: parseFloat(balance).toFixed(4),
       value: (parseFloat(balance) * ethPrice).toLocaleString('en-US', { style: 'currency', currency: 'USD' }),
-      icon: ethLogo,
+      iconUrl: ethLogo?.imageUrl,
+      iconHint: ethLogo?.imageHint,
       contractAddress: 'eth',
   } : null;
 
   const demoTokens: FormattedTokenBalance[] = [
-      { name: 'USD Coin', symbol: 'USDC', balance: '5,000.00', value: '$5,000.00', icon: usdcLogo, contractAddress: 'usdc' },
-      { name: 'Wrapped BTC', symbol: 'WBTC', balance: '0.05', value: '$3,500.00', icon: wbtcLogo, contractAddress: 'wbtc' },
-      { name: 'Uniswap', symbol: 'UNI', balance: '250.00', value: '$2,500.00', icon: uniLogo, contractAddress: 'uni' },
+      { name: 'USD Coin', symbol: 'USDC', balance: '5,000.00', value: '$5,000.00', iconUrl: usdcLogo?.imageUrl, iconHint: usdcLogo?.imageHint, contractAddress: 'usdc' },
+      { name: 'Wrapped BTC', symbol: 'WBTC', balance: '0.05', value: '$3,500.00', iconUrl: wbtcLogo?.imageUrl, iconHint: wbtcLogo?.imageHint, contractAddress: 'wbtc' },
+      { name: 'Uniswap', symbol: 'UNI', balance: '250.00', value: '$2,500.00', iconUrl: uniLogo?.imageUrl, iconHint: uniLogo?.imageHint, contractAddress: 'uni' },
   ];
 
   const displayedTokens = [
@@ -69,8 +70,8 @@ export function AssetsTabs() {
               {displayedTokens.length > 0 ? displayedTokens.map((token) => (
                 <div key={token.contractAddress} className="flex items-center">
                   <div className="h-10 w-10 rounded-full flex items-center justify-center bg-muted">
-                    {token.icon && token.icon.imageUrl ? (
-                      <Image src={token.icon.imageUrl} alt={`${token.name} logo`} width={40} height={40} className="h-10 w-10 rounded-full" data-ai-hint={token.icon.imageHint}/>
+                    {token.iconUrl ? (
+                      <Image src={token.iconUrl} alt={`${token.name} logo`} width={40} height={40} className="h-10 w-10 rounded-full" data-ai-hint={token.iconHint}/>
                     ) : (
                       <Wallet className="h-5 w-5 text-muted-foreground"/>
                     )}
@@ -87,7 +88,7 @@ export function AssetsTabs() {
                  <div className="flex flex-col items-center justify-center h-48 text-center">
                   <Wallet className="h-12 w-12 text-muted-foreground/50 mb-4" />
                   <p className="text-sm text-muted-foreground">No token balances found.</p>
-                   <p className="text-xs text-muted-foreground mt-1">Only ETH balance may be available.</p>
+                   <p className="text-xs text-muted-foreground mt-1">Connect a wallet with tokens to see them here.</p>
                  </div>
               )}
             </div>

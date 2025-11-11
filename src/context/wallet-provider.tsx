@@ -32,7 +32,8 @@ export interface FormattedTokenBalance {
   symbol: string;
   balance: string;
   value: string;
-  icon: any; // Can be improved
+  iconUrl: string | null | undefined;
+  iconHint: string | null | undefined;
   contractAddress: string;
 }
 
@@ -367,7 +368,8 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
           symbol: metadata.symbol || '???',
           balance: balance.toFixed(4),
           value: '$0.00', // Placeholder, would need price API
-          icon: { imageUrl: metadata.logo, imageHint: `${metadata.name} logo` },
+          iconUrl: metadata.logo,
+          iconHint: `${metadata.name} logo`,
           contractAddress: token.contractAddress,
         }
       });
@@ -497,5 +499,3 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     </WalletContext.Provider>
   );
 };
-
-    

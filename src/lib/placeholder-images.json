@@ -3,25 +3,25 @@
     {
       "id": "eth-logo",
       "description": "Ethereum Logo",
-      "imageUrl": "https://images.unsplash.com/photo-1627435407254-1e01816ca5e7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxldGhlcmV1bSUyMGxvZ298ZW58MHx8fHwxNzYyNzgyMzkyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://static.alchemyapi.io/images/assets/1.png",
       "imageHint": "ethereum logo"
     },
     {
       "id": "usdc-logo",
       "description": "USDC Logo",
-      "imageUrl": "https://images.unsplash.com/photo-1595409583957-5d1ec5869de9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHx1c2RjJTIwbG9nb3xlbnwwfHx8fDE3NjI4MjQ3MDJ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://static.alchemyapi.io/images/assets/3408.png",
       "imageHint": "usdc logo"
     },
     {
       "id": "wbtc-logo",
       "description": "Wrapped BTC Logo",
-      "imageUrl": "https://images.unsplash.com/photo-1706086699518-ebc67759cdcd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxiaXRjb2luJTIwbG9nb3xlbnwwfHx8fDE3NjI4MDQ4NTh8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://static.alchemyapi.io/images/assets/2280.png",
       "imageHint": "bitcoin logo"
     },
     {
       "id": "uni-logo",
       "description": "Uniswap Logo",
-      "imageUrl": "https://images.unsplash.com/photo-1643768675623-a3b38829faad?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHx1bmlzd2FwJTIwbG9nb3xlbnwwfHx8fDE3NjI4MDYxNDd8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://static.alchemyapi.io/images/assets/2691.png",
       "imageHint": "uniswap logo"
     },
     {
