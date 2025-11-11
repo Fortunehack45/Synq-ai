@@ -65,42 +65,50 @@ export default function BillingPage() {
         </p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {plans.map((plan) => (
-          <Card
-            key={plan.name}
-            className={`flex flex-col glass ${
-              plan.primary ? "border-primary shadow-primary/20 shadow-lg" : ""
-            }`}
-          >
-            <CardHeader>
-              <CardTitle>{plan.name}</CardTitle>
-              <CardDescription>{plan.description}</CardDescription>
-            </CardHeader>
-            <CardContent className="flex-1 space-y-6">
-              <div className="flex items-baseline">
-                <span className="text-4xl font-bold">{plan.price}</span>
-                <span className="text-muted-foreground ml-1">{plan.period}</span>
-              </div>
-              <ul className="space-y-3">
-                {plan.features.map((feature) => (
-                  <li key={feature} className="flex items-center">
-                    <Check className="h-4 w-4 mr-2 text-primary" />
-                    <span className="text-sm">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-            <CardFooter>
-              <Button
-                className="w-full"
-                variant={plan.primary ? "default" : "outline"}
-                disabled={plan.disabled}
-              >
-                {plan.cta}
-              </Button>
-            </CardFooter>
-          </Card>
-        ))}
+        {plans.map((plan) => {
+          const hasDecimal = plan.price.includes('.');
+          const [dollars, cents] = hasDecimal ? plan.price.split('.') : [plan.price];
+
+          return (
+            <Card
+              key={plan.name}
+              className={`flex flex-col glass ${
+                plan.primary ? "border-primary shadow-primary/20 shadow-lg" : ""
+              }`}
+            >
+              <CardHeader>
+                <CardTitle>{plan.name}</CardTitle>
+                <CardDescription>{plan.description}</CardDescription>
+              </CardHeader>
+              <CardContent className="flex-1 space-y-6">
+                <div className="flex items-baseline">
+                  <span className="text-4xl font-bold">{dollars}</span>
+                  {hasDecimal && (
+                    <span className="text-xl font-semibold -translate-y-1">.{cents}</span>
+                  )}
+                  <span className="text-muted-foreground ml-1">{plan.period}</span>
+                </div>
+                <ul className="space-y-3">
+                  {plan.features.map((feature) => (
+                    <li key={feature} className="flex items-center">
+                      <Check className="h-4 w-4 mr-2 text-primary" />
+                      <span className="text-sm">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+              <CardFooter>
+                <Button
+                  className="w-full"
+                  variant={plan.primary ? "default" : "outline"}
+                  disabled={plan.disabled}
+                >
+                  {plan.cta}
+                </Button>
+              </CardFooter>
+            </Card>
+          );
+        })}
       </div>
     </>
   );
