@@ -52,9 +52,11 @@ export default function InterestsStep() {
   };
 
   const handleNext = () => {
-    if (address && selectedNetworks.length > 0) {
-      localStorage.setItem(`profile_${address}_interests`, JSON.stringify(selectedNetworks));
-      router.push('/onboarding/discovery');
+    if (address) {
+        if (selectedNetworks.length > 0) {
+            localStorage.setItem(`profile_${address}_interests`, JSON.stringify(selectedNetworks));
+        }
+        router.push('/onboarding/discovery');
     }
   };
 
@@ -88,7 +90,7 @@ export default function InterestsStep() {
            <ChevronLeft className="mr-2 h-4 w-4" />
           Back
         </Button>
-        <Button onClick={handleNext} disabled={selectedNetworks.length === 0}>
+        <Button onClick={handleNext}>
           Continue
         </Button>
       </CardFooter>

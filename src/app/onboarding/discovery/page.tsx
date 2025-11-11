@@ -33,13 +33,23 @@ export default function DiscoveryStep() {
   const { address } = useWallet();
   const [source, setSource] = useState('');
 
-  const handleFinish = () => {
-    if (address && source) {
-      localStorage.setItem(`profile_${address}_discovery`, source);
+  const finishOnboarding = () => {
+     if (address) {
       localStorage.setItem(`onboarding_complete_${address}`, 'true');
       router.push('/dashboard');
     }
+  }
+
+  const handleFinish = () => {
+    if (address && source) {
+      localStorage.setItem(`profile_${address}_discovery`, source);
+    }
+    finishOnboarding();
   };
+  
+  const handleSkip = () => {
+    finishOnboarding();
+  }
 
   return (
     <Card className="w-full max-w-lg glass shadow-2xl">
@@ -66,9 +76,14 @@ export default function DiscoveryStep() {
           <ChevronLeft className="mr-2 h-4 w-4" />
           Back
         </Button>
-        <Button onClick={handleFinish} disabled={!source}>
-          Finish Setup
-        </Button>
+        <div className="flex gap-2">
+            <Button variant="ghost" onClick={handleSkip}>
+                Skip
+            </Button>
+            <Button onClick={handleFinish} disabled={!source}>
+              Finish Setup
+            </Button>
+        </div>
       </CardFooter>
     </Card>
   );

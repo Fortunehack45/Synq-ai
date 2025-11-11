@@ -25,8 +25,10 @@ export default function ExperienceStep() {
   const [selectedExperience, setSelectedExperience] = useState('');
 
   const handleNext = () => {
-    if (address && selectedExperience) {
-      localStorage.setItem(`profile_${address}_experience`, selectedExperience);
+    if (address) {
+      if (selectedExperience) {
+        localStorage.setItem(`profile_${address}_experience`, selectedExperience);
+      }
       router.push('/onboarding/interests');
     }
   };
@@ -61,7 +63,7 @@ export default function ExperienceStep() {
           <ChevronLeft className="mr-2 h-4 w-4" />
           Back
         </Button>
-        <Button onClick={handleNext} disabled={!selectedExperience}>
+        <Button onClick={handleNext}>
           Continue
         </Button>
       </CardFooter>
