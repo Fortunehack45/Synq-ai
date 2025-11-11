@@ -16,8 +16,8 @@ const networks = [
   { id: 'solana', name: 'Solana' },
   { id: 'polygon', name: 'Polygon' },
   { id: 'avalanche', name: 'Avalanche' },
-  { id: 'bsc', name: 'BNB Smart Chain' },
-  { id: 'base', name: 'Base' },
+  { id: 'bsc', name: 'BNB Chain' },
+  { id: 'bitcoin', name: 'Bitcoin' },
 ];
 
 export default function InterestsStep() {
