@@ -6,9 +6,10 @@ import React, {
   useCallback,
   useEffect,
   ReactNode,
+  useMemo,
 } from "react";
 import { useRouter } from "next/navigation";
-import { ethers, BrowserProvider } from "ethers";
+import { ethers, BrowserProvider, JsonRpcProvider } from "ethers";
 
 interface FormattedTransaction {
   hash: string;
@@ -75,19 +76,21 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     }
     return null;
   };
+  
+  const jsonRpcProvider = useMemo(() => {
+    return new JsonRpcProvider("https://ethereum.publicnode.com");
+  }, []);
 
   const updateWalletState = useCallback(async (currentAddress: string) => {
-    const ethereum = getEthereum();
-    if (!ethereum) return;
-    
-    const provider = new ethers.BrowserProvider(ethereum);
-
+    if (!currentAddress) return;
     try {
-      const balanceWei = await provider.getBalance(currentAddress);
+      const balanceWei = await jsonRpcProvider.getBalance(currentAddress);
       const history = await fetchTransactionHistory(currentAddress);
+      
       setAddress(currentAddress);
       setBalance(ethers.formatEther(balanceWei));
       setTransactions(history);
+      setError(null);
     } catch (e: any) {
       console.error("Error fetching wallet data:", e);
       if (e.code === -32002 || (e.error && e.error.code === -32002) ) {
@@ -96,7 +99,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
           setError("Could not fetch wallet data.");
       }
     }
-  }, []);
+  }, [jsonRpcProvider]);
   
   useEffect(() => {
     const ethereum = getEthereum();
@@ -108,7 +111,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
           setBalance(null);
           setTransactions([]);
           router.push("/login");
-        } else {
+        } else if (accounts[0] !== address) {
           updateWalletState(accounts[0]);
         }
     };
@@ -120,7 +123,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     const checkInitialConnection = async () => {
       try {
         const accounts = await ethereum.request({ method: 'eth_accounts' });
-        if (accounts.length > 0) {
+        if (accounts.length > 0 && accounts[0] !== address) {
           await updateWalletState(accounts[0]);
         }
       } catch (err) {
@@ -139,7 +142,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
             ethereum.removeListener("chainChanged", handleChainChanged);
         }
     };
-  }, [router, updateWalletState]);
+  }, [router, updateWalletState, address]);
 
   const connectWallet = useCallback(async () => {
     const ethereum = getEthereum();
@@ -152,7 +155,6 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       const accounts = await ethereum.request({ method: "eth_requestAccounts" });
       if (accounts && accounts.length > 0) {
         await updateWalletState(accounts[0]);
-        setError(null);
       } else {
          setError("No accounts found. Please create an account in MetaMask.");
       }
