@@ -5,26 +5,64 @@
  *
  * - aiCryptoWalletAssistant - A function that handles the AI assistant flow.
  * - AICryptoWalletAssistantInput - The input type for the aiCryptoWalletAssistant function.
- * - AICryptoWalletAssistantOutput - The return type for the aiCryptoWalletAssistant function.
+ * - AICryptoWallet-WalletAnalysis - The return type for the aiCryptoWalletAssistant function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import { ai } from '@/ai/genkit';
+import { z } from 'genkit';
+import { getWalletBalance, getWalletTransactions, getWalletTokenBalances } from '@/services/onchain-data';
+import { AICryptoWalletAssistantOutputSchema } from '../schemas/ai-crypto-wallet-assistant-schema';
+
+const getBalanceTool = ai.defineTool(
+  {
+    name: 'getWalletBalance',
+    description: 'Get the native ETH balance of a wallet address.',
+    inputSchema: z.object({
+      address: z.string().describe('The wallet address.'),
+    }),
+    outputSchema: z.string(),
+  },
+  async ({ address }) => {
+    return getWalletBalance(address);
+  }
+);
+
+const getTransactionsTool = ai.defineTool(
+  {
+    name: 'getWalletTransactions',
+    description: 'Get the 10 most recent transactions for a wallet address.',
+    inputSchema: z.object({
+      address: z.string().describe('The wallet address.'),
+    }),
+    outputSchema: z.any(),
+  },
+  async ({ address }) => {
+    return JSON.stringify(await getWalletTransactions(address));
+  }
+);
+
+const getTokenBalancesTool = ai.defineTool(
+  {
+    name: 'getWalletTokenBalances',
+    description: 'Get the ERC20 token balances for a wallet address.',
+    inputSchema: z.object({
+      address: z.string().describe('The wallet address.'),
+    }),
+    outputSchema: z.any(),
+  },
+  async ({ address }) => {
+    return JSON.stringify(await getWalletTokenBalances(address));
+  }
+);
+
 
 const AICryptoWalletAssistantInputSchema = z.object({
   walletAddress: z.string().describe('The address of the crypto wallet to analyze.'),
   userQuery: z.string().describe('The user query or request for analysis.'),
 });
 export type AICryptoWalletAssistantInput = z.infer<typeof AICryptoWalletAssistantInputSchema>;
-
-const AICryptoWalletAssistantOutputSchema = z.object({
-  riskScore: z.number().describe('The risk score of the wallet (0-100).'),
-  reasons: z.array(z.string()).describe('The reasons for the risk score.'),
-  suggestedActions: z.array(z.string()).describe('Suggested actions for the user.'),
-  citations: z.array(z.string()).describe('On-chain data citations.'),
-  overallSummary: z.string().describe('Overall summary of the wallet analysis.'),
-});
 export type AICryptoWalletAssistantOutput = z.infer<typeof AICryptoWalletAssistantOutputSchema>;
+
 
 export async function aiCryptoWalletAssistant(input: AICryptoWalletAssistantInput): Promise<AICryptoWalletAssistantOutput> {
   return aiCryptoWalletAssistantFlow(input);
@@ -32,15 +70,29 @@ export async function aiCryptoWalletAssistant(input: AICryptoWalletAssistantInpu
 
 const prompt = ai.definePrompt({
   name: 'aiCryptoWalletAssistantPrompt',
-  input: {schema: AICryptoWalletAssistantInputSchema},
-  output: {schema: AICryptoWalletAssistantOutputSchema},
-  prompt: `You are Synq.AI, a crypto wallet assistant. Use verified on-chain and social data to provide insights for wallet address: {{{walletAddress}}}.\n\nUser Query: {{{userQuery}}}\n\nOutput structured JSON with risk_score (0-100), reasons[], suggested_actions[], citations[], and overallSummary. Never hallucinate or execute transactions without user consent.  The reasons and suggested_actions should be concise.  Citations should reference the source of the insight.\n\n{
-  "riskScore": 50,
-  "reasons": ["Reason 1", "Reason 2"],
-  "suggestedActions": ["Action 1", "Action 2"],
-  "citations": ["Citation 1", "Citation 2"],
-  "overallSummary": "Overall summary of the wallet analysis."
-}`,
+  input: { schema: AICryptoWalletAssistantInputSchema },
+  output: { schema: AICryptoWalletAssistantOutputSchema },
+  tools: [getBalanceTool, getTransactionsTool, getTokenBalancesTool],
+  prompt: `You are Synq.AI, an expert crypto wallet analyst. Your role is to provide a clear, concise, and accurate risk assessment of the provided wallet address based on on-chain data.
+
+User Query: "{{userQuery}}"
+Wallet Address: "{{walletAddress}}"
+
+Instructions:
+1.  Use the available tools to fetch the wallet's balance, recent transactions, and token holdings.
+2.  Analyze the data to identify potential risks and noteworthy activities. Consider factors like:
+    - Transaction frequency and volume.
+    - Interactions with known risky or malicious contracts (if identifiable from data).
+    - Holdings of suspicious or spam tokens.
+    - Large inflows or outflows.
+    - Age of the wallet and its activity patterns.
+3.  Calculate a risk score from 0 (very low risk) to 100 (very high risk).
+4.  Provide a few clear, bullet-pointed reasons for your assigned risk score.
+5.  Suggest 2-3 actionable steps the user could take to mitigate risks.
+6.  List any on-chain data points you used as citations for your analysis.
+7.  Provide a brief, professional overall summary.
+
+Output the final analysis in the specified JSON format. Do not add any commentary outside of the JSON structure.`,
 });
 
 const aiCryptoWalletAssistantFlow = ai.defineFlow(
@@ -50,7 +102,10 @@ const aiCryptoWalletAssistantFlow = ai.defineFlow(
     outputSchema: AICryptoWalletAssistantOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
-    return output!;
+    const { output } = await prompt(input);
+    if (!output) {
+      throw new Error('The AI model did not return a valid analysis.');
+    }
+    return output;
   }
 );
