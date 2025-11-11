@@ -43,23 +43,25 @@ const getEtherscanApiUrl = (chainId: bigint): string | null => {
     case 5: // Goerli
       return "https://api-goerli.etherscan.io";
     default:
-      console.warn(`Unsupported network for Etherscan: ${chainIdNumber}`);
+      console.warn(`Unsupported network for Etherscan: ${chainIdNumber}. Transaction history will not be available.`);
       return null;
   }
 }
 
 const fetchTransactionHistory = async (address: string, chainId: bigint): Promise<FormattedTransaction[]> => {
   const apiKey = process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY;
+  
+  if (!apiKey || apiKey === 'YOUR_API_KEY_HERE' || apiKey === "VFUK5IW3WT9FS58TY4ZNZGJFVDAQVAB6GE") {
+    console.warn("Etherscan API key not found or is invalid. Please add NEXT_PUBLIC_ETHERSCAN_API_KEY to your .env file to fetch transaction history. You can get a free key from https://etherscan.io/myapikey.");
+    return [];
+  }
+  
   const baseUrl = getEtherscanApiUrl(chainId);
 
   if (!baseUrl) {
     return [];
   }
   
-  if (!apiKey || apiKey === 'YOUR_API_KEY_HERE') {
-    console.warn("Etherscan API key not found. Please add NEXT_PUBLIC_ETHERSCAN_API_KEY to your .env file to fetch transaction history. You can get a free key from https://etherscan.io/myapikey.");
-    return [];
-  }
   const url = `${baseUrl}/api?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&sort=desc&page=1&offset=25&apikey=${apiKey}`;
 
   try {
@@ -89,6 +91,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
   const [balance, setBalance] = useState<string | null>(null);
   const [transactions, setTransactions] = useState<FormattedTransaction[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [initialCheckDone, setInitialCheckDone] = useState(false);
   const router = useRouter();
 
   const getEthereum = () => {
@@ -130,7 +133,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
   
   useEffect(() => {
     const ethereum = getEthereum();
-    if (!ethereum) return;
+    if (!ethereum || initialCheckDone) return;
 
     const handleAccountsChanged = (accounts: string[]) => {
         if (accounts.length === 0) {
@@ -150,11 +153,13 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     const checkInitialConnection = async () => {
       try {
         const accounts = await ethereum.request({ method: 'eth_accounts' });
-        if (accounts.length > 0 && accounts[0] !== address) {
+        if (accounts.length > 0) {
           await updateWalletState(accounts[0]);
         }
       } catch (err) {
         console.error("Failed to check initial connection:", err);
+      } finally {
+        setInitialCheckDone(true);
       }
     };
 
@@ -169,7 +174,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
             ethereum.removeListener("chainChanged", handleChainChanged);
         }
     };
-  }, [router, updateWalletState, address]);
+  }, [router, updateWalletState, address, initialCheckDone]);
 
   const connectWallet = useCallback(async () => {
     const ethereum = getEthereum();
