@@ -6,7 +6,6 @@ import React, {
   useCallback,
   useEffect,
   ReactNode,
-  useRef,
 } from "react";
 import { useRouter } from "next/navigation";
 import { ethers, BrowserProvider } from "ethers";
@@ -68,10 +67,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
   const [balance, setBalance] = useState<string | null>(null);
   const [transactions, setTransactions] = useState<FormattedTransaction[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [checkedConnection, setCheckedConnection] = useState(false);
   const router = useRouter();
-
-  const providerRef = useRef<BrowserProvider | null>(null);
 
   const getEthereum = () => {
     if (typeof window !== "undefined" && (window as any).ethereum) {
@@ -79,28 +75,12 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     }
     return null;
   };
-  
-  const getProvider = useCallback(() => {
-    if (providerRef.current) {
-      return providerRef.current;
-    }
-    const ethereum = getEthereum();
-    if (ethereum) {
-      const newProvider = new ethers.BrowserProvider(ethereum);
-      providerRef.current = newProvider;
-      return newProvider;
-    }
-    return null;
-  }, []);
 
-  const updateWalletState = useCallback(async (currentAddress: string | null) => {
-    const provider = getProvider();
-    if (!currentAddress || !provider) {
-      setAddress(null);
-      setBalance(null);
-      setTransactions([]);
-      return;
-    }
+  const updateWalletState = useCallback(async (currentAddress: string) => {
+    const ethereum = getEthereum();
+    if (!ethereum) return;
+    
+    const provider = new ethers.BrowserProvider(ethereum);
 
     try {
       const balanceWei = await provider.getBalance(currentAddress);
@@ -116,14 +96,11 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
           setError("Could not fetch wallet data.");
       }
     }
-  }, [getProvider]);
+  }, []);
   
   useEffect(() => {
     const ethereum = getEthereum();
-    if (!ethereum) {
-      setCheckedConnection(true);
-      return;
-    };
+    if (!ethereum) return;
 
     const handleAccountsChanged = (accounts: string[]) => {
         if (accounts.length === 0) {
@@ -140,25 +117,21 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
         window.location.reload();
     };
 
+    const checkInitialConnection = async () => {
+      try {
+        const accounts = await ethereum.request({ method: 'eth_accounts' });
+        if (accounts.length > 0) {
+          await updateWalletState(accounts[0]);
+        }
+      } catch (err) {
+        console.error("Failed to check initial connection:", err);
+      }
+    };
+
+    checkInitialConnection();
+
     ethereum.on("accountsChanged", handleAccountsChanged);
     ethereum.on("chainChanged", handleChainChanged);
-
-    const checkConnection = async () => {
-        try {
-            const accounts = await ethereum.request({ method: 'eth_accounts' });
-            if (accounts.length > 0) {
-                await updateWalletState(accounts[0]);
-            }
-        } catch (err: any) {
-            console.error("Failed to check accounts on initial load", err);
-        } finally {
-            setCheckedConnection(true);
-        }
-    };
-    
-    if (!checkedConnection) {
-      checkConnection();
-    }
 
     return () => {
         if (ethereum.removeListener) {
@@ -166,7 +139,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
             ethereum.removeListener("chainChanged", handleChainChanged);
         }
     };
-  }, [checkedConnection, router, updateWalletState]);
+  }, [router, updateWalletState]);
 
   const connectWallet = useCallback(async () => {
     const ethereum = getEthereum();
