@@ -28,7 +28,7 @@ const networks = [
   { id: 'ethereum-classic', name: 'ETC' },
   { id: 'nervos', name: 'Nervos Network' },
   { id: 'ton', name: 'TON' },
-  { id: 'other', name: 'Others' },
+  { id: 'others', name: 'Others' },
 ];
 
 
@@ -42,7 +42,7 @@ export default function InterestsStep() {
       if (prev.includes(networkId)) {
         return prev.filter((id) => id !== networkId);
       } else {
-        if (prev.length < 2) {
+        if (prev.length < 4) {
           return [...prev, networkId];
         }
         return prev;
@@ -62,7 +62,7 @@ export default function InterestsStep() {
       <CardHeader className="text-center">
         <Logo className="mx-auto" />
         <CardTitle className="text-2xl pt-4">Which networks interest you?</CardTitle>
-        <CardDescription>Select up to two to personalize your dashboard.</CardDescription>
+        <CardDescription>Select up to four to personalize your dashboard.</CardDescription>
         <Progress value={75} className="w-full mt-4" />
       </CardHeader>
       <CardContent className="grid grid-cols-2 md:grid-cols-3 gap-4 pt-6">
@@ -76,7 +76,7 @@ export default function InterestsStep() {
               id={network.id}
               checked={selectedNetworks.includes(network.id)}
               onCheckedChange={() => handleCheckboxChange(network.id)}
-              disabled={selectedNetworks.length >= 2 && !selectedNetworks.includes(network.id)}
+              disabled={selectedNetworks.length >= 4 && !selectedNetworks.includes(network.id)}
             />
             <span className="font-medium text-sm">{network.name}</span>
           </Label>
