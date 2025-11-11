@@ -70,8 +70,6 @@ const getEtherscanApiUrl = (): string | null => {
     return null;
   }
   
-  // V2-compatible approach: Use a single base URL. The API key determines the plan and access level.
-  // The wallet address itself is what determines the network for account-based queries.
   return `https://api.etherscan.io/api`;
 }
 
