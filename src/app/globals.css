@@ -89,14 +89,14 @@
 
 @layer components {
   .glass {
-    @apply backdrop-blur-lg;
+    @apply backdrop-blur-xl shadow-inner;
   }
   .dark .glass {
-     background-color: hsl(var(--card) / 0.5);
-     @apply border border-white/10;
+     background-color: hsl(var(--card) / 0.4);
+     @apply border border-white/10 shadow-black/20;
   }
   .light .glass {
-     background-color: hsl(var(--card) / 0.7);
-     @apply border border-black/10;
+     background-color: hsl(var(--card) / 0.6);
+     @apply border border-black/10 shadow-black/10;
   }
 }
