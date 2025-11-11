@@ -33,13 +33,34 @@ export const WalletContext = createContext<WalletContextType | undefined>(
   undefined
 );
 
-const fetchTransactionHistory = async (address: string): Promise<FormattedTransaction[]> => {
+const getEtherscanApiUrl = (chainId: bigint): string | null => {
+  const chainIdNumber = Number(chainId);
+  switch (chainIdNumber) {
+    case 1: // Mainnet
+      return "https://api.etherscan.io";
+    case 11155111: // Sepolia
+      return "https://api-sepolia.etherscan.io";
+    case 5: // Goerli
+      return "https://api-goerli.etherscan.io";
+    default:
+      console.warn(`Unsupported network for Etherscan: ${chainIdNumber}`);
+      return null;
+  }
+}
+
+const fetchTransactionHistory = async (address: string, chainId: bigint): Promise<FormattedTransaction[]> => {
   const apiKey = process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY;
+  const baseUrl = getEtherscanApiUrl(chainId);
+
+  if (!baseUrl) {
+    return [];
+  }
+  
   if (!apiKey || apiKey === 'YOUR_API_KEY_HERE') {
     console.warn("Etherscan API key not found. Please add NEXT_PUBLIC_ETHERSCAN_API_KEY to your .env file to fetch transaction history. You can get a free key from https://etherscan.io/myapikey.");
     return [];
   }
-  const url = `https://api.etherscan.io/api?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&sort=desc&page=1&offset=25&apikey=${apiKey}`;
+  const url = `${baseUrl}/api?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&sort=desc&page=1&offset=25&apikey=${apiKey}`;
 
   try {
     const response = await fetch(url);
@@ -84,8 +105,14 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
   const updateWalletState = useCallback(async (currentAddress: string) => {
     if (!currentAddress) return;
     try {
+      const ethereum = getEthereum();
+      if (!ethereum) return;
+      
+      const provider = new BrowserProvider(ethereum);
+      const network = await provider.getNetwork();
+
       const balanceWei = await jsonRpcProvider.getBalance(currentAddress);
-      const history = await fetchTransactionHistory(currentAddress);
+      const history = await fetchTransactionHistory(currentAddress, network.chainId);
       
       setAddress(currentAddress);
       setBalance(ethers.formatEther(balanceWei));
