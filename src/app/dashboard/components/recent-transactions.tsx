@@ -26,13 +26,13 @@ export function RecentTransactions() {
         <div className="space-y-4">
           {transactions.length > 0 ? transactions.slice(0, 5).map((tx, index) => (
             <div key={index} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 overflow-hidden">
                  <div className="flex-1">
-                    <p className="text-sm font-medium truncate w-60 sm:w-auto">{tx.hash}</p>
+                    <p className="text-sm font-medium truncate w-full">{tx.hash}</p>
                     <p className="text-sm text-muted-foreground truncate">To: {tx.to ? `${tx.to.substring(0,10)}...${tx.to.substring(tx.to.length-8)}`: 'Contract Creation'}</p>
                  </div>
               </div>
-              <div className="text-right sm:text-right w-full sm:w-auto">
+              <div className="text-left sm:text-right w-full sm:w-auto shrink-0">
                 <p className="text-sm font-medium">{parseFloat(tx.value).toFixed(5)} ETH</p>
                 {tx.timeStamp && <p className="text-sm text-muted-foreground">{new Date(tx.timeStamp * 1000).toLocaleDateString()}</p>}
               </div>
