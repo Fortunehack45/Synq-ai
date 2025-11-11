@@ -36,7 +36,7 @@ export const WalletContext = createContext<WalletContextType | undefined>(
 const fetchTransactionHistory = async (address: string): Promise<FormattedTransaction[]> => {
   const apiKey = process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY;
   if (!apiKey || apiKey === 'YOUR_API_KEY_HERE') {
-    console.warn("Etherscan API key is not configured. Transaction history will be empty.");
+    console.warn("Etherscan API key not found. Please add NEXT_PUBLIC_ETHERSCAN_API_KEY to your .env file to fetch transaction history. You can get a free key from https://etherscan.io/myapikey.");
     return [];
   }
   const url = `https://api.etherscan.io/api?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&sort=desc&page=1&offset=25&apikey=${apiKey}`;
