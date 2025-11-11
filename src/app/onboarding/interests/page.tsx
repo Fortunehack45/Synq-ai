@@ -13,18 +13,22 @@ import { Label } from '@/components/ui/label';
 import { useWallet } from '@/hooks/use-wallet';
 
 const networks = [
-  { id: 'ethereum', name: 'Ethereum' },
-  { id: 'bitcoin', name: 'Bitcoin' },
-  { id: 'solana', name: 'Solana' },
+  { id: 'bitcoin', name: 'Bitcoin (BTC)' },
+  { id: 'ethereum', name: 'Ethereum (ETH)' },
   { id: 'bnb', name: 'BNB Chain' },
-  { id: 'polygon', name: 'Polygon' },
-  { id: 'avalanche', name: 'Avalanche' },
-  { id: 'cardano', name: 'Cardano' },
-  { id: 'polkadot', name: 'Polkadot' },
-  { id: 'ton', name: 'TON' },
+  { id: 'solana', name: 'Solana (SOL)' },
+  { id: 'avalanche', name: 'Avalanche (AVAX)' },
+  { id: 'polygon', name: 'Polygon (MATIC)' },
+  { id: 'cardano', name: 'Cardano (ADA)' },
+  { id: 'polkadot', name: 'Polkadot (DOT)' },
   { id: 'near', name: 'NEAR Protocol' },
-  { id: 'tron', name: 'Tron' },
-  { id: 'algorand', name: 'Algorand' },
+  { id: 'algorand', name: 'Algorand (ALGO)' },
+  { id: 'tezos', name: 'Tezos (XTZ)' },
+  { id: 'tron', name: 'Tron (TRX)' },
+  { id: 'ethereum-classic', name: 'Ethereum Classic (ETC)' },
+  { id: 'nervos', name: 'Nervos Network' },
+  { id: 'ton', name: 'TON' },
+  { id: 'other', name: 'Other' },
 ];
 
 
@@ -54,14 +58,14 @@ export default function InterestsStep() {
   };
 
   return (
-    <Card className="w-full max-w-lg glass shadow-2xl">
+    <Card className="w-full max-w-2xl glass shadow-2xl">
       <CardHeader className="text-center">
         <Logo className="mx-auto" />
         <CardTitle className="text-2xl pt-4">Which networks interest you?</CardTitle>
         <CardDescription>Select up to two to personalize your dashboard.</CardDescription>
         <Progress value={75} className="w-full mt-4" />
       </CardHeader>
-      <CardContent className="grid grid-cols-2 md:grid-cols-3 gap-4 pt-6">
+      <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6">
         {networks.map((network) => (
           <Label
             key={network.id}
@@ -74,7 +78,7 @@ export default function InterestsStep() {
               onCheckedChange={() => handleCheckboxChange(network.id)}
               disabled={selectedNetworks.length >= 2 && !selectedNetworks.includes(network.id)}
             />
-            <span className="font-medium">{network.name}</span>
+            <span className="font-medium text-sm">{network.name}</span>
           </Label>
         ))}
       </CardContent>
