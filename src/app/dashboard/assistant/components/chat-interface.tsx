@@ -1,0 +1,153 @@
+"use client";
+
+import { useFormState, useFormStatus } from "react-dom";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { getWalletAnalysis } from "../actions";
+import { AlertCircle, BotMessageSquare, CheckCircle2, ChevronRight, Shield, TrendingUp } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
+import { Progress } from "@/components/ui/progress";
+
+const initialState = {
+  success: false,
+  data: null,
+  error: null,
+};
+
+function SubmitButton() {
+  const { pending } = useFormStatus();
+  return (
+    <Button type="submit" disabled={pending}>
+      {pending ? "Analyzing..." : "Analyze Wallet"}
+    </Button>
+  );
+}
+
+export function ChatInterface() {
+  const [state, formAction] = useFormState(getWalletAnalysis, initialState);
+
+  return (
+    <div className="grid md:grid-cols-3 gap-8">
+      <div className="md:col-span-1">
+        <Card>
+          <CardHeader>
+            <CardTitle>Wallet Analysis</CardTitle>
+            <CardDescription>
+              Enter a wallet address and your query to get AI-powered insights.
+            </CardDescription>
+          </CardHeader>
+          <form action={formAction}>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="walletAddress">Wallet Address</Label>
+                <Input
+                  id="walletAddress"
+                  name="walletAddress"
+                  placeholder="0x..."
+                  defaultValue="0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="userQuery">Your Query</Label>
+                <Textarea
+                  id="userQuery"
+                  name="userQuery"
+                  placeholder="e.g., Is this wallet safe? What are the main holdings?"
+                  defaultValue="What is the risk profile of this wallet?"
+                  required
+                />
+              </div>
+            </CardContent>
+            <CardFooter>
+              <SubmitButton />
+            </CardFooter>
+          </form>
+        </Card>
+      </div>
+
+      <div className="md:col-span-2">
+        <Card className="min-h-[400px]">
+          <CardHeader>
+            <CardTitle>Analysis Result</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {!state.data && !state.error && (
+              <div className="flex flex-col items-center justify-center text-center text-muted-foreground h-64">
+                <BotMessageSquare className="h-12 w-12 mb-4" />
+                <p>Your analysis will appear here.</p>
+              </div>
+            )}
+            {state.error && (
+              <div className="text-red-500 flex flex-col items-center justify-center text-center h-64">
+                <AlertCircle className="h-12 w-12 mb-4"/>
+                <p>Error: {state.error}</p>
+              </div>
+            )}
+            {state.data && (
+              <div className="space-y-6">
+                <div>
+                  <h3 className="font-semibold text-lg flex items-center mb-2"><Shield className="w-5 h-5 mr-2 text-primary"/>Risk Score</h3>
+                  <div className="flex items-center gap-4">
+                    <Progress value={state.data.riskScore} className="w-full h-3" />
+                    <span className="font-bold text-xl">{state.data.riskScore}/100</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-1">{state.data.overallSummary}</p>
+                </div>
+                
+                <Separator />
+
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-3">
+                    <h3 className="font-semibold text-lg flex items-center"><AlertCircle className="w-5 h-5 mr-2 text-primary"/>Reasons</h3>
+                    <ul className="space-y-2">
+                      {state.data.reasons.map((reason: string, index: number) => (
+                        <li key={index} className="flex items-start">
+                          <ChevronRight className="h-4 w-4 mr-2 mt-1 shrink-0 text-muted-foreground" />
+                          <span>{reason}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="space-y-3">
+                    <h3 className="font-semibold text-lg flex items-center"><CheckCircle2 className="w-5 h-5 mr-2 text-primary"/>Suggested Actions</h3>
+                    <ul className="space-y-2">
+                      {state.data.suggestedActions.map((action: string, index: number) => (
+                        <li key={index} className="flex items-start">
+                          <ChevronRight className="h-4 w-4 mr-2 mt-1 shrink-0 text-muted-foreground" />
+                          <span>{action}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div>
+                  <h3 className="font-semibold text-lg flex items-center mb-2"><TrendingUp className="w-5 h-5 mr-2 text-primary"/>On-chain Citations</h3>
+                  <div className="space-y-2 text-sm text-muted-foreground">
+                    {state.data.citations.map((citation: string, index: number) => (
+                      <p key={index} className="truncate">{citation}</p>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}

@@ -1,3 +1,58 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "eth-logo",
+      "description": "Ethereum Logo",
+      "imageUrl": "https://images.unsplash.com/photo-1627435407254-1e01816ca5e7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxldGhlcmV1bSUyMGxvZ298ZW58MHx8fHwxNzYyNzgyMzkyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "ethereum logo"
+    },
+    {
+      "id": "usdc-logo",
+      "description": "USDC Logo",
+      "imageUrl": "https://images.unsplash.com/photo-1761624159387-5f9d883b4415?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHx1c2RjJTIwbG9nb3xlbnwwfHx8fDE3NjI4MjQ3MDJ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "usdc logo"
+    },
+    {
+      "id": "wbtc-logo",
+      "description": "Wrapped BTC Logo",
+      "imageUrl": "https://images.unsplash.com/photo-1706086699531-c0591a87c73a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxiaXRjb2luJTIwbG9nb3xlbnwwfHx8fDE3NjI4MDQ4NTh8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "bitcoin logo"
+    },
+    {
+      "id": "uni-logo",
+      "description": "Uniswap Logo",
+      "imageUrl": "https://images.unsplash.com/photo-1753453218794-0dcd1e98442d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHx1bmlzd2FwJTIwbG9nb3xlbnwwfHx8fDE3NjI4MDYxNDd8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "uniswap logo"
+    },
+    {
+      "id": "nft-1",
+      "description": "Abstract Art NFT",
+      "imageUrl": "https://images.unsplash.com/photo-1618331833071-ce81bd50d300?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxhYnN0cmFjdCUyMGFydHxlbnwwfHx8fDE3NjI3NTkzMjd8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "abstract art"
+    },
+    {
+      "id": "nft-2",
+      "description": "Pixelated Character NFT",
+      "imageUrl": "https://images.unsplash.com/photo-1650963310446-011fc6a28367?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxwaXhlbCUyMGFydHxlbnwwfHx8fDE3NjI4MjQ3MDJ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "pixel art"
+    },
+    {
+      "id": "nft-3",
+      "description": "Futuristic Landscape NFT",
+      "imageUrl": "https://images.unsplash.com/photo-1744175404765-9fc4b9bdecb8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxmdXR1cmlzdGljJTIwbGFuZHNjYXBlfGVufDB8fHx8MTc2MjgyMzI1MHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "futuristic landscape"
+    },
+    {
+      "id": "nft-4",
+      "description": "Generative Pattern NFT",
+      "imageUrl": "https://images.unsplash.com/photo-1642160432858-8e6540b5e5c6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxnZW5lcmF0aXZlJTIwcGF0dGVybnxlbnwwfHx8fDE3NjI4MjQ3MDJ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "generative pattern"
+    },
+    {
+      "id": "user-avatar",
+      "description": "User Avatar",
+      "imageUrl": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxwZXJzb24lMjBwb3J0cmFpdHxlbnwwfHx8fDE3NjI4MDgwNTN8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "person portrait"
+    }
+  ]
 }
