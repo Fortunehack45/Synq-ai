@@ -14,12 +14,19 @@ import { useWallet } from '@/hooks/use-wallet';
 
 const networks = [
   { id: 'ethereum', name: 'Ethereum' },
+  { id: 'bitcoin', name: 'Bitcoin' },
   { id: 'solana', name: 'Solana' },
+  { id: 'bnb', name: 'BNB Chain' },
   { id: 'polygon', name: 'Polygon' },
   { id: 'avalanche', name: 'Avalanche' },
-  { id: 'bsc', name: 'BNB Chain' },
-  { id: 'bitcoin', name: 'Bitcoin' },
+  { id: 'cardano', name: 'Cardano' },
+  { id: 'polkadot', name: 'Polkadot' },
+  { id: 'ton', name: 'TON' },
+  { id: 'near', name: 'NEAR Protocol' },
+  { id: 'tron', name: 'Tron' },
+  { id: 'algorand', name: 'Algorand' },
 ];
+
 
 export default function InterestsStep() {
   const router = useRouter();
@@ -54,7 +61,7 @@ export default function InterestsStep() {
         <CardDescription>Select up to two to personalize your dashboard.</CardDescription>
         <Progress value={75} className="w-full mt-4" />
       </CardHeader>
-      <CardContent className="grid grid-cols-2 gap-4 pt-6">
+      <CardContent className="grid grid-cols-2 md:grid-cols-3 gap-4 pt-6">
         {networks.map((network) => (
           <Label
             key={network.id}
