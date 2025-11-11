@@ -12,6 +12,7 @@ import React, {
 import { useRouter } from "next/navigation";
 import { ethers, BrowserProvider } from "ethers";
 import { Alchemy, Network, OwnedNft, TokenBalance, TokenMetadataResponse } from "alchemy-sdk";
+import { PlaceHolderImages } from "@/lib/placeholder-images";
 
 interface FormattedTransaction {
   hash: string;
@@ -322,6 +323,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
 
   const updateWalletState = useCallback(async (currentAddress: string, provider?: BrowserProvider) => {
     setLoading(true);
+    const ethPrice = 3150; // Static price for now
 
     if (!ethers.isAddress(currentAddress)) {
       console.error("Attempted to update with invalid address:", currentAddress);
@@ -334,14 +336,29 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       const mockHistory = createMockPortfolioHistory();
       const mockChange = calculatePortfolioChange(mockHistory);
       
+      const ethLogo = PlaceHolderImages.find(img => img.id === 'eth-logo');
+      const usdcLogo = PlaceHolderImages.find(img => img.id === 'usdc-logo');
+      const wbtcLogo = PlaceHolderImages.find(img => img.id === 'wbtc-logo');
+      const uniLogo = PlaceHolderImages.find(img => img.id === 'uni-logo');
+
+      const ethToken: FormattedTokenBalance = {
+          name: 'Ethereum', symbol: 'ETH', balance: parseFloat(mockBalance).toFixed(4),
+          value: (parseFloat(mockBalance) * ethPrice).toLocaleString('en-US', { style: 'currency', currency: 'USD' }),
+          iconUrl: ethLogo?.imageUrl, iconHint: ethLogo?.imageHint, contractAddress: 'eth',
+      };
+      const demoTokens: FormattedTokenBalance[] = [
+          { name: 'USD Coin', symbol: 'USDC', balance: '5,000.00', value: '$5,000.00', iconUrl: usdcLogo?.imageUrl, iconHint: usdcLogo?.imageHint, contractAddress: 'usdc' },
+          { name: 'Wrapped BTC', symbol: 'WBTC', balance: '0.05', value: '$3,500.00', iconUrl: wbtcLogo?.imageUrl, iconHint: wbtcLogo?.imageHint, contractAddress: 'wbtc' },
+          { name: 'Uniswap', symbol: 'UNI', balance: '250.00', value: '$2,500.00', iconUrl: uniLogo?.imageUrl, iconHint: uniLogo?.imageHint, contractAddress: 'uni' },
+      ];
+
       setAddress(mockAddress);
       setBalance(mockBalance);
       setTransactions(createMockTransactions(mockAddress));
       setNfts(createMockNfts());
       setPortfolioHistory(mockHistory);
       setPortfolioChange(mockChange);
-      // Tokens are set in AssetsTabs for demo mode
-      setTokens([]); 
+      setTokens([ethToken, ...demoTokens]); 
       setLoading(false);
       return;
     }
@@ -354,13 +371,25 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       
       const network = await provider.getNetwork();
       const balanceWei = await provider.getBalance(currentAddress);
+      const balanceEth = ethers.formatEther(balanceWei);
       const history = await fetchTransactionHistory(currentAddress, network.chainId);
       const userNfts = await fetchNfts(currentAddress, network.chainId);
       
       const tokenBalances = await fetchTokenBalances(currentAddress, network.chainId);
       const tokenMetadata = await fetchTokenMetadata(tokenBalances.map(t => t.contractAddress), network.chainId);
 
-      const formattedTokens = tokenBalances.map((token, i) => {
+      const ethLogo = PlaceHolderImages.find(img => img.id === 'eth-logo');
+      const ethToken: FormattedTokenBalance = {
+        name: 'Ethereum',
+        symbol: 'ETH',
+        balance: parseFloat(balanceEth).toFixed(4),
+        value: (parseFloat(balanceEth) * ethPrice).toLocaleString('en-US', { style: 'currency', currency: 'USD' }),
+        iconUrl: ethLogo?.imageUrl,
+        iconHint: ethLogo?.imageHint,
+        contractAddress: 'eth',
+      };
+
+      const formattedTokens: FormattedTokenBalance[] = tokenBalances.map((token, i) => {
         const metadata = tokenMetadata[i];
         const balance = parseFloat(token.tokenBalance!) / Math.pow(10, metadata.decimals || 18);
         return {
@@ -375,8 +404,8 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       });
       
       setAddress(currentAddress);
-      setBalance(ethers.formatEther(balanceWei));
-      setTokens(formattedTokens);
+      setBalance(balanceEth);
+      setTokens([ethToken, ...formattedTokens]);
       setTransactions(history);
       setNfts(userNfts);
       // For real accounts, we clear mock data. A real implementation would fetch real historical data.

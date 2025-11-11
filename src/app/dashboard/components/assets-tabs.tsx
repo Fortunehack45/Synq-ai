@@ -16,42 +16,10 @@ import {
 } from "@/components/ui/tabs"
 import Image from "next/image"
 import { useWallet } from "@/hooks/use-wallet";
-import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { ImageIcon, Wallet } from "lucide-react";
-import { FormattedTokenBalance } from "@/context/wallet-provider";
 
 export function AssetsTabs() {
-  const { balance, tokens: realTokens, nfts, address } = useWallet();
-  const ethPrice = 3150; // Static price for now
-
-  const ethLogo = PlaceHolderImages.find(img => img.id === 'eth-logo');
-  const usdcLogo = PlaceHolderImages.find(img => img.id === 'usdc-logo');
-  const wbtcLogo = PlaceHolderImages.find(img => img.id === 'wbtc-logo');
-  const uniLogo = PlaceHolderImages.find(img => img.id === 'uni-logo');
-
-  const isDemo = address && address.toLowerCase() === "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045".toLowerCase();
-
-  const ethToken: FormattedTokenBalance | null = balance ? {
-      name: 'Ethereum',
-      symbol: 'ETH',
-      balance: parseFloat(balance).toFixed(4),
-      value: (parseFloat(balance) * ethPrice).toLocaleString('en-US', { style: 'currency', currency: 'USD' }),
-      iconUrl: ethLogo?.imageUrl,
-      iconHint: ethLogo?.imageHint,
-      contractAddress: 'eth',
-  } : null;
-
-  const demoTokens: FormattedTokenBalance[] = [
-      { name: 'USD Coin', symbol: 'USDC', balance: '5,000.00', value: '$5,000.00', iconUrl: usdcLogo?.imageUrl, iconHint: usdcLogo?.imageHint, contractAddress: 'usdc' },
-      { name: 'Wrapped BTC', symbol: 'WBTC', balance: '0.05', value: '$3,500.00', iconUrl: wbtcLogo?.imageUrl, iconHint: wbtcLogo?.imageHint, contractAddress: 'wbtc' },
-      { name: 'Uniswap', symbol: 'UNI', balance: '250.00', value: '$2,500.00', iconUrl: uniLogo?.imageUrl, iconHint: uniLogo?.imageHint, contractAddress: 'uni' },
-  ];
-
-  const displayedTokens = [
-    ...(ethToken ? [ethToken] : []),
-    ...(isDemo ? demoTokens : realTokens)
-  ];
-
+  const { tokens, nfts } = useWallet();
 
   return (
     <Card className="glass">
@@ -67,7 +35,7 @@ export function AssetsTabs() {
           </TabsList>
           <TabsContent value="tokens">
             <div className="space-y-4 pt-4">
-              {displayedTokens.length > 0 ? displayedTokens.map((token) => (
+              {tokens.length > 0 ? tokens.map((token) => (
                 <div key={token.contractAddress} className="flex items-center">
                   <div className="h-10 w-10 rounded-full flex items-center justify-center bg-muted">
                     {token.iconUrl ? (
