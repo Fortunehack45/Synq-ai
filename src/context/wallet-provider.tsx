@@ -193,9 +193,23 @@ const createMockPortfolioHistory = (): PortfolioHistoryPoint[] => {
   return data;
 };
 
+const calculatePortfolioChange = (history: PortfolioHistoryPoint[]): number => {
+  if (history.length < 2) {
+    return 0;
+  }
+  const latestValue = history[history.length - 1].valueModifier;
+  const previousValue = history[history.length - 2].valueModifier;
+
+  if (previousValue === 0) {
+    return 0;
+  }
+
+  const change = ((latestValue - previousValue) / previousValue) * 100;
+  return change;
+};
+
 const mockAddress = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"; // Vitalik's address for fun
 const mockBalance = "12.3456";
-const mockPortfolioChange = (Math.random() - 0.5) * 10; // Random change between -5% and +5%
 
 export const WalletProvider = ({ children }: { children: ReactNode }) => {
   const [address, setAddress] = useState<string | null>(null);
@@ -239,12 +253,15 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     
     // Handle Demo Mode
     if (currentAddress.toLowerCase() === mockAddress.toLowerCase() && localStorage.getItem('walletAddress') === mockAddress) {
+      const mockHistory = createMockPortfolioHistory();
+      const mockChange = calculatePortfolioChange(mockHistory);
+      
       setAddress(mockAddress);
       setBalance(mockBalance);
       setTransactions(createMockTransactions(mockAddress));
       setNfts(createMockNfts());
-      setPortfolioHistory(createMockPortfolioHistory());
-      setPortfolioChange(mockPortfolioChange);
+      setPortfolioHistory(mockHistory);
+      setPortfolioChange(mockChange);
       setLoading(false);
       return;
     }
@@ -259,13 +276,15 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       const balanceWei = await provider.getBalance(currentAddress);
       const history = await fetchTransactionHistory(currentAddress, network.chainId);
       const userNfts = await fetchNfts(currentAddress, network.chainId);
+      const mockHistory = createMockPortfolioHistory(); // Using mock data for now
+      const mockChange = calculatePortfolioChange(mockHistory); // Using mock data for now
       
       setAddress(currentAddress);
       setBalance(ethers.formatEther(balanceWei));
       setTransactions(history);
       setNfts(userNfts);
-      setPortfolioHistory(createMockPortfolioHistory()); // Using mock data for now
-      setPortfolioChange(mockPortfolioChange); // Using mock data for now
+      setPortfolioHistory(mockHistory); 
+      setPortfolioChange(mockChange);
       setError(null);
 
       if (typeof window !== "undefined") {
@@ -386,3 +405,5 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     </WalletContext.Provider>
   );
 };
+
+    
