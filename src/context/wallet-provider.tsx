@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, {
@@ -7,9 +6,10 @@ import React, {
   useCallback,
   useEffect,
   ReactNode,
+  useRef,
 } from "react";
 import { useRouter } from "next/navigation";
-import { ethers } from "ethers";
+import { ethers, BrowserProvider } from "ethers";
 
 interface FormattedTransaction {
   hash: string;
@@ -35,7 +35,7 @@ export const WalletContext = createContext<WalletContextType | undefined>(
 
 const fetchTransactionHistory = async (address: string): Promise<FormattedTransaction[]> => {
   const apiKey = process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY;
-  if (!apiKey) {
+  if (!apiKey || apiKey === 'YOUR_API_KEY_HERE') {
     console.warn("Etherscan API key is not configured. Transaction history will be empty.");
     return [];
   }
@@ -71,90 +71,101 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
   const [checkedConnection, setCheckedConnection] = useState(false);
   const router = useRouter();
 
-  const getProvider = () => {
-    if (typeof window !== "undefined" && (window as any).ethereum) {
-      return new ethers.BrowserProvider((window as any).ethereum);
-    }
-    return null;
-  };
-  
+  const providerRef = useRef<BrowserProvider | null>(null);
+
   const getEthereum = () => {
     if (typeof window !== "undefined" && (window as any).ethereum) {
       return (window as any).ethereum;
     }
     return null;
   };
+  
+  const getProvider = useCallback(() => {
+    if (providerRef.current) {
+      return providerRef.current;
+    }
+    const ethereum = getEthereum();
+    if (ethereum) {
+      const newProvider = new ethers.BrowserProvider(ethereum);
+      providerRef.current = newProvider;
+      return newProvider;
+    }
+    return null;
+  }, []);
 
   const updateWalletState = useCallback(async (currentAddress: string | null) => {
-    if (!currentAddress) {
+    const provider = getProvider();
+    if (!currentAddress || !provider) {
       setAddress(null);
       setBalance(null);
       setTransactions([]);
       return;
     }
 
-    const provider = getProvider();
-    if (provider) {
-      try {
-        const balanceWei = await provider.getBalance(currentAddress);
-        const history = await fetchTransactionHistory(currentAddress);
-        setAddress(currentAddress);
-        setBalance(ethers.formatEther(balanceWei));
-        setTransactions(history);
-      } catch (e: any) {
-        console.error("Error fetching wallet data:", e);
-        if (e.code === -32002) {
-             setError("Too many requests sent to the network. Please wait a moment and try again.");
-        } else {
-            setError("Could not fetch wallet data.");
-        }
+    try {
+      const balanceWei = await provider.getBalance(currentAddress);
+      const history = await fetchTransactionHistory(currentAddress);
+      setAddress(currentAddress);
+      setBalance(ethers.formatEther(balanceWei));
+      setTransactions(history);
+    } catch (e: any) {
+      console.error("Error fetching wallet data:", e);
+      if (e.code === -32002 || (e.error && e.error.code === -32002) ) {
+           setError("Too many requests sent to the network. Please wait a moment and try again.");
+      } else {
+          setError("Could not fetch wallet data.");
       }
     }
-  }, []);
+  }, [getProvider]);
   
   useEffect(() => {
     const ethereum = getEthereum();
-    if (ethereum && !checkedConnection) {
-        const handleAccountsChanged = (accounts: string[]) => {
-            if (accounts.length === 0) {
-              setAddress(null);
-              setBalance(null);
-              setTransactions([]);
-              router.push("/login");
-            } else {
-              updateWalletState(accounts[0]);
+    if (!ethereum) {
+      setCheckedConnection(true);
+      return;
+    };
+
+    const handleAccountsChanged = (accounts: string[]) => {
+        if (accounts.length === 0) {
+          setAddress(null);
+          setBalance(null);
+          setTransactions([]);
+          router.push("/login");
+        } else {
+          updateWalletState(accounts[0]);
+        }
+    };
+
+    const handleChainChanged = () => {
+        window.location.reload();
+    };
+
+    ethereum.on("accountsChanged", handleAccountsChanged);
+    ethereum.on("chainChanged", handleChainChanged);
+
+    const checkConnection = async () => {
+        try {
+            const accounts = await ethereum.request({ method: 'eth_accounts' });
+            if (accounts.length > 0) {
+                await updateWalletState(accounts[0]);
             }
-        };
-
-        const handleChainChanged = () => {
-            window.location.reload();
-        };
-
-        ethereum.on("accountsChanged", handleAccountsChanged);
-        ethereum.on("chainChanged", handleChainChanged);
-
-        const checkConnection = async () => {
-            try {
-                const accounts = await ethereum.request({ method: 'eth_accounts' });
-                if (accounts.length > 0) {
-                    await updateWalletState(accounts[0]);
-                }
-            } catch (err: any) {
-                console.error("Failed to check accounts on initial load", err);
-            } finally {
-                setCheckedConnection(true);
-            }
-        };
-        
-        checkConnection();
-
-        return () => {
-            if (ethereum.removeListener) {
-                ethereum.removeListener("accountsChanged", handleAccountsChanged);
-                ethereum.removeListener("chainChanged", handleChainChanged);
-            }
-        };
+        } catch (err: any) {
+            console.error("Failed to check accounts on initial load", err);
+        } finally {
+            setCheckedConnection(true);
+        }
+    };
+    
+    if (!checkedConnection) {
+      checkConnection();
     }
+
+    return () => {
+        if (ethereum.removeListener) {
+            ethereum.removeListener("accountsChanged", handleAccountsChanged);
+            ethereum.removeListener("chainChanged", handleChainChanged);
+        }
+    };
   }, [checkedConnection, router, updateWalletState]);
 
   const connectWallet = useCallback(async () => {
