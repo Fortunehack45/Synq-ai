@@ -45,7 +45,7 @@ export function AssetsTabs() {
             </div>
           </TabsContent>
           <TabsContent value="nfts">
-            <div className="grid grid-cols-2 gap-4 pt-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-2 xl:grid-cols-3 gap-4 pt-4">
               {nfts.map((nft) => (
                 <div key={nft.name} className="space-y-2">
                   {nft.image && 
@@ -54,7 +54,7 @@ export function AssetsTabs() {
                       alt={nft.name}
                       width={150}
                       height={150}
-                      className="rounded-md object-cover aspect-square"
+                      className="rounded-md object-cover aspect-square w-full h-auto"
                       data-ai-hint={nft.image.imageHint}
                     />
                   }

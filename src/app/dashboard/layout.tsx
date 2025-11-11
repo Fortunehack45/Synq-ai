@@ -3,10 +3,9 @@ import {
   Bell,
   BotMessageSquare,
   Home,
-  LineChart,
+  Menu,
   Package,
   Settings,
-  Users,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -18,7 +17,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import {
   Sheet,
   SheetContent,
@@ -26,7 +24,6 @@ import {
 } from "@/components/ui/sheet";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserNav } from "@/components/user-nav";
-import { Logo } from "@/components/logo";
 
 export default function DashboardLayout({
   children,
@@ -109,7 +106,7 @@ export default function DashboardLayout({
                 size="icon"
                 className="shrink-0 md:hidden"
               >
-                <Users className="h-5 w-5" />
+                <Menu className="h-5 w-5" />
                 <span className="sr-only">Toggle navigation menu</span>
               </Button>
             </SheetTrigger>
@@ -162,7 +159,7 @@ export default function DashboardLayout({
           <ThemeToggle />
           <UserNav />
         </header>
-        <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-background">
+        <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
           {children}
         </main>
       </div>

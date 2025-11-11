@@ -20,14 +20,14 @@ export function RecentTransactions() {
       <CardContent>
         <div className="space-y-4">
           {transactions.slice(0, 5).map((tx, index) => (
-            <div key={index} className="flex items-center justify-between">
+            <div key={index} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
               <div className="flex items-center gap-4">
                  <div className="flex-1">
                     <p className="text-sm font-medium">{tx.type}</p>
                     <p className="text-sm text-muted-foreground">{tx.description}</p>
                  </div>
               </div>
-              <div className="text-right">
+              <div className="text-right sm:text-right w-full sm:w-auto">
                 <p className="text-sm font-medium">{tx.amount}</p>
                 <p className="text-sm text-muted-foreground">{tx.date}</p>
               </div>
