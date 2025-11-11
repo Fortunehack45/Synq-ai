@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { useWallet } from "@/hooks/use-wallet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
-import { Copy, Image as ImageIcon, Sparkles, User, MessageSquare, Repeat, UserPlus, Heart, MessageCircle, BarChart2, Pencil } from "lucide-react";
+import { Copy, Image as ImageIcon, Sparkles, User, MessageSquare, Repeat, Heart, MessageCircle, BarChart2, Pencil, PlusSquare } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
@@ -198,23 +198,31 @@ export default function ProfilePage() {
             <TabsTrigger value="media">Media</TabsTrigger>
           </TabsList>
           <TabsContent value="posts">
-            {isDemoUser ? (
-              <div className="space-y-4">
-                {mockPosts.map((post) => (
-                  <PostCard key={post.id} post={post} authorName={username} />
-                ))}
+            <div className="space-y-4">
+              <div className="flex justify-end">
+                <Button disabled>
+                  <PlusSquare className="mr-2 h-4 w-4" />
+                  New Post
+                </Button>
               </div>
-            ) : (
-              <Card className="glass">
-                <CardContent className="pt-6">
-                  <div className="flex flex-col items-center justify-center h-48 text-center">
-                    <MessageSquare className="h-12 w-12 text-muted-foreground/50 mb-4" />
-                    <p className="text-lg font-semibold">No Posts Yet</p>
-                    <p className="text-sm text-muted-foreground">When this user makes a post, it'll show up here.</p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+              {isDemoUser ? (
+                <div className="space-y-4">
+                  {mockPosts.map((post) => (
+                    <PostCard key={post.id} post={post} authorName={username} />
+                  ))}
+                </div>
+              ) : (
+                <Card className="glass mt-4">
+                  <CardContent className="pt-6">
+                    <div className="flex flex-col items-center justify-center h-48 text-center">
+                      <MessageSquare className="h-12 w-12 text-muted-foreground/50 mb-4" />
+                      <p className="text-lg font-semibold">No Posts Yet</p>
+                      <p className="text-sm text-muted-foreground">When this user makes a post, it'll show up here.</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           </TabsContent>
            <TabsContent value="replies">
             <Card className="glass">
@@ -254,5 +262,3 @@ export default function ProfilePage() {
     </>
   );
 }
-
-    
