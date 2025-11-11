@@ -17,12 +17,9 @@ import {
 import Image from "next/image"
 import { useWallet } from "@/hooks/use-wallet";
 import { ImageIcon, Wallet } from "lucide-react";
-import { PlaceHolderImages } from "@/lib/placeholder-images";
 
 export function AssetsTabs() {
   const { tokens, nfts } = useWallet();
-
-  const btcLogo = PlaceHolderImages.find(img => img.id === 'wbtc-logo');
 
   return (
     <Card className="glass">
@@ -42,7 +39,7 @@ export function AssetsTabs() {
                 <div key={token.contractAddress} className="flex items-center">
                   <div className="h-10 w-10 rounded-full flex items-center justify-center bg-muted">
                     {token.iconUrl ? (
-                      <Image src={token.iconUrl} alt={`${token.name} logo`} width={40} height={40} className="h-10 w-10 rounded-full" data-ai-hint={token.iconHint}/>
+                      <Image src={token.iconUrl} alt={`${token.name} logo`} width={40} height={40} className="h-10 w-10 rounded-full" data-ai-hint={token.iconHint || ''}/>
                     ) : (
                       <Wallet className="h-5 w-5 text-muted-foreground"/>
                     )}
