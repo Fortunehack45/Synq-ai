@@ -49,7 +49,16 @@ function DashboardLayoutContent({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { disconnectWallet } = useWallet();
+  const { disconnectWallet, address } = useWallet();
+
+  useEffect(() => {
+    // If there's no address, the user is not connected. Redirect to login.
+    // This is a simple way to protect routes.
+    if (!address) {
+      router.push('/login');
+    }
+  }, [address, router]);
+
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -84,6 +93,12 @@ function DashboardLayoutContent({
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [router, disconnectWallet]);
+
+  // Don't render the dashboard if the user is not authenticated.
+  // This prevents a flash of content before the redirect.
+  if (!address) {
+    return null; // Or a loading spinner
+  }
 
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[240px_1fr] lg:grid-cols-[280px_1fr]">

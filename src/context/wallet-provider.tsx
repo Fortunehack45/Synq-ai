@@ -36,7 +36,7 @@ export const WalletContext = createContext<WalletContextType | undefined>(
 const getEtherscanApiUrl = (chainId: bigint): string | null => {
   const apiKey = process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY;
   if (!apiKey || apiKey === "YOUR_API_KEY_HERE" || apiKey.length < 30) {
-    console.warn("Etherscan API key not found or invalid. Please add NEXT_PUBLIC_ETHERSCAN_API_KEY to your .env file to fetch transaction history. You can get a free key from https://etherscan.io/myapikey.");
+    console.warn("Etherscan API key not found or invalid. Transaction history will not be available. Please add NEXT_PUBLIC_ETHERSCAN_API_KEY to your .env file. You can get a free key from https://etherscan.io/myapikey.");
     return null;
   }
 
@@ -89,7 +89,7 @@ const fetchTransactionHistory = async (address: string, chainId: bigint): Promis
       return [];
     }
   } catch (error) {
-    console.error("Failed to fetch from Etherscan:", error);
+    console.error("Failed to fetch transaction history from Etherscan:", error);
     return [];
   }
 };
@@ -108,8 +108,31 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     setAddress(null);
     setBalance(null);
     setTransactions([]);
+    if (typeof window !== "undefined") {
+      // Optional: Clear any session-related data if needed
+    }
     router.push("/login");
   }, [router]);
+
+  const updateWalletState = useCallback(async (currentAddress: string) => {
+    try {
+      const provider = new BrowserProvider((window as any).ethereum);
+      const network = await provider.getNetwork();
+      const balanceWei = await provider.getBalance(currentAddress);
+      const history = await fetchTransactionHistory(currentAddress, network.chainId);
+      
+      setAddress(currentAddress);
+      setBalance(ethers.formatEther(balanceWei));
+      setTransactions(history);
+      setError(null);
+    } catch (err) {
+       console.error("Failed to update wallet state:", err);
+       setError("Failed to fetch wallet data.");
+       // Disconnect if we can't get basic data, as the state is inconsistent
+       disconnectWallet();
+    }
+  }, [disconnectWallet]);
+
 
   const connectWallet = useCallback(async () => {
     if (typeof window === "undefined" || !(window as any).ethereum) {
@@ -122,54 +145,50 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       const accounts = await provider.send("eth_requestAccounts", []);
       
       if (accounts && accounts.length > 0) {
-        const signer = await provider.getSigner();
-        const currentAddress = await signer.getAddress();
-        const network = await provider.getNetwork();
-        const balanceWei = await provider.getBalance(currentAddress);
-        const history = await fetchTransactionHistory(currentAddress, network.chainId);
-
-        setAddress(currentAddress);
-        setBalance(ethers.formatEther(balanceWei));
-        setTransactions(history);
-        setError(null);
+        await updateWalletState(accounts[0]);
+      } else {
+        setError("No accounts found. Please connect an account in MetaMask.");
       }
     } catch (err: any) {
       if (err.code === 4001) {
         setError("Connection rejected by user.");
       } else {
+        console.error("Failed to connect to MetaMask:", err);
         setError("Failed to connect to MetaMask.");
-        console.error("Connection error:", err);
       }
     }
-  }, []);
+  }, [updateWalletState]);
 
   useEffect(() => {
     const ethereum = (window as any).ethereum;
-    if (typeof window !== "undefined" && ethereum) {
+    if (ethereum?.isMetaMask) {
       const handleAccountsChanged = (accounts: string[]) => {
         if (accounts.length > 0) {
-          connectWallet();
+          // Re-fetch all data for the new account
+          updateWalletState(accounts[0]);
         } else {
+          // User has disconnected all accounts in MetaMask
           disconnectWallet();
         }
       };
       
       const handleChainChanged = () => {
+        // Reload to re-initialize with the new network
         window.location.reload();
       };
 
       ethereum.on("accountsChanged", handleAccountsChanged);
       ethereum.on("chainChanged", handleChainChanged);
       
-      // Check if already connected on initial load
+      // Check for existing connection on initial load
       const checkInitialConnection = async () => {
         try {
           const accounts = await ethereum.request({ method: 'eth_accounts' });
           if (accounts.length > 0) {
-            connectWallet();
+            await updateWalletState(accounts[0]);
           }
         } catch (err) {
-          console.error("Failed to check initial connection:", err);
+          console.error("Failed to check initial MetaMask connection:", err);
         }
       };
 
@@ -182,7 +201,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
         }
       };
     }
-  }, [connectWallet, disconnectWallet]);
+  }, [updateWalletState, disconnectWallet]);
 
   const value = useMemo(() => ({ 
     address, 
