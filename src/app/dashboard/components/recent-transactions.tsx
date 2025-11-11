@@ -8,16 +8,18 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { useWallet } from "@/hooks/use-wallet";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export function RecentTransactions() {
-  const { transactions } = useWallet();
+  const { transactions, address } = useWallet();
 
   return (
     <Card className="glass">
       <CardHeader>
         <CardTitle>Recent Transactions</CardTitle>
         <CardDescription>
-          An overview of your latest wallet activity.
+          Your latest wallet activity. For a full history, use a block explorer.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -26,8 +28,8 @@ export function RecentTransactions() {
             <div key={index} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
               <div className="flex items-center gap-4">
                  <div className="flex-1">
-                    <p className="text-sm font-medium">{tx.hash.substring(0,10)}...{tx.hash.substring(tx.hash.length-8)}</p>
-                    <p className="text-sm text-muted-foreground">To: {tx.to.substring(0,10)}...{tx.to.substring(tx.to.length-8)}</p>
+                    <p className="text-sm font-medium truncate w-60 sm:w-auto">{tx.hash}</p>
+                    <p className="text-sm text-muted-foreground">To: {tx.to ? `${tx.to.substring(0,10)}...${tx.to.substring(tx.to.length-8)}`: 'Contract Creation'}</p>
                  </div>
               </div>
               <div className="text-right sm:text-right w-full sm:w-auto">
@@ -36,9 +38,18 @@ export function RecentTransactions() {
               </div>
             </div>
           )) : (
-            <p className="text-sm text-muted-foreground text-center pt-4">No transactions to display. Fetching full transaction history typically requires a dedicated API like Etherscan.</p>
+            <p className="text-sm text-muted-foreground text-center pt-4">No recent transactions found.</p>
           )}
         </div>
+        {address && (
+          <div className="flex justify-center pt-6">
+            <Button variant="link" asChild>
+              <Link href={`https://etherscan.io/address/${address}`} target="_blank" rel="noopener noreferrer">
+                View all on Etherscan
+              </Link>
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   )

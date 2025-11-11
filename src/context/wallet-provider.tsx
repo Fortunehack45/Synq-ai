@@ -8,12 +8,20 @@ import React, {
   ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
-import { ethers } from "ethers";
+import { ethers, TransactionResponse, Block } from "ethers";
+
+interface FormattedTransaction {
+  hash: string;
+  from: string;
+  to: string | null;
+  value: string;
+  timeStamp: number | undefined;
+}
 
 interface WalletContextType {
   address: string | null;
   balance: string | null;
-  transactions: any[];
+  transactions: FormattedTransaction[];
   connectWallet: () => Promise<void>;
   disconnectWallet: () => void;
   error: string | null;
@@ -27,7 +35,7 @@ export const WalletContext = createContext<WalletContextType | undefined>(
 export const WalletProvider = ({ children }: { children: ReactNode }) => {
   const [address, setAddress] = useState<string | null>(null);
   const [balance, setBalance] = useState<string | null>(null);
-  const [transactions, setTransactions] = useState<any[]>([]);
+  const [transactions, setTransactions] = useState<FormattedTransaction[]>([]);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
@@ -52,10 +60,28 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
         const balanceWei = await provider.getBalance(currentAddress);
         setBalance(ethers.formatEther(balanceWei));
 
-        // Note: Fetching full transaction history from the client-side is complex.
-        // A more robust solution would use an API like Etherscan.
-        // Here, we'll just clear it for now as we can't reliably fetch it without an API key.
-        setTransactions([]);
+        const blockNumber = await provider.getBlockNumber();
+        const txs: FormattedTransaction[] = [];
+        
+        // Fetch last 10 blocks for recent transactions.
+        // This is not a complete history. For that, an API like Etherscan is needed.
+        for (let i = 0; i < 10 && blockNumber - i >= 0; i++) {
+          const block = await provider.getBlock(blockNumber - i, true);
+          if (block) {
+            for (const tx of block.prefetchedTransactions) {
+              if (tx.from === currentAddress || tx.to === currentAddress) {
+                 txs.push({
+                   hash: tx.hash,
+                   from: tx.from,
+                   to: tx.to,
+                   value: ethers.formatEther(tx.value),
+                   timeStamp: block.timestamp,
+                 });
+              }
+            }
+          }
+        }
+        setTransactions(txs);
         
       } catch (e) {
         console.error("Error fetching wallet data:", e);

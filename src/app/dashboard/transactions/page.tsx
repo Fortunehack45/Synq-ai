@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Card,
   CardContent,
@@ -5,34 +7,54 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { transactions } from "@/lib/data";
+import { useWallet } from "@/hooks/use-wallet";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export default function TransactionsPage() {
+  const { transactions, address } = useWallet();
+
   return (
     <>
       <div className="flex items-center">
         <h1 className="text-lg font-semibold md:text-2xl">Transactions</h1>
       </div>
-      <Card>
+      <Card className="glass">
         <CardHeader>
           <CardTitle>Transaction History</CardTitle>
-          <CardDescription>A complete record of your wallet activity.</CardDescription>
+          <CardDescription>A record of your recent wallet activity.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="divide-y divide-border">
-            {transactions.map((tx, index) => (
+            {transactions.length > 0 ? transactions.map((tx, index) => (
               <div key={index} className="flex flex-col sm:flex-row items-start sm:items-center justify-between py-4 gap-2">
                 <div className="grid gap-1">
-                  <p className="text-sm font-medium">{tx.type}</p>
-                  <p className="text-sm text-muted-foreground">{tx.description}</p>
+                  <p className="text-sm font-medium truncate w-60 sm:w-auto">{tx.hash}</p>
+                   <p className="text-sm text-muted-foreground">
+                    From: {tx.from.substring(0, 10)}...{tx.from.substring(tx.from.length - 8)}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    To: {tx.to ? `${tx.to.substring(0,10)}...${tx.to.substring(tx.to.length-8)}` : 'Contract Creation'}
+                  </p>
                 </div>
                 <div className="text-right sm:text-right w-full sm:w-auto">
-                  <p className="text-sm font-semibold">{tx.amount}</p>
-                  <p className="text-sm text-muted-foreground">{tx.date}</p>
+                  <p className="text-sm font-semibold">{parseFloat(tx.value).toFixed(5)} ETH</p>
+                   {tx.timeStamp && <p className="text-sm text-muted-foreground">{new Date(tx.timeStamp * 1000).toLocaleString()}</p>}
                 </div>
               </div>
-            ))}
+            )) : (
+              <p className="text-center text-muted-foreground pt-4">No transactions found.</p>
+            )}
           </div>
+           {address && (
+          <div className="flex justify-center pt-6">
+            <Button variant="link" asChild>
+              <Link href={`https://etherscan.io/address/${address}`} target="_blank" rel="noopener noreferrer">
+                View all on Etherscan
+              </Link>
+            </Button>
+          </div>
+        )}
         </CardContent>
       </Card>
     </>
