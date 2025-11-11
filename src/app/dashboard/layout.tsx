@@ -29,7 +29,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { UserNav } from "@/components/user-nav";
 import { WalletProvider } from "@/context/wallet-provider";
 import { useWallet } from "@/hooks/use-wallet";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 
@@ -50,6 +50,7 @@ function DashboardLayoutContent({
   const router = useRouter();
   const pathname = usePathname();
   const { disconnectWallet, address, loading } = useWallet();
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   useEffect(() => {
     // Wait until the loading is finished before checking for address
@@ -97,7 +98,6 @@ function DashboardLayoutContent({
   if (loading || !address) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
-        {/* You can replace this with a more sophisticated spinner/skeleton component */}
         <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div>
       </div>
     );
@@ -156,7 +156,7 @@ function DashboardLayoutContent({
       </div>
       <div className="flex flex-col">
         <header className="flex h-14 items-center gap-4 border-b bg-muted/20 px-4 lg:h-[60px] lg:px-6 sticky top-0 z-30 glass">
-          <Sheet>
+          <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
             <SheetTrigger asChild>
               <Button
                 variant="outline"
@@ -180,6 +180,7 @@ function DashboardLayoutContent({
                   <Link
                     key={item.href}
                     href={item.href}
+                    onClick={() => setIsSheetOpen(false)}
                     className={cn(
                       "mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 transition-all active:scale-95",
                       pathname === item.href

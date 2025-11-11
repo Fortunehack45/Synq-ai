@@ -1,7 +1,6 @@
 "use client";
 
-import { useActionState, useTransition } from "react";
-import { useFormStatus } from "react-dom";
+import { useActionState, useFormStatus } from "react-dom";
 import {
   Card,
   CardContent,
@@ -38,7 +37,7 @@ export function ChatInterface() {
   const [state, formAction] = useActionState(getWalletAnalysis, initialState);
 
   return (
-    <div className="grid lg:grid-cols-3 gap-8">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
       <div className="lg:col-span-1">
         <Card className="glass sticky top-20">
           <CardHeader>
