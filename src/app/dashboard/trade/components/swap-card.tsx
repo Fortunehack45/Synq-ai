@@ -14,7 +14,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowDown, Repeat } from "lucide-react";
 import { TokenSelect } from "./token-select";
-import { FormattedTokenBalance, useWallet } from "@/hooks/use-wallet";
+import { useWallet } from "@/hooks/use-wallet";
+import { FormattedTokenBalance } from "@/context/wallet-provider";
 import { useToast } from "@/hooks/use-toast";
 
 export function SwapCard() {
