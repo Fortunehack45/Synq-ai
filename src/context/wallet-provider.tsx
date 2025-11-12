@@ -113,7 +113,7 @@ const getAlchemy = (chainId: bigint) => {
   return new Alchemy(config);
 };
 
-const fetchTransactionHistory = async (address: string, chainId: bigint): Promise<FormattedTransaction[]> => {
+const fetchTransactionHistory = async (address: string): Promise<FormattedTransaction[]> => {
   const baseUrl = getEtherscanApiUrl();
   if (!baseUrl) return [];
   
@@ -462,7 +462,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       }
 
       const balanceEth = ethers.formatEther(balanceWei);
-      const history = await fetchTransactionHistory(currentAddress, network.chainId);
+      const history = await fetchTransactionHistory(currentAddress);
       const userNfts = await fetchNfts(currentAddress, alchemy);
       const portfolioHistoryData = await fetchPortfolioHistory(currentAddress, alchemy);
       
