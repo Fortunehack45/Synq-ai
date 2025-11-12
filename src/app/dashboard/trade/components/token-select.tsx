@@ -22,7 +22,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { FormattedTokenBalance } from "@/context/wallet-provider"
+import { type FormattedTokenBalance } from "@/context/wallet-provider"
 
 
 interface TokenSelectProps {

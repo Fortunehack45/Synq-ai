@@ -55,7 +55,7 @@ This is a Next.js project bootstrapped with `create-next-app`.
     ```
     NEXT_PUBLIC_ALCHEMY_KEY="YOUR_ALCHEMY_API_KEY"
     NEXT_PUBLIC_ETHERSCAN_API_KEY="YOUR_ETHERSCAN_API_KEY"
-    GEMINI_API_KEY="YOUR_GEMINI_API_KEY"
+    NEXT_PUBLIC_GEMINI_API_KEY="YOUR_GEMINI_API_KEY"
     ```
 
 4.  **Run the development server:**
@@ -64,5 +64,6 @@ This is a Next.js project bootstrapped with `create-next-app`.
     ```
 
 Open [http://localhost:9002](http://localhost:9002) with your browser to see the result. You can start editing the page by modifying `src/app/page.tsx`.
+
 
 

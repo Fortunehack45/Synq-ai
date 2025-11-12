@@ -1,22 +1,26 @@
 
+
 'use server';
 
 import { Alchemy, Network, Utils } from 'alchemy-sdk';
 import { ethers } from 'ethers';
 
+// This function needs to be callable from the server, but it might not have window context.
+// We'll prioritize env vars and accept that localStorage won't work here.
 function getAlchemy(): Alchemy | null {
   const apiKey = process.env.NEXT_PUBLIC_ALCHEMY_KEY;
   if (!apiKey || apiKey === "YOUR_API_KEY_HERE" || apiKey.length < 30) {
-    console.warn("Alchemy API key not found or invalid. On-chain data fetching will be disabled.");
+    console.warn("Alchemy API key not found or invalid in server context. On-chain data fetching will be disabled.");
     return null;
   }
+  // Default to mainnet for server-side tool calls
   return new Alchemy({ apiKey, network: Network.ETH_MAINNET });
 }
 
 function getEtherscanApiKey(): string | null {
   const apiKey = process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY;
   if (!apiKey || apiKey === "YOUR_API_KEY_HERE" || apiKey.length < 30) {
-    console.warn("Etherscan API key not found or invalid. Transaction history will not be available.");
+    console.warn("Etherscan API key not found or invalid in server context. Transaction history will not be available.");
     return null;
   }
   return apiKey;
@@ -92,5 +96,3 @@ export async function getWalletTokenBalances(address: string) {
     return [];
   }
 }
-
-    

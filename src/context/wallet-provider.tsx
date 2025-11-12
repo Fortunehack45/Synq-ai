@@ -59,7 +59,7 @@ export const WalletContext = createContext<WalletContextType | undefined>(
   undefined
 );
 
-const getEtherscanApiUrl = (): string | null => {
+const getEtherscanApiUrl = (chainId: bigint): string | null => {
   const userKey = typeof window !== 'undefined' ? localStorage.getItem('etherscanApiKey') : null;
   const envKey = process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY;
   const apiKey = userKey || envKey;
@@ -70,8 +70,22 @@ const getEtherscanApiUrl = (): string | null => {
     }
     return null;
   }
+
+  const chainIdNumber = Number(chainId);
+  let domain = '';
+  switch (chainIdNumber) {
+    case 1:
+      domain = 'api.etherscan.io';
+      break;
+    case 11155111:
+      domain = 'api-sepolia.etherscan.io';
+      break;
+    default:
+      console.warn(`Unsupported network for Etherscan: ${chainIdNumber}. Transaction history will not be available.`);
+      return null;
+  }
   
-  return `https://api.etherscan.io/api`;
+  return `https://${domain}/api`;
 }
 
 
@@ -105,8 +119,8 @@ const getAlchemy = (chainId: bigint) => {
   return new Alchemy({ apiKey, network });
 };
 
-const fetchTransactionHistory = async (address: string): Promise<FormattedTransaction[]> => {
-  const baseUrl = getEtherscanApiUrl();
+const fetchTransactionHistory = async (address: string, chainId: bigint): Promise<FormattedTransaction[]> => {
+  const baseUrl = getEtherscanApiUrl(chainId);
   if (!baseUrl) return [];
   
   const apiKey = (typeof window !== 'undefined' ? localStorage.getItem('etherscanApiKey') : null) || process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY;
@@ -428,7 +442,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       const alchemy = getAlchemy(network.chainId);
       const balanceWei = await provider.getBalance(currentAddress);
       const balanceEth = ethers.formatEther(balanceWei);
-      const history = await fetchTransactionHistory(currentAddress);
+      const history = await fetchTransactionHistory(currentAddress, network.chainId);
       const userNfts = await fetchNfts(currentAddress, alchemy);
       const portfolioHistoryData = await fetchPortfolioHistory(currentAddress, alchemy);
       
