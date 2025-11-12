@@ -11,7 +11,7 @@ import React, {
   useMemo,
 } from "react";
 import { useRouter } from "next/navigation";
-import { ethers, BrowserProvider, BigNumberish, AlchemyProvider } from "ethers";
+import { ethers, BrowserProvider, AlchemyProvider } from "ethers";
 import { Alchemy, Network, OwnedNft, TokenBalance, TokenMetadataResponse } from "alchemy-sdk";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { ComingSoonDialog } from "@/components/coming-soon-dialog";
