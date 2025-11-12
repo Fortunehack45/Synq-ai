@@ -60,7 +60,7 @@ export const WalletContext = createContext<WalletContextType | undefined>(
   undefined
 );
 
-const getEtherscanApiUrl = (chainId: bigint): string | null => {
+const getEtherscanApiUrl = (): string | null => {
   const userKey = typeof window !== 'undefined' ? localStorage.getItem('etherscanApiKey') : null;
   const envKey = process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY;
   const apiKey = userKey || envKey;
@@ -114,7 +114,7 @@ const getAlchemy = (chainId: bigint) => {
 };
 
 const fetchTransactionHistory = async (address: string, chainId: bigint): Promise<FormattedTransaction[]> => {
-  const baseUrl = getEtherscanApiUrl(chainId);
+  const baseUrl = getEtherscanApiUrl();
   if (!baseUrl) return [];
   
   const apiKey = (typeof window !== 'undefined' ? localStorage.getItem('etherscanApiKey') : null) || process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY;
