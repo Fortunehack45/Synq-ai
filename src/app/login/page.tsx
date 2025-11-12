@@ -24,17 +24,6 @@ function LoginPageContent() {
   const { connectWallet, address, error, clearError, loading, startDemoMode } = useWallet();
   const { toast } = useToast();
 
-  useEffect(() => {
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Connection Error",
-        description: error,
-      });
-      clearError();
-    }
-  }, [error, toast, clearError]);
-
   const handleConnect = async (walletType: 'metaMask' | 'walletConnect') => {
     if (walletType === 'walletConnect') {
       toast({
@@ -45,13 +34,13 @@ function LoginPageContent() {
     }
     await connectWallet();
   };
-
+  
   const handleDemo = () => {
     startDemoMode();
   }
 
   // Show a loading indicator on the login page while the initial auth check is running.
-  if (loading && !address) {
+  if (loading) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div>
@@ -76,43 +65,51 @@ function LoginPageContent() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <Button className="w-full relative" size="lg" onClick={() => handleConnect('metaMask')} disabled>
-                <Icons.metaMask className="mr-2 h-6 w-6" /> 
-                Connect with MetaMask
-                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs bg-primary/20 text-primary-foreground py-0.5 px-2 rounded-full">Coming Soon</span>
-            </Button>
-            <Button
-              variant="secondary"
-              className="w-full relative"
-              size="lg"
-              onClick={() => handleConnect('walletConnect')}
-              disabled
-            >
-              <Icons.walletConnect className="mr-2 h-6 w-6" />
-              Connect with WalletConnect
-              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs bg-secondary-foreground/20 text-secondary-foreground py-0.5 px-2 rounded-full">Coming Soon</span>
-            </Button>
-             <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
+            <div className="space-y-4">
+               <Button className="w-full justify-between" size="lg" onClick={() => handleConnect('metaMask')} disabled>
+                <div className="flex items-center gap-2">
+                  <Icons.metaMask className="mr-2 h-6 w-6" /> 
+                  Connect with MetaMask
+                </div>
+                <span className="text-xs bg-primary/20 text-primary-foreground py-0.5 px-2 rounded-full">Coming Soon</span>
+              </Button>
+
+              <Button
+                variant="secondary"
+                className="w-full justify-between"
+                size="lg"
+                onClick={() => handleConnect('walletConnect')}
+                disabled
+              >
+                 <div className="flex items-center gap-2">
+                  <Icons.walletConnect className="mr-2 h-6 w-6" />
+                  Connect with WalletConnect
+                </div>
+                 <span className="text-xs bg-secondary-foreground/20 text-secondary-foreground py-0.5 px-2 rounded-full">Coming Soon</span>
+              </Button>
+
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-3 text-muted-foreground text-[0.7rem]">
+                    OR
+                  </span>
+                </div>
               </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-3 text-muted-foreground text-[0.7rem]">
-                  OR
-                </span>
-              </div>
+
+              <Button
+                variant="outline"
+                className="w-full"
+                size="lg"
+                onClick={handleDemo}
+              >
+                <Eye className="mr-2 h-5 w-5" />
+                Continue with Demo
+              </Button>
             </div>
-            <Button
-              variant="outline"
-              className="w-full"
-              size="lg"
-              onClick={handleDemo}
-            >
-              <Eye className="mr-2 h-5 w-5" />
-              Continue with Demo
-            </Button>
-          </div>
+
           <p className="mt-6 px-8 text-center text-xs text-muted-foreground">
             By connecting, you agree to our{" "}
             <Link
