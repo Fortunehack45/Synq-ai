@@ -428,22 +428,35 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
 
     try {
         let provider;
+        let network: ethers.Network;
+
         if (externalProvider) {
-            const network = await externalProvider.getNetwork();
-            const alchemyConfig = getAlchemyConfig(network.chainId);
-            if (!alchemyConfig) {
-                setError("Alchemy API key not configured. Please add it in Settings to fetch wallet data.");
+            try {
+                network = await externalProvider.getNetwork();
+            } catch (e: any) {
+                console.error("A wallet connection error occurred while getting network. This can happen if the connection is interrupted or the network is switched.", e);
+                setError("Could not get network from wallet. Your connection may have been interrupted.");
                 handleDisconnect();
                 return;
             }
-             // Map alchemy-sdk Network to a name ethers.js understands
+
+            const alchemyConfig = getAlchemyConfig(network.chainId);
+            if (!alchemyConfig) {
+                setError("This network is not supported. Please switch to Ethereum Mainnet or Sepolia in your wallet.");
+                handleDisconnect();
+                return;
+            }
+            
             const ethersNetworkName = alchemyConfig.network.replace('eth-', '');
             provider = new AlchemyProvider(ethersNetworkName, alchemyConfig.apiKey);
         } else {
-            throw new Error("MetaMask provider not detected.");
+            // This case handles a page refresh where the provider is not immediately available.
+            // We can't proceed without the provider, so we disconnect.
+            setError("Wallet provider not available on page refresh. Please reconnect your wallet.");
+            handleDisconnect();
+            return;
         }
       
-      const network = await provider.getNetwork();
       const alchemy = getAlchemy(network.chainId);
       
       let balanceWei;
@@ -644,4 +657,6 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       {children}
     </WalletContext.Provider>
   );
-};
+}
+
+    

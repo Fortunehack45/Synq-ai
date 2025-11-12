@@ -1,5 +1,4 @@
 
-
 'use server';
 
 import { Alchemy, Network, Utils } from 'alchemy-sdk';
@@ -26,6 +25,15 @@ function getEtherscanApiKey(): string | null {
   return apiKey;
 }
 
+function getEtherscanApiUrl(): string | null {
+    const apiKey = getEtherscanApiKey();
+    if (!apiKey) {
+        return null;
+    }
+    // Etherscan API V2 uses a single endpoint for all networks
+    return `https://api.etherscan.io/api`;
+}
+
 export async function getWalletBalance(address: string): Promise<string> {
   const alchemy = getAlchemy();
   if (!alchemy || !ethers.isAddress(address)) {
@@ -42,12 +50,12 @@ export async function getWalletBalance(address: string): Promise<string> {
 
 export async function getWalletTransactions(address: string) {
   const apiKey = getEtherscanApiKey();
-  if (!apiKey || !ethers.isAddress(address)) {
+  const baseUrl = getEtherscanApiUrl();
+  if (!baseUrl || !apiKey || !ethers.isAddress(address)) {
     return [];
   }
 
-  // Use the mainnet API endpoint for all chains, as per Etherscan V2
-  const url = `https://api.etherscan.io/api?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=10&sort=desc&apikey=${apiKey}`;
+  const url = `${baseUrl}?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=10&sort=desc&apikey=${apiKey}`;
   try {
     const response = await fetch(url);
     const data = await response.json();
@@ -101,6 +109,7 @@ export async function getWalletTokenBalances(address: string) {
 <<<<<<< HEAD
 =======
 
+<<<<<<< HEAD
     
 <<<<<<< HEAD
 >>>>>>> b3298fc (Try fixing this error: `Console Error: Etherscan API error: "NOTOK" "You)
@@ -112,3 +121,6 @@ export async function getWalletTokenBalances(address: string) {
 >>>>>>> b204695 (Error: Etherscan API error: "NOTOK" "You are using a deprecated V1 endpo)
 =======
 >>>>>>> 023ff16 (Try fixing this error: `Console Error: Etherscan API error: "NOTOK" "You)
+=======
+    
+>>>>>>> d229963 (Error: Etherscan API error: "NOTOK" "You are using a deprecated V1 endpo)
