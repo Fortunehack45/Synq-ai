@@ -384,17 +384,6 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     handleDisconnect();
     router.push("/login");
   }, [router, handleDisconnect]);
-
-  const startDemoMode = useCallback(() => {
-    setLoading(true);
-    setShowComingSoonModal(false);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("walletAddress", mockAddress);
-    }
-    // We just need to call updateWalletState with the mock address
-    updateWalletState(mockAddress);
-    router.push('/dashboard');
-  }, [router, updateWalletState]);
   
   const updateWalletState = useCallback(async (currentAddress: string, externalProvider?: BrowserProvider) => {
     setLoading(true);
@@ -532,7 +521,6 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [handleDisconnect]);
 
-
   const connectWallet = useCallback(async () => {
     if (typeof window === "undefined" || !(window as any).ethereum) {
       setError("MetaMask not detected. Please install the extension.");
@@ -562,8 +550,17 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       }
       setLoading(false);
     }
-  }, [updateWalletState]);
+  }, []);
 
+  const startDemoMode = useCallback(() => {
+    setLoading(true);
+    setShowComingSoonModal(false);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("walletAddress", mockAddress);
+    }
+    updateWalletState(mockAddress);
+    router.push('/dashboard');
+  }, [router, updateWalletState]);
 
   useEffect(() => {
     const path = window.location.pathname;
