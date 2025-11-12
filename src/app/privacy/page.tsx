@@ -5,7 +5,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import Image from "next/image";
+import { Logo } from "@/components/logo";
 import Link from "next/link";
 
 export default function PrivacyPage() {
@@ -18,7 +18,7 @@ export default function PrivacyPage() {
       <Card className="w-full max-w-4xl glass shadow-2xl">
         <CardHeader className="text-center">
            <Link href="/login" className="mx-auto flex items-center gap-2 font-semibold w-fit mb-4">
-            <Image src="/icon.svg" alt="SynqAI Logo" width={32} height={32} />
+            <Logo className="h-8 w-8 text-primary" />
             <span className="font-headline text-2xl tracking-tight">SynqAI</span>
           </Link>
           <CardTitle className="text-3xl font-bold tracking-tight">Privacy Policy</CardTitle>

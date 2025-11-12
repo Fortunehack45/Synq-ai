@@ -13,11 +13,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { getWalletAnalysis, type WalletAnalysisState } from "../actions";
-import { AlertCircle, BotMessageSquare, CheckCircle2, ChevronRight, Shield, Sparkles, TrendingUp } from "lucide-react";
+import { AlertCircle, CheckCircle2, ChevronRight, Shield, Sparkles, TrendingUp } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
+import { Logo } from "@/components/logo";
 
 const initialState: WalletAnalysisState = {
   success: false,
@@ -85,7 +86,7 @@ export function ChatInterface() {
           <CardContent>
             {!state.data && !state.error && (
               <div className="flex flex-col items-center justify-center text-center text-muted-foreground h-96">
-                <BotMessageSquare className="h-16 w-16 mb-4 text-primary/50" />
+                <Logo className="h-16 w-16 mb-4 text-primary/50" />
                 <p className="text-lg">Your analysis will appear here.</p>
                 <p className="text-sm">Submit a query to get started.</p>
               </div>

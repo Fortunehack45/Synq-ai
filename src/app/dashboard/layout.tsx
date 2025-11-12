@@ -4,7 +4,6 @@
 import Link from "next/link";
 import {
   Bell,
-  BotMessageSquare,
   CreditCard,
   Dog,
   Home,
@@ -41,10 +40,11 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
+import { Logo } from "@/components/logo";
 
 const navItems = [
   { href: "/dashboard", icon: Home, label: "Dashboard" },
-  { href: "/dashboard/assistant", icon: BotMessageSquare, label: "AI Assistant" },
+  { href: "/dashboard/assistant", icon: User, label: "AI Assistant" },
   { href: "/dashboard/transactions", icon: Package, label: "Transactions" },
   { href: "/dashboard/trade", icon: Repeat, label: "Trade" },
   { href: "/dashboard/coin-scan", icon: ScanLine, label: "Coin Scan" },
@@ -149,7 +149,7 @@ function DashboardLayoutContent({
         <div className="flex h-full max-h-screen flex-col gap-2">
           <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
             <Link href="/" className="flex items-center gap-2 font-semibold">
-              <Image src="/icon.svg" alt="SynqAI Logo" width={24} height={24} />
+              <Logo className="h-6 w-6" />
               <span className="font-headline text-lg tracking-tight">SynqAI</span>
             </Link>
             <Button variant="ghost" size="icon" className="ml-auto h-8 w-8">
@@ -166,7 +166,7 @@ function DashboardLayoutContent({
                   className={cn(
                     "flex items-center gap-3 rounded-lg px-3 py-2 transition-all active:scale-95",
                     pathname === item.href
-                      ? "bg-muted text-primary"
+                      ? "bg-accent text-accent-foreground"
                       : "text-muted-foreground hover:text-primary"
                   )}
                 >
@@ -216,7 +216,7 @@ function DashboardLayoutContent({
                   href="#"
                   className="flex items-center gap-2 text-lg font-semibold mb-4"
                 >
-                  <Image src="/icon.svg" alt="SynqAI Logo" width={24} height={24} />
+                  <Logo className="h-6 w-6" />
                   <span className="sr-only">SynqAI</span>
                 </Link>
                 {navItems.map((item) => (
