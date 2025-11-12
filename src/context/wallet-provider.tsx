@@ -110,6 +110,7 @@ const fetchTransactionHistory = async (address: string, chainId: bigint): Promis
     }
 
     const data = await response.json();
+
     if (data.result) {
       return data.result.map((tx: any) => ({
         hash: tx.hash,
@@ -119,11 +120,14 @@ const fetchTransactionHistory = async (address: string, chainId: bigint): Promis
         timeStamp: parseInt(tx.timeStamp, 10),
         type: tx.from.toLowerCase() === address.toLowerCase() ? 'Send' : 'Receive'
       }));
+    } else if (data.error) {
+       throw new Error(data.error);
     } else {
       return [];
     }
   } catch (error) {
     console.error("Failed to fetch transaction history from internal API:", error);
+    // Re-throw the error so it can be caught in updateWalletState
     throw error;
   }
 };

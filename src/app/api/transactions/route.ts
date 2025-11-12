@@ -3,11 +3,8 @@ import {NextResponse} from 'next/server';
 import {ethers} from 'ethers';
 
 /**
- * API route to fetch transaction history from Etherscan API V2.
+ * API route to fetch transaction history from Etherscan.
  * This acts as a secure, server-side proxy to handle the API key and avoid CORS issues.
- * It uses the POST method and Bearer Token as required by the V2 API for many modules,
- * though for txlist, GET is often still used. This implementation standardizes on the more modern
- * V2 structure where possible.
  */
 export async function GET(request: Request) {
   const {searchParams} = new URL(request.url);
@@ -18,16 +15,15 @@ export async function GET(request: Request) {
     return NextResponse.json({error: 'Valid wallet address is required'}, {status: 400});
   }
 
-  // Use the server-side environment variable for the API key.
   const apiKey = process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY;
+
   if (!apiKey || apiKey.includes('YOUR_API_KEY')) {
     console.error('Etherscan API key not configured on the server.');
     return NextResponse.json({error: 'Server API service is not configured.'}, {status: 500});
   }
   
-  // Etherscan's 'account' module actions like 'txlist' still work reliably with GET,
-  // which avoids potential complexities with networks or firewalls blocking POST.
-  // We will stick to the documented V1/V2-compatible GET request for this specific action.
+  // The 'txlist' action from the 'account' module still uses a GET request.
+  // We determine the correct subdomain for the network.
   const getApiSubdomain = (id: string) => {
     switch (id) {
       case '11155111': return 'api-sepolia';
@@ -54,10 +50,11 @@ export async function GET(request: Request) {
     if (data.status !== '1') {
       const errorMessage = data.result || data.message || 'An unknown Etherscan API error occurred.';
       console.error("Etherscan API error response:", errorMessage);
+      // Return a structured error to the client
       return NextResponse.json({error: `Etherscan API Error: ${errorMessage}`}, {status: 500});
     }
 
-    // Successfully fetched data, return the result.
+    // Successfully fetched data, return the result array.
     return NextResponse.json({result: data.result});
     
   } catch (error) {
