@@ -11,7 +11,7 @@ import React, {
   useMemo,
 } from "react";
 import { useRouter } from "next/navigation";
-import { ethers, BrowserProvider, BigNumberish } from "ethers";
+import { ethers, BrowserProvider } from "ethers";
 import { Alchemy, Network, OwnedNft, TokenBalance, TokenMetadataResponse } from "alchemy-sdk";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 
@@ -438,9 +438,28 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
         provider = new BrowserProvider((window as any).ethereum);
       }
       
-      const network = await provider.getNetwork();
+      let network;
+      try {
+        network = await provider.getNetwork();
+      } catch (e) {
+        console.error("A wallet connection error occurred, likely from MetaMask.", e);
+        setError("Your wallet connection was interrupted. Please try again.");
+        handleDisconnect();
+        return;
+      }
+
       const alchemy = getAlchemy(network.chainId);
-      const balanceWei = await provider.getBalance(currentAddress);
+      
+      let balanceWei;
+      try {
+        balanceWei = await provider.getBalance(currentAddress);
+      } catch (e) {
+        console.error("A wallet connection error occurred while fetching balance.", e);
+        setError("Could not fetch wallet balance. Your connection may have been interrupted.");
+        handleDisconnect();
+        return;
+      }
+
       const balanceEth = ethers.formatEther(balanceWei);
       const history = await fetchTransactionHistory(currentAddress, network.chainId);
       const userNfts = await fetchNfts(currentAddress, alchemy);
