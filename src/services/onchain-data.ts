@@ -97,7 +97,10 @@ export async function getWalletTokenBalances(address: string) {
   }
 }
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 
     
 >>>>>>> b3298fc (Try fixing this error: `Console Error: Etherscan API error: "NOTOK" "You)
+=======
+>>>>>>> 2ad3dc5 (Try fixing this error: `Console Error: Etherscan API error: "NOTOK" "You)
