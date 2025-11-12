@@ -59,7 +59,7 @@ export const WalletContext = createContext<WalletContextType | undefined>(
   undefined
 );
 
-const getEtherscanApiUrl = (): string | null => {
+const getEtherscanApiKey = (): string | null => {
   const userKey = typeof window !== 'undefined' ? localStorage.getItem('etherscanApiKey') : null;
   const envKey = process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY;
   const apiKey = userKey || envKey;
@@ -70,9 +70,7 @@ const getEtherscanApiUrl = (): string | null => {
     }
     return null;
   }
-
-  // Etherscan API V2 uses a single endpoint for all networks
-  return `https://api.etherscan.io/api`;
+  return apiKey;
 }
 
 const getAlchemyConfig = (chainId: bigint): { apiKey: string, network: Network } | null => {
@@ -113,21 +111,44 @@ const getAlchemy = (chainId: bigint) => {
 };
 
 const fetchTransactionHistory = async (address: string): Promise<FormattedTransaction[]> => {
-  const baseUrl = getEtherscanApiUrl();
-  if (!baseUrl) return [];
-  
-  const apiKey = (typeof window !== 'undefined' ? localStorage.getItem('etherscanApiKey') : null) || process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY;
-  
-  const url = `${baseUrl}?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=25&sort=desc&apikey=${apiKey}`;
+  const apiKey = getEtherscanApiKey();
+  if (!apiKey) return [];
+
+  const url = `https://api.etherscan.io/v2/api`;
+
+  const body = {
+    module: "account",
+    action: "txlist",
+    address: address,
+    startblock: 0,
+    endblock: 99999999,
+    page: 1,
+    offset: 25,
+    sort: "desc"
+  };
 
   try {
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify(body)
+    });
+    
     if (!response.ok) {
-        throw new Error(`Etherscan API request failed with status ${response.status}`);
+      if(response.status === 429) {
+        console.error("Etherscan API rate limit reached.");
+        // Optional: Implement retry logic here
+      }
+      throw new Error(`Etherscan API request failed with status ${response.status}`);
     }
+
     const data = await response.json();
+    
     if (data.status === "1") {
-      return data.result.map((tx: any) => ({
+      return data.data.result.map((tx: any) => ({
         hash: tx.hash,
         from: tx.from,
         to: tx.to,
@@ -136,7 +157,10 @@ const fetchTransactionHistory = async (address: string): Promise<FormattedTransa
         type: tx.from.toLowerCase() === address.toLowerCase() ? 'Send' : 'Receive'
       }));
     } else {
-       console.error("Etherscan API error:", data.message, data.result);
+       console.error("Etherscan API error:", data.message, data.data);
+       if (data.message === "Invalid API Key") {
+         // Specific error for invalid keys
+       }
       return [];
     }
   } catch (error) {
@@ -144,6 +168,7 @@ const fetchTransactionHistory = async (address: string): Promise<FormattedTransa
     return [];
   }
 };
+
 
 const fetchTokenBalances = async (address: string, alchemy: Alchemy | null): Promise<TokenBalance[]> => {
   if (!alchemy) return [];
@@ -450,7 +475,6 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
             const ethersNetworkName = alchemyConfig.network.replace('eth-', '');
             provider = new AlchemyProvider(ethersNetworkName, alchemyConfig.apiKey);
         } else {
-            // This case handles a page refresh where the provider is not immediately available.
             const userKey = typeof window !== 'undefined' ? localStorage.getItem('alchemyApiKey') : null;
             const envKey = process.env.NEXT_PUBLIC_ALCHEMY_KEY;
             const apiKey = userKey || envKey;

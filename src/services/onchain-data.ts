@@ -26,15 +26,6 @@ function getEtherscanApiKey(): string | null {
   return apiKey;
 }
 
-function getEtherscanApiUrl(): string | null {
-    const apiKey = getEtherscanApiKey();
-    if (!apiKey) {
-        return null;
-    }
-    // Etherscan API V2 uses a single endpoint for all networks
-    return `https://api.etherscan.io/api`;
-}
-
 export async function getWalletBalance(address: string): Promise<string> {
   const alchemy = getAlchemy();
   if (!alchemy || !ethers.isAddress(address)) {
@@ -51,17 +42,40 @@ export async function getWalletBalance(address: string): Promise<string> {
 
 export async function getWalletTransactions(address: string) {
   const apiKey = getEtherscanApiKey();
-  const baseUrl = getEtherscanApiUrl();
-  if (!baseUrl || !apiKey || !ethers.isAddress(address)) {
+  if (!apiKey || !ethers.isAddress(address)) {
     return [];
   }
 
-  const url = `${baseUrl}?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=10&sort=desc&apikey=${apiKey}`;
+  const url = `https://api.etherscan.io/v2/api`;
+
+  const body = {
+    module: "account",
+    action: "txlist",
+    address: address,
+    startblock: 0,
+    endblock: 99999999,
+    page: 1,
+    offset: 10,
+    sort: "desc"
+  };
+
   try {
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify(body)
+    });
+
+    if (!response.ok) {
+        throw new Error(`Etherscan API request failed with status ${response.status}`);
+    }
+
     const data = await response.json();
     if (data.status === '1') {
-      return data.result.map((tx: any) => ({
+      return data.data.result.map((tx: any) => ({
         hash: tx.hash,
         from: tx.from,
         to: tx.to,
@@ -69,7 +83,7 @@ export async function getWalletTransactions(address: string) {
         timeStamp: tx.timeStamp,
       }));
     } else {
-      console.error("Etherscan API error:", data.message, data.result);
+      console.error("Etherscan API error:", data.message, data.data);
       return [];
     }
   } catch (error) {
@@ -109,6 +123,7 @@ export async function getWalletTokenBalances(address: string) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 
 <<<<<<< HEAD
@@ -128,3 +143,8 @@ export async function getWalletTokenBalances(address: string) {
 >>>>>>> d229963 (Error: Etherscan API error: "NOTOK" "You are using a deprecated V1 endpo)
 =======
 >>>>>>> 9add21b (Try fixing this error: `Console Error: Etherscan API error: "NOTOK" "You)
+=======
+
+    
+    
+>>>>>>> 2aa5d23 (I'm getting this runtime error:)
