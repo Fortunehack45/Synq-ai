@@ -59,20 +59,6 @@ export const WalletContext = createContext<WalletContextType | undefined>(
   undefined
 );
 
-const getEtherscanApiKey = (): string | null => {
-  const userKey = typeof window !== 'undefined' ? localStorage.getItem('etherscanApiKey') : null;
-  const envKey = process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY;
-  const apiKey = userKey || envKey;
-
-  if (!apiKey || apiKey === "YOUR_API_KEY_HERE" || apiKey.length < 30) {
-    if (!userKey) {
-      console.warn("Etherscan API key not found or invalid. Transaction history will not be available. Please add NEXT_PUBLIC_ETHERSCAN_API_KEY to your .env file or add your key in the settings page. You can get a free key from https://etherscan.io/myapikey.");
-    }
-    return null;
-  }
-  return apiKey;
-}
-
 const getAlchemyConfig = (chainId: bigint): { apiKey: string, network: Network } | null => {
     const userKey = typeof window !== 'undefined' ? localStorage.getItem('alchemyApiKey') : null;
     const envKey = process.env.NEXT_PUBLIC_ALCHEMY_KEY;
@@ -111,61 +97,32 @@ const getAlchemy = (chainId: bigint) => {
 };
 
 const fetchTransactionHistory = async (address: string): Promise<FormattedTransaction[]> => {
-  const apiKey = getEtherscanApiKey();
-  if (!apiKey) return [];
-
-  const url = `https://api.etherscan.io/v2/api`;
-
-  const body = {
-    module: "account",
-    action: "txlist",
-    address: address,
-    startblock: 0,
-    endblock: 99999999,
-    page: 1,
-    offset: 25,
-    sort: "desc"
-  };
+  // We call our own API route to securely fetch transactions from the server side.
+  // This avoids CORS issues and keeps the API key private.
+  const url = `/api/transactions?address=${address}`;
 
   try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify(body)
-    });
+    const response = await fetch(url);
     
     if (!response.ok) {
-      if(response.status === 429) {
-        console.error("Etherscan API rate limit reached.");
-        // Optional: Implement retry logic here
-      }
-      throw new Error(`Etherscan API request failed with status ${response.status}`);
+      const errorData = await response.json();
+      throw new Error(errorData.error || `API request failed with status ${response.status}`);
     }
 
     const data = await response.json();
-    
-    if (data.status === "1") {
-      return data.data.result.map((tx: any) => ({
-        hash: tx.hash,
-        from: tx.from,
-        to: tx.to,
-        value: ethers.formatEther(tx.value),
-        timeStamp: parseInt(tx.timeStamp, 10),
-        type: tx.from.toLowerCase() === address.toLowerCase() ? 'Send' : 'Receive'
-      }));
-    } else {
-       console.error("Etherscan API error:", data.message, data.data);
-       if (data.message === "Invalid API Key") {
-         // Specific error for invalid keys
-       }
-      return [];
-    }
+    return data.result.map((tx: any) => ({
+      hash: tx.hash,
+      from: tx.from,
+      to: tx.to,
+      value: ethers.formatEther(tx.value),
+      timeStamp: parseInt(tx.timeStamp, 10),
+      type: tx.from.toLowerCase() === address.toLowerCase() ? 'Send' : 'Receive'
+    }));
   } catch (error) {
-    console.error("Failed to fetch transaction history from Etherscan:", error);
-    return [];
+    console.error("Failed to fetch transaction history from internal API:", error);
+    // You might want to throw the error to be caught by the caller
+    // and displayed in the UI.
+    throw error;
   }
 };
 
@@ -556,7 +513,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
              setError("The network is busy or rate-limited. Please try again in a few minutes.");
         } else {
             console.error("Failed to update wallet state:", err);
-            setError("Failed to fetch wallet data. Please check your connection and that your API keys are correct.");
+            setError(`Failed to fetch wallet data: ${err.message}. Please check your connection and API keys.`);
         }
        handleDisconnect();
     } finally {
