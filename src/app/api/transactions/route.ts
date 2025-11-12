@@ -9,6 +9,7 @@ import {ethers} from 'ethers';
 export async function GET(request: Request) {
   const {searchParams} = new URL(request.url);
   const address = searchParams.get('address');
+  const chainId = searchParams.get('chainId') || '1'; // Default to mainnet
 
   // 1. Input Validation
   if (!address || !ethers.isAddress(address)) {
@@ -23,29 +24,25 @@ export async function GET(request: Request) {
     return NextResponse.json({error: 'API service is not configured.'}, {status: 500});
   }
 
-  const url = `https://api.etherscan.io/api`;
+  let apiSubdomain = 'api';
+  switch (chainId) {
+    case '11155111':
+      apiSubdomain = 'api-sepolia';
+      break;
+    case '1':
+    default:
+      apiSubdomain = 'api';
+      break;
+  }
 
-  // 3. Etherscan V2 POST Request Body
-  const body = {
-    module: 'account',
-    action: 'txlist',
-    address: address,
-    startblock: 0,
-    endblock: 99999999,
-    page: 1,
-    offset: 25,
-    sort: 'desc',
-  };
+  const url = `https://${apiSubdomain}.etherscan.io/api?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=25&sort=desc&apikey=${apiKey}`;
 
   try {
-    // 4. Making the Server-to-Server Request
     const response = await fetch(url, {
-      method: 'POST',
+      method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`, // Using Bearer token for V2
       },
-      body: JSON.stringify(body),
     });
 
     if (!response.ok) {
@@ -57,11 +54,10 @@ export async function GET(request: Request) {
 
     const data = await response.json();
 
-    // 5. Response Handling
     if (data.status === '1') {
       return NextResponse.json({result: data.result});
     } else {
-      // Forward Etherscan's specific error message if available
+      console.error("Etherscan API error response:", data);
       return NextResponse.json({error: data.message || 'Error fetching transactions from Etherscan.'}, {status: 500});
     }
   } catch (error) {

@@ -17,43 +17,13 @@ function getAlchemy(): Alchemy | null {
   return new Alchemy({ apiKey, network: Network.ETH_MAINNET });
 }
 
-async function fetchEtherscanV2(body: object) {
+function getEtherscanApiKey(): string | null {
   const apiKey = process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY;
-  if (!apiKey || apiKey.includes("YOUR_API_KEY")) {
-    throw new Error("Etherscan API key is not configured on the server.");
+  if (!apiKey || apiKey === "YOUR_API_KEY_HERE" || apiKey.length < 30) {
+    console.warn("Etherscan API key not found or invalid in server context. Transaction history will not be available.");
+    return null;
   }
-
-  const url = `https://api.etherscan.io/api`;
-
-  try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify(body)
-    });
-
-    if (!response.ok) {
-      if(response.status === 429) {
-        throw new Error("Etherscan API rate limit reached.");
-      }
-      throw new Error(`Etherscan API request failed with status ${response.status}`);
-    }
-
-    const data = await response.json();
-    
-    if (data.status === '1') {
-      return data.result;
-    } else {
-      console.error("Etherscan API V2 error:", data.message, data.result);
-      throw new Error(data.message || 'An error occurred with the Etherscan API.');
-    }
-  } catch (error) {
-    console.error("Failed to fetch from Etherscan V2 API:", error);
-    throw error;
-  }
+  return apiKey;
 }
 
 export async function getWalletBalance(address: string): Promise<string> {
@@ -71,32 +41,31 @@ export async function getWalletBalance(address: string): Promise<string> {
 }
 
 export async function getWalletTransactions(address: string) {
-  if (!ethers.isAddress(address)) {
+  const apiKey = getEtherscanApiKey();
+  if (!apiKey || !ethers.isAddress(address)) {
     return [];
   }
 
-  const body = {
-    module: "account",
-    action: "txlist",
-    address: address,
-    startblock: 0,
-    endblock: 99999999,
-    page: 1,
-    offset: 10,
-    sort: "desc"
-  };
+  // Always use mainnet for server-side tool calls, as per V2 recommendation
+  const url = `https://api.etherscan.io/api?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=10&sort=desc&apikey=${apiKey}`;
 
   try {
-    const result = await fetchEtherscanV2(body);
-    return result.map((tx: any) => ({
+    const response = await fetch(url);
+    const data = await response.json();
+    if (data.status === '1') {
+      return data.result.map((tx: any) => ({
         hash: tx.hash,
         from: tx.from,
         to: tx.to,
         value: Utils.formatEther(tx.value),
         timeStamp: tx.timeStamp,
       }));
+    } else {
+      console.error("Etherscan API error:", data.message, data.result);
+      return [];
+    }
   } catch (error) {
-    console.error("Failed to get wallet transactions via V2 API:", error);
+    console.error("Failed to fetch transactions from Etherscan:", error);
     return [];
   }
 }
@@ -133,6 +102,7 @@ export async function getWalletTokenBalances(address: string) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 
 <<<<<<< HEAD
@@ -157,3 +127,5 @@ export async function getWalletTokenBalances(address: string) {
     
     
 >>>>>>> 2aa5d23 (I'm getting this runtime error:)
+=======
+>>>>>>> aa04012 (I’m still getting this runtime error:)

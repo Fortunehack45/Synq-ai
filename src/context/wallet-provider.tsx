@@ -96,10 +96,10 @@ const getAlchemy = (chainId: bigint) => {
   return new Alchemy(config);
 };
 
-const fetchTransactionHistory = async (address: string): Promise<FormattedTransaction[]> => {
+const fetchTransactionHistory = async (address: string, chainId: bigint): Promise<FormattedTransaction[]> => {
   // We call our own API route to securely fetch transactions from the server side.
   // This avoids CORS issues and keeps the API key private.
-  const url = `/api/transactions?address=${address}`;
+  const url = `/api/transactions?address=${address}&chainId=${String(chainId)}`;
 
   try {
     const response = await fetch(url);
@@ -110,18 +110,20 @@ const fetchTransactionHistory = async (address: string): Promise<FormattedTransa
     }
 
     const data = await response.json();
-    return data.result.map((tx: any) => ({
-      hash: tx.hash,
-      from: tx.from,
-      to: tx.to,
-      value: ethers.formatEther(tx.value),
-      timeStamp: parseInt(tx.timeStamp, 10),
-      type: tx.from.toLowerCase() === address.toLowerCase() ? 'Send' : 'Receive'
-    }));
+    if (data.result) {
+      return data.result.map((tx: any) => ({
+        hash: tx.hash,
+        from: tx.from,
+        to: tx.to,
+        value: ethers.formatEther(tx.value),
+        timeStamp: parseInt(tx.timeStamp, 10),
+        type: tx.from.toLowerCase() === address.toLowerCase() ? 'Send' : 'Receive'
+      }));
+    } else {
+      return [];
+    }
   } catch (error) {
     console.error("Failed to fetch transaction history from internal API:", error);
-    // You might want to throw the error to be caught by the caller
-    // and displayed in the UI.
     throw error;
   }
 };
@@ -462,7 +464,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       }
 
       const balanceEth = ethers.formatEther(balanceWei);
-      const history = await fetchTransactionHistory(currentAddress);
+      const history = await fetchTransactionHistory(currentAddress, network.chainId);
       const userNfts = await fetchNfts(currentAddress, alchemy);
       const portfolioHistoryData = await fetchPortfolioHistory(currentAddress, alchemy);
       
