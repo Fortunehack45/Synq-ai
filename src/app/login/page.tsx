@@ -105,8 +105,8 @@ function LoginPageContent() {
                 <span className="w-full border-t" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">
-                  Or
+                <span className="bg-background px-3 text-muted-foreground text-[0.7rem]">
+                  OR
                 </span>
               </div>
             </div>
