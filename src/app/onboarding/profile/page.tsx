@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { useWallet } from '@/hooks/use-wallet';
 import { Logo } from '@/components/logo';
 import { Progress } from '@/components/ui/progress';
+import { ChevronLeft } from 'lucide-react';
 
 export default function ProfileStep() {
   const router = useRouter();
@@ -52,8 +53,12 @@ export default function ProfileStep() {
           <Input id="username" placeholder="e.g., vitalik.eth" value={username} onChange={(e) => setUsername(e.target.value)} />
         </div>
       </CardContent>
-      <CardFooter>
-        <Button className="w-full" onClick={handleNext} disabled={!name || !username}>
+      <CardFooter className="flex justify-between">
+        <Button variant="ghost" onClick={() => router.push('/login')}>
+          <ChevronLeft className="mr-2 h-4 w-4" />
+          Back to Login
+        </Button>
+        <Button onClick={handleNext} disabled={!name || !username}>
           Continue
         </Button>
       </CardFooter>
