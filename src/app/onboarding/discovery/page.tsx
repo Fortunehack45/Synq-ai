@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState } from 'react';
@@ -80,7 +79,7 @@ export default function DiscoveryStep() {
             <Button variant="ghost" onClick={handleSkip}>
                 Skip
             </Button>
-            <Button onClick={handleFinish} disabled={!source}>
+            <Button onClick={handleFinish}>
               Finish Setup
             </Button>
         </div>
