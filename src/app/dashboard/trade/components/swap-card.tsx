@@ -132,7 +132,7 @@ export function SwapCard() {
         </div>
       </CardContent>
       <CardFooter>
-        <Button className="w-full" size="lg" disabled onClick={handleSwap}>
+        <Button className="w-full" size="lg" onClick={handleSwap}>
           <Repeat className="mr-2 h-4 w-4"/> Swap
         </Button>
       </CardFooter>

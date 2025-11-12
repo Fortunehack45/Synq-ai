@@ -25,8 +25,18 @@ const SmartContractSummaryOutputSchema = z.object({
 });
 export type SmartContractSummaryOutput = z.infer<typeof SmartContractSummaryOutputSchema>;
 
+
+const mockSummary: SmartContractSummaryOutput = {
+  summary: "This is a standard ERC-20 token contract with basic functionalities. It allows for transfers, approvals, and includes OpenZeppelin's safe math libraries to prevent overflows. The ownership is renounced, which is a positive security indicator.",
+  ownerOnlyFunctions: "The contract ownership has been renounced, meaning there are no functions that can only be called by the original deployer. This mitigates risks of malicious owner actions.",
+  mintBurnPermissions: "There are no minting or burning functions exposed in this contract. The total supply is fixed, which prevents dilution of token value by creating new tokens.",
+  transferRestrictions: "There are no transfer restrictions or blacklisting capabilities in this contract. All tokens are freely transferable between any two addresses.",
+  riskAssessment: "Low",
+};
+
 export async function summarizeSmartContract(input: SmartContractSummaryInput): Promise<SmartContractSummaryOutput> {
-  return smartContractSummaryFlow(input);
+  // For demo purposes, we return a mock summary immediately.
+  return new Promise(resolve => setTimeout(() => resolve(mockSummary), 1000));
 }
 
 const prompt = ai.definePrompt({
