@@ -448,7 +448,9 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
                 handleDisconnect();
                 return;
             }
-            provider = new AlchemyProvider(alchemyConfig.network, alchemyConfig.apiKey);
+             // Map alchemy-sdk Network to a name ethers.js understands
+            const ethersNetworkName = alchemyConfig.network.replace('eth-', '');
+            provider = new AlchemyProvider(ethersNetworkName, alchemyConfig.apiKey);
         } else {
             throw new Error("MetaMask provider not detected.");
         }
@@ -460,8 +462,8 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       try {
         balanceWei = await provider.getBalance(currentAddress);
       } catch (e) {
-        console.error("A wallet connection error occurred while fetching balance.", e);
-        setError("Could not fetch wallet balance. Your connection may have been interrupted.");
+        console.error("A wallet connection error occurred while fetching balance. This can happen if the connection is interrupted or the network is switched.", e);
+        setError("Could not fetch wallet balance. Your wallet connection may have been interrupted.");
         handleDisconnect();
         return;
       }
