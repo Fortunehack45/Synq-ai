@@ -81,13 +81,19 @@ function DashboardLayoutContent({
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.metaKey || event.ctrlKey) {
+        // Profile shortcut: Ctrl/Cmd + Alt + A
+        if (event.altKey && event.key.toLowerCase() === "a") {
+          event.preventDefault();
+          router.push("/dashboard/profile");
+        }
+        
+        // Logout shortcut: Ctrl/Cmd + Alt + L
+        if (event.altKey && event.key.toLowerCase() === "l") {
+          event.preventDefault();
+          disconnectWallet();
+        }
+
         switch (event.key.toLowerCase()) {
-          case "p":
-            if (event.shiftKey) {
-              event.preventDefault();
-              router.push("/dashboard/profile");
-            }
-            break;
           case "b":
             event.preventDefault();
             router.push("/dashboard/billing");
@@ -95,12 +101,6 @@ function DashboardLayoutContent({
           case "s":
             event.preventDefault();
             router.push("/dashboard/settings");
-            break;
-          case "q":
-            if (event.shiftKey) {
-              event.preventDefault();
-              disconnectWallet();
-            }
             break;
         }
       }
