@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import { ethers, BrowserProvider, BigNumberish, AlchemyProvider } from "ethers";
 import { Alchemy, Network, OwnedNft, TokenBalance, TokenMetadataResponse } from "alchemy-sdk";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
+import { ComingSoonDialog } from "@/components/coming-soon-dialog";
 
 interface FormattedTransaction {
   hash: string;
@@ -213,8 +214,8 @@ const createMockNfts = (): OwnedNft[] => {
     name: pNft.name,
     description: "This is a mock NFT for demo purposes.",
     image: {
-      cachedUrl: `https://picsum.photos/seed/${i+1}/300/300`,
-      originalUrl: `https://picsum.photos/seed/${i+1}/300/300`,
+      cachedUrl: PlaceHolderImages.find(img => img.id === pNft.id)?.imageUrl ?? `https://picsum.photos/seed/${i+1}/300/300`,
+      originalUrl: PlaceHolderImages.find(img => img.id === pNft.id)?.imageUrl ?? `https://picsum.photos/seed/${i+1}/300/300`,
     },
     timeLastUpdated: new Date().toISOString(),
     balance: "1",
@@ -360,6 +361,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
   const [portfolioChange, setPortfolioChange] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showComingSoonModal, setShowComingSoonModal] = useState(false);
   const router = useRouter();
 
   const clearError = useCallback(() => setError(null), []);
@@ -382,7 +384,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     handleDisconnect();
     router.push("/login");
   }, [router, handleDisconnect]);
-
+  
   const updateWalletState = useCallback(async (currentAddress: string, externalProvider?: BrowserProvider) => {
     setLoading(true);
     const ethPrice = 3150; // Static price for now
@@ -519,6 +521,16 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [handleDisconnect]);
 
+  const startDemoMode = useCallback(() => {
+    setLoading(true);
+    setShowComingSoonModal(false);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("walletAddress", mockAddress);
+    }
+    // We just need to call updateWalletState with the mock address
+    updateWalletState(mockAddress);
+    router.push('/dashboard');
+  }, [router, updateWalletState]);
 
   const connectWallet = useCallback(async () => {
     if (typeof window === "undefined" || !(window as any).ethereum) {
@@ -533,7 +545,9 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       const accounts = await browserProvider.send("eth_requestAccounts", []);
       
       if (accounts && accounts.length > 0) {
-        await updateWalletState(accounts[0], browserProvider);
+        localStorage.setItem('walletAddress', accounts[0]);
+        setShowComingSoonModal(true);
+        setLoading(false);
       } else {
         setError("No accounts found. Please connect an account in MetaMask.");
         setLoading(false);
@@ -549,17 +563,14 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [updateWalletState]);
 
-   const startDemoMode = useCallback(() => {
-    setLoading(true);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("walletAddress", mockAddress);
-    }
-    // We just need to call updateWalletState with the mock address
-    updateWalletState(mockAddress);
-    router.push('/dashboard');
-  }, [router, updateWalletState]);
 
   useEffect(() => {
+    const path = window.location.pathname;
+    if (path.startsWith('/login') || path.startsWith('/onboarding')) {
+      setLoading(false);
+      return;
+    }
+    
     setLoading(true);
     const storedAddress = localStorage.getItem("walletAddress");
     
@@ -626,6 +637,11 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <WalletContext.Provider value={value}>
+       <ComingSoonDialog
+        open={showComingSoonModal}
+        onOpenChange={setShowComingSoonModal}
+        onContinue={startDemoMode}
+      />
       {children}
     </WalletContext.Provider>
   );
