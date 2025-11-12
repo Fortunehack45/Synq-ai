@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,23 +17,13 @@ import { useToast } from "@/hooks/use-toast";
 import { useWallet } from "@/hooks/use-wallet";
 import Link from "next/link";
 import { WalletProvider } from "@/context/wallet-provider";
-import { Eye } from "lucide-react";
+import { Eye, ChevronRight } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 function LoginPageContent() {
   const router = useRouter();
   const { connectWallet, address, error, clearError, loading, startDemoMode } = useWallet();
   const { toast } = useToast();
-
-  useEffect(() => {
-    if (!loading && address) {
-      const onboardingComplete = localStorage.getItem(`onboarding_complete_${address}`);
-      if (onboardingComplete) {
-        router.push("/dashboard");
-      } else {
-        router.push("/onboarding");
-      }
-    }
-  }, [address, loading, router]);
 
   useEffect(() => {
     if (error) {
@@ -47,13 +37,6 @@ function LoginPageContent() {
   }, [error, toast, clearError]);
 
   const handleConnect = async (walletType: 'metaMask' | 'walletConnect') => {
-    if (walletType === 'walletConnect') {
-      toast({
-        title: "Coming Soon",
-        description: "WalletConnect support is not yet implemented.",
-      });
-      return;
-    }
     await connectWallet();
   };
 
@@ -88,17 +71,22 @@ function LoginPageContent() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <Button className="w-full" size="lg" onClick={() => handleConnect('metaMask')} disabled={loading}>
-              {loading ? "Connecting..." : <> <Icons.metaMask className="mr-2 h-6 w-6" /> Connect with MetaMask</>}
+            <Button className="w-full relative" size="lg" onClick={() => handleConnect('metaMask')} disabled={loading}>
+              <span className="flex items-center justify-center flex-1">
+                <Icons.metaMask className="mr-2 h-6 w-6" /> Connect with MetaMask
+              </span>
             </Button>
             <Button
               variant="secondary"
-              className="w-full"
+              className="w-full relative"
               size="lg"
-              onClick={() => handleConnect('walletConnect')}
+              disabled
             >
-              <Icons.walletConnect className="mr-2 h-6 w-6" />
-              Connect with WalletConnect
+              <span className="flex items-center justify-center flex-1">
+                <Icons.walletConnect className="mr-2 h-6 w-6" />
+                Connect with WalletConnect
+              </span>
+              <Badge variant="outline" className="bg-background/50 border-border absolute right-2">Coming Soon</Badge>
             </Button>
              <div className="relative">
               <div className="absolute inset-0 flex items-center">
