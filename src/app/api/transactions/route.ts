@@ -22,13 +22,13 @@ export async function GET(request: Request) {
     return NextResponse.json({error: 'Server API service is not configured.'}, {status: 500});
   }
   
-  // The 'txlist' action from the 'account' module still uses a GET request.
-  // We determine the correct subdomain for the network.
+  // Etherscan's 'txlist' action uses the api.etherscan.io endpoint for mainnet,
+  // and network-specific subdomains for testnets.
   const getApiSubdomain = (id: string) => {
     switch (id) {
       case '11155111': return 'api-sepolia';
       case '1': return 'api';
-      default: return 'api';
+      default: return 'api'; // Default to mainnet for others
     }
   }
   
