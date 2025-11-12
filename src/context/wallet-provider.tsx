@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import React, {
@@ -645,4 +644,5 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       {children}
     </WalletContext.Provider>
   );
-};
+
+    

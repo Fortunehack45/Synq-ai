@@ -98,9 +98,14 @@ export async function getWalletTokenBalances(address: string) {
 }
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 
     
 >>>>>>> b3298fc (Try fixing this error: `Console Error: Etherscan API error: "NOTOK" "You)
 =======
 >>>>>>> 2ad3dc5 (Try fixing this error: `Console Error: Etherscan API error: "NOTOK" "You)
+=======
+
+    
+>>>>>>> b204695 (Error: Etherscan API error: "NOTOK" "You are using a deprecated V1 endpo)
