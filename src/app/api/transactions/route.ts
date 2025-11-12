@@ -23,18 +23,11 @@ export async function GET(request: Request) {
     console.error('Etherscan API key not configured on the server.');
     return NextResponse.json({error: 'API service is not configured.'}, {status: 500});
   }
-
-  let apiSubdomain = 'api';
-  switch (chainId) {
-    case '11155111':
-      apiSubdomain = 'api-sepolia';
-      break;
-    case '1':
-    default:
-      apiSubdomain = 'api';
-      break;
-  }
-
+  
+  // Etherscan V2 uses a single endpoint for all supported chains.
+  // The network is inferred from the API key or is just mainnet.
+  // For other networks, you often use a different API key.
+  const apiSubdomain = chainId === '11155111' ? 'api-sepolia' : 'api';
   const url = `https://${apiSubdomain}.etherscan.io/api?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=25&sort=desc&apikey=${apiKey}`;
 
   try {
@@ -54,12 +47,16 @@ export async function GET(request: Request) {
 
     const data = await response.json();
 
-    if (data.status === '1') {
-      return NextResponse.json({result: data.result});
-    } else {
+    // The most important check: Etherscan returns status "0" for errors.
+    if (data.status !== '1') {
       console.error("Etherscan API error response:", data);
-      return NextResponse.json({error: data.message || 'Error fetching transactions from Etherscan.'}, {status: 500});
+      // The `result` field often contains the specific error message (e.g., "Invalid API Key")
+      const errorMessage = typeof data.result === 'string' ? data.result : data.message;
+      return NextResponse.json({error: `Etherscan API Error: ${errorMessage}`}, {status: 500});
     }
+
+    return NextResponse.json({result: data.result});
+    
   } catch (error) {
     console.error('Error in /api/transactions:', error);
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
