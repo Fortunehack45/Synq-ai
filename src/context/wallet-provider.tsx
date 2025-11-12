@@ -11,7 +11,7 @@ import React, {
   useMemo,
 } from "react";
 import { useRouter } from "next/navigation";
-import { ethers, BrowserProvider, BigNumberish } from "ethers";
+import { ethers, BrowserProvider, BigNumberish, AlchemyProvider } from "ethers";
 import { Alchemy, Network, OwnedNft, TokenBalance, TokenMetadataResponse } from "alchemy-sdk";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 
@@ -88,35 +88,41 @@ const getEtherscanApiUrl = (chainId: bigint): string | null => {
   return `https://${domain}/api`;
 }
 
+const getAlchemyConfig = (chainId: bigint): { apiKey: string, network: Network } | null => {
+    const userKey = typeof window !== 'undefined' ? localStorage.getItem('alchemyApiKey') : null;
+    const envKey = process.env.NEXT_PUBLIC_ALCHEMY_KEY;
+    const apiKey = userKey || envKey;
+
+    if (!apiKey || apiKey === "YOUR_API_KEY_HERE" || apiKey.length < 30) {
+        if (!userKey) {
+        console.warn("Alchemy API key not found or invalid. Some features may not be available.");
+        }
+        return null;
+    }
+
+    const chainIdNumber = Number(chainId);
+    let network: Network;
+
+    switch (chainIdNumber) {
+        case 1:
+        network = Network.ETH_MAINNET;
+        break;
+        case 11155111:
+        network = Network.ETH_SEPOLIA;
+        break;
+        default:
+        console.warn(`Unsupported network for Alchemy: ${chainIdNumber}.`);
+        return null;
+    }
+
+    return { apiKey, network };
+};
+
 
 const getAlchemy = (chainId: bigint) => {
-  const userKey = typeof window !== 'undefined' ? localStorage.getItem('alchemyApiKey') : null;
-  const envKey = process.env.NEXT_PUBLIC_ALCHEMY_KEY;
-  const apiKey = userKey || envKey;
-  
-  if (!apiKey || apiKey === "YOUR_API_KEY_HERE" || apiKey.length < 30) {
-    if (!userKey) {
-      console.warn("Alchemy API key not found or invalid. NFT and token data will not be available. Please add NEXT_PUBLIC_ALCHEMY_KEY to your .env file or add your key in the settings page. You can get a free key from https://alchemy.com/");
-    }
-    return null;
-  }
-
-  const chainIdNumber = Number(chainId);
-  let network: Network;
-
-  switch (chainIdNumber) {
-    case 1:
-      network = Network.ETH_MAINNET;
-      break;
-    case 11155111:
-      network = Network.ETH_SEPOLIA;
-      break;
-    default:
-      console.warn(`Unsupported network for Alchemy: ${chainIdNumber}. NFT and token data will not be available.`);
-      return null;
-  }
-
-  return new Alchemy({ apiKey, network });
+  const config = getAlchemyConfig(chainId);
+  if (!config) return null;
+  return new Alchemy(config);
 };
 
 const fetchTransactionHistory = async (address: string, chainId: bigint): Promise<FormattedTransaction[]> => {
@@ -390,7 +396,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     router.push("/login");
   }, [router, handleDisconnect]);
 
-  const updateWalletState = useCallback(async (currentAddress: string, provider?: BrowserProvider) => {
+  const updateWalletState = useCallback(async (currentAddress: string, externalProvider?: BrowserProvider) => {
     setLoading(true);
     const ethPrice = 3150; // Static price for now
 
@@ -433,21 +439,21 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
-      if (!provider) {
-        if (!(window as any).ethereum) throw new Error("MetaMask not detected.");
-        provider = new BrowserProvider((window as any).ethereum);
-      }
+        let provider;
+        if (externalProvider) {
+            const network = await externalProvider.getNetwork();
+            const alchemyConfig = getAlchemyConfig(network.chainId);
+            if (!alchemyConfig) {
+                setError("Alchemy API key not configured. Please add it in Settings to fetch wallet data.");
+                handleDisconnect();
+                return;
+            }
+            provider = new AlchemyProvider(alchemyConfig.network, alchemyConfig.apiKey);
+        } else {
+            throw new Error("MetaMask provider not detected.");
+        }
       
-      let network;
-      try {
-        network = await provider.getNetwork();
-      } catch (e) {
-        console.error("A wallet connection error occurred, likely from MetaMask.", e);
-        setError("Your wallet connection was interrupted. Please try again.");
-        handleDisconnect();
-        return;
-      }
-
+      const network = await provider.getNetwork();
       const alchemy = getAlchemy(network.chainId);
       
       let balanceWei;
@@ -507,9 +513,13 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       if (typeof window !== "undefined") {
         localStorage.setItem("walletAddress", currentAddress);
       }
-    } catch (err) {
-       console.error("Failed to update wallet state:", err);
-       setError("Failed to fetch wallet data. Please check your connection and ensure MetaMask is configured correctly.");
+    } catch (err: any) {
+        if (err.code === -32002) {
+             setError("The network is busy or rate-limited. Please try again in a few minutes.");
+        } else {
+            console.error("Failed to update wallet state:", err);
+            setError("Failed to fetch wallet data. Please check your connection and that your API keys are correct.");
+        }
        handleDisconnect();
     } finally {
       setLoading(false);
@@ -526,11 +536,11 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     
     setLoading(true);
     try {
-      const provider = new BrowserProvider((window as any).ethereum);
-      const accounts = await provider.send("eth_requestAccounts", []);
+      const browserProvider = new BrowserProvider((window as any).ethereum);
+      const accounts = await browserProvider.send("eth_requestAccounts", []);
       
       if (accounts && accounts.length > 0) {
-        await updateWalletState(accounts[0], provider);
+        await updateWalletState(accounts[0], browserProvider);
       } else {
         setError("No accounts found. Please connect an account in MetaMask.");
         setLoading(false);
@@ -561,7 +571,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     const storedAddress = localStorage.getItem("walletAddress");
     
     if (storedAddress && ethers.isAddress(storedAddress)) {
-      updateWalletState(storedAddress);
+      updateWalletState(storedAddress, new BrowserProvider((window as any).ethereum));
     } else {
       handleDisconnect();
     }
@@ -570,7 +580,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     if (ethereum?.isMetaMask) {
       const handleAccountsChanged = (accounts: string[]) => {
         if (accounts.length > 0 && ethers.isAddress(accounts[0])) {
-          updateWalletState(accounts[0]);
+          updateWalletState(accounts[0], new BrowserProvider(ethereum));
         } else {
           handleDisconnect();
           router.push('/login');
