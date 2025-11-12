@@ -9,11 +9,15 @@ import React, {
   ReactNode,
   useMemo,
 } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { ethers, BrowserProvider, AlchemyProvider } from "ethers";
 import { Alchemy, Network, OwnedNft, TokenBalance, TokenMetadataResponse } from "alchemy-sdk";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
+<<<<<<< HEAD
 import { ComingSoonDialog } from "@/components/coming-soon-dialog";
+=======
+import { toast } from "@/hooks/use-toast";
+>>>>>>> c447b51 (When I click on back to login page it takes me to the login page then to)
 
 interface FormattedTransaction {
   hash: string;
@@ -97,8 +101,6 @@ const getAlchemy = (chainId: bigint) => {
 };
 
 const fetchTransactionHistory = async (address: string, chainId: bigint): Promise<FormattedTransaction[]> => {
-  // We call our own API route to securely fetch transactions from the server side.
-  // This avoids CORS issues and keeps the API key private.
   const url = `/api/transactions?address=${address}&chainId=${String(chainId)}`;
 
   try {
@@ -127,7 +129,6 @@ const fetchTransactionHistory = async (address: string, chainId: bigint): Promis
     }
   } catch (error) {
     console.error("Failed to fetch transaction history from internal API:", error);
-    // Re-throw the error so it can be caught in updateWalletState
     throw error;
   }
 };
@@ -350,6 +351,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [showComingSoonModal, setShowComingSoonModal] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
 
   const clearError = useCallback(() => setError(null), []);
 
@@ -381,9 +383,9 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       handleDisconnect();
       return;
     }
-    
-    // Handle Demo Mode
-    if (currentAddress.toLowerCase() === mockAddress.toLowerCase() && localStorage.getItem('walletAddress')?.toLowerCase() === mockAddress.toLowerCase()) {
+
+    // Force demo mode for any connected wallet
+    if (currentAddress) {
       const mockHistory = createMockPortfolioHistory();
       const mockChange = calculatePortfolioChange(mockHistory);
       
@@ -410,123 +412,18 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       setPortfolioHistory(mockHistory);
       setPortfolioChange(mockChange);
       setTokens([ethToken, ...demoTokens]); 
+      setError(null);
+      
+      if (typeof window !== "undefined") {
+        // We store the mock address to signify we are in demo mode.
+        localStorage.setItem("walletAddress", mockAddress);
+      }
       setLoading(false);
       return;
     }
-
-    try {
-        let provider;
-        let network: ethers.Network;
-
-        if (externalProvider) {
-            try {
-                network = await externalProvider.getNetwork();
-            } catch (e: any) {
-                console.error("A wallet connection error occurred while getting network. This can happen if the connection is interrupted or the network is switched.", e);
-                setError("Could not get network from wallet. Your connection may have been interrupted.");
-                handleDisconnect();
-                return;
-            }
-
-            const alchemyConfig = getAlchemyConfig(network.chainId);
-            if (!alchemyConfig) {
-                setError("This network is not supported. Please switch to Ethereum Mainnet or Sepolia in your wallet.");
-                handleDisconnect();
-                return;
-            }
-            
-            const ethersNetworkName = alchemyConfig.network.replace('eth-', '');
-            provider = new AlchemyProvider(ethersNetworkName, alchemyConfig.apiKey);
-        } else {
-            const userKey = typeof window !== 'undefined' ? localStorage.getItem('alchemyApiKey') : null;
-            const envKey = process.env.NEXT_PUBLIC_ALCHEMY_KEY;
-            const apiKey = userKey || envKey;
-             if (!apiKey || apiKey === "YOUR_API_KEY_HERE" || apiKey.length < 30) {
-                setError("Alchemy API key not configured. Please add it in Settings to fetch wallet data.");
-                handleDisconnect();
-                return;
-            }
-            // Assume mainnet on refresh if no provider
-            provider = new AlchemyProvider('mainnet', apiKey);
-            network = await provider.getNetwork();
-        }
-      
-      const alchemy = getAlchemy(network.chainId);
-      
-      let balanceWei;
-      try {
-        balanceWei = await provider.getBalance(currentAddress);
-      } catch (e: any) {
-        console.error("A wallet connection error occurred while fetching balance. This can happen if the connection is interrupted or the network is switched.", e);
-         if (e.code === -32002) {
-             setError("The network is busy or rate-limited by your wallet provider. Please try again in a few minutes.");
-         } else {
-             setError("Could not fetch wallet balance. Your wallet connection may have been interrupted.");
-         }
-        handleDisconnect();
-        return;
-      }
-
-      const balanceEth = ethers.formatEther(balanceWei);
-      const history = await fetchTransactionHistory(currentAddress, network.chainId);
-      const userNfts = await fetchNfts(currentAddress, alchemy);
-      const portfolioHistoryData = await fetchPortfolioHistory(currentAddress, alchemy);
-      
-      const tokenBalances = await fetchTokenBalances(currentAddress, alchemy);
-      const tokenMetadata = await fetchTokenMetadata(tokenBalances.map(t => t.contractAddress), alchemy);
-
-      const ethLogo = PlaceHolderImages.find(img => img.id === 'eth-logo');
-      const ethToken: FormattedTokenBalance = {
-        name: 'Ethereum',
-        symbol: 'ETH',
-        balance: parseFloat(balanceEth).toFixed(4),
-        value: (parseFloat(balanceEth) * ethPrice).toLocaleString('en-US', { style: 'currency', currency: 'USD' }),
-        iconUrl: ethLogo?.imageUrl,
-        iconHint: ethLogo?.imageHint,
-        contractAddress: 'eth',
-      };
-
-      const formattedTokens: FormattedTokenBalance[] = tokenBalances.map((token, i) => {
-        const metadata = tokenMetadata[i];
-        const balance = parseFloat(ethers.formatUnits(token.tokenBalance!, metadata.decimals || 18));
-        // Placeholder for token value - requires price API
-        const tokenValue = metadata.symbol === 'USDC' || metadata.symbol === 'USDT' ? balance : 0; 
-        return {
-          name: metadata.name || 'Unknown Token',
-          symbol: metadata.symbol || '???',
-          balance: balance.toFixed(4),
-          value: tokenValue > 0 ? tokenValue.toLocaleString('en-US', { style: 'currency', currency: 'USD' }) : '$0.00',
-          iconUrl: metadata.logo,
-          iconHint: `${metadata.name} logo`,
-          contractAddress: token.contractAddress,
-        }
-      });
-      
-      setAddress(currentAddress);
-      setBalance(balanceEth);
-      setTokens([ethToken, ...formattedTokens]);
-      setTransactions(history);
-      setNfts(userNfts);
-      setPortfolioHistory(portfolioHistoryData);
-      setPortfolioChange(calculatePortfolioChange(portfolioHistoryData));
-      setError(null);
-
-      if (typeof window !== "undefined") {
-        localStorage.setItem("walletAddress", currentAddress);
-      }
-    } catch (err: any) {
-        if (err.code === -32002) {
-             setError("The network is busy or rate-limited. Please try again in a few minutes.");
-        } else {
-            console.error("Failed to update wallet state:", err);
-            setError(`Failed to fetch wallet data: ${err.message}. Please check your connection and API keys.`);
-        }
-       handleDisconnect();
-    } finally {
-      setLoading(false);
-    }
   }, [handleDisconnect]);
 
+<<<<<<< HEAD
   const startDemoMode = useCallback(() => {
     setLoading(true);
     setShowComingSoonModal(false);
@@ -538,6 +435,8 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     router.push('/dashboard');
   }, [router, updateWalletState]);
 
+=======
+>>>>>>> c447b51 (When I click on back to login page it takes me to the login page then to)
   const connectWallet = useCallback(async () => {
     if (typeof window === "undefined" || !(window as any).ethereum) {
       setError("MetaMask not detected. Please install the extension.");
@@ -551,9 +450,20 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       const accounts = await browserProvider.send("eth_requestAccounts", []);
       
       if (accounts && accounts.length > 0) {
+<<<<<<< HEAD
         localStorage.setItem('walletAddress', accounts[0]);
         setShowComingSoonModal(true);
         setLoading(false);
+=======
+        toast({
+          title: "Connection Successful!",
+          description: "Live data import is coming soon. Welcome to the SynqAI demo experience.",
+        });
+        // After connecting, immediately force the app into demo mode.
+        await updateWalletState(mockAddress);
+        router.push('/dashboard');
+
+>>>>>>> c447b51 (When I click on back to login page it takes me to the login page then to)
       } else {
         setError("No accounts found. Please connect an account in MetaMask.");
         setLoading(false);
@@ -567,8 +477,9 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       }
       setLoading(false);
     }
-  }, [updateWalletState]);
+  }, [updateWalletState, router]);
 
+<<<<<<< HEAD
 
   useEffect(() => {
     const path = window.location.pathname;
@@ -579,26 +490,37 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     
     setLoading(true);
     const storedAddress = localStorage.getItem("walletAddress");
+=======
+   const startDemoMode = useCallback(async () => {
+    setLoading(true);
+    await updateWalletState(mockAddress);
+    router.push('/dashboard');
+  }, [router, updateWalletState]);
+
+  useEffect(() => {
+    const isLoginPage = pathname.startsWith('/login');
+    const isOnboardingPage = pathname.startsWith('/onboarding');
+>>>>>>> c447b51 (When I click on back to login page it takes me to the login page then to)
     
-    if (storedAddress && ethers.isAddress(storedAddress)) {
-      if ((window as any).ethereum) {
-         updateWalletState(storedAddress, new BrowserProvider((window as any).ethereum));
-      } else if (storedAddress.toLowerCase() === mockAddress.toLowerCase()){
-         updateWalletState(storedAddress);
+    // Only attempt auto-reconnection if we are not on the login/onboarding pages
+    if (!isLoginPage && !isOnboardingPage) {
+      setLoading(true);
+      const storedAddress = localStorage.getItem("walletAddress");
+      if (storedAddress && ethers.isAddress(storedAddress)) {
+        updateWalletState(storedAddress, (window as any).ethereum ? new BrowserProvider((window as any).ethereum) : undefined);
       } else {
-        // If no provider but address is stored, it's likely a hard refresh on a real wallet.
-        // We can't proceed without the provider, so we disconnect.
         handleDisconnect();
       }
     } else {
-      handleDisconnect();
+      setLoading(false);
     }
 
     const ethereum = (window as any).ethereum;
     if (ethereum?.isMetaMask) {
       const handleAccountsChanged = (accounts: string[]) => {
-        if (accounts.length > 0 && ethers.isAddress(accounts[0])) {
-          updateWalletState(accounts[0], new BrowserProvider(ethereum));
+        if (accounts.length > 0) {
+          // Re-trigger the connection flow to show toast and guide to demo
+          connectWallet();
         } else {
           handleDisconnect();
           router.push('/login');
@@ -620,7 +542,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       };
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Run only once on mount
+  }, [pathname]);
 
   const value = useMemo(() => ({
     address,

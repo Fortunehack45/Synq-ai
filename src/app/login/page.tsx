@@ -25,14 +25,6 @@ function LoginPageContent() {
   const { toast } = useToast();
 
   useEffect(() => {
-    // This effect now only handles post-connection routing for the demo mode
-    if (!loading && address) {
-       router.push("/dashboard");
-    }
-  }, [address, loading, router]);
-
-
-  useEffect(() => {
     if (error) {
       toast({
         variant: "destructive",
@@ -51,7 +43,6 @@ function LoginPageContent() {
       });
       return;
     }
-    // The connectWallet function now handles the entire professional flow.
     await connectWallet();
   };
 
@@ -60,7 +51,6 @@ function LoginPageContent() {
   }
 
   // Show a loading indicator on the login page while the initial auth check is running.
-  // The loading state is managed by the WalletProvider.
   if (loading && !address) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
@@ -87,9 +77,10 @@ function LoginPageContent() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <Button className="w-full" size="lg" onClick={() => handleConnect('metaMask')}>
+            <Button className="w-full relative" size="lg" onClick={() => handleConnect('metaMask')} disabled>
                 <Icons.metaMask className="mr-2 h-6 w-6" /> 
                 Connect with MetaMask
+                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs bg-primary/20 text-primary-foreground py-0.5 px-2 rounded-full">Coming Soon</span>
             </Button>
             <Button
               variant="secondary"
