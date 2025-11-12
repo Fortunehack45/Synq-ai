@@ -131,16 +131,8 @@ function SettingsPageContent() {
     if (!address) return;
     try {
       // List all possible keys related to the user
-      const keysToRemove = [
-        `profile_${address}_name`,
-        `profile_${address}_username`,
-        `profile_${address}_bio`,
-        `profile_${address}_experience`,
-        `profile_${address}_interests`,
-        `profile_${address}_discovery`,
-        `onboarding_complete_${address}`,
-      ];
-
+      const keysToRemove = Object.keys(localStorage).filter(key => key.includes(address));
+      
       keysToRemove.forEach(key => localStorage.removeItem(key));
       
       toast({
