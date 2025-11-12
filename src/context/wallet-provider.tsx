@@ -71,21 +71,8 @@ const getEtherscanApiUrl = (chainId: bigint): string | null => {
     return null;
   }
 
-  const chainIdNumber = Number(chainId);
-  let domain = '';
-  switch (chainIdNumber) {
-    case 1:
-      domain = 'api.etherscan.io';
-      break;
-    case 11155111:
-      domain = 'api-sepolia.etherscan.io';
-      break;
-    default:
-      console.warn(`Unsupported network for Etherscan: ${chainIdNumber}. Transaction history will not be available.`);
-      return null;
-  }
-  
-  return `https://${domain}/api`;
+  // Etherscan API V2 uses a single endpoint for all networks
+  return `https://api.etherscan.io/api`;
 }
 
 const getAlchemyConfig = (chainId: bigint): { apiKey: string, network: Network } | null => {
@@ -461,9 +448,13 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       let balanceWei;
       try {
         balanceWei = await provider.getBalance(currentAddress);
-      } catch (e) {
+      } catch (e: any) {
         console.error("A wallet connection error occurred while fetching balance. This can happen if the connection is interrupted or the network is switched.", e);
-        setError("Could not fetch wallet balance. Your wallet connection may have been interrupted.");
+         if (e.code === -32002) {
+             setError("The network is busy or rate-limited by your wallet provider. Please try again in a few minutes.");
+         } else {
+             setError("Could not fetch wallet balance. Your wallet connection may have been interrupted.");
+         }
         handleDisconnect();
         return;
       }
@@ -573,7 +564,15 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     const storedAddress = localStorage.getItem("walletAddress");
     
     if (storedAddress && ethers.isAddress(storedAddress)) {
-      updateWalletState(storedAddress, new BrowserProvider((window as any).ethereum));
+      if ((window as any).ethereum) {
+         updateWalletState(storedAddress, new BrowserProvider((window as any).ethereum));
+      } else if (storedAddress.toLowerCase() === mockAddress.toLowerCase()){
+         updateWalletState(storedAddress);
+      } else {
+        // If no provider but address is stored, it's likely a hard refresh on a real wallet.
+        // We can't proceed without the provider, so we disconnect.
+        handleDisconnect();
+      }
     } else {
       handleDisconnect();
     }
