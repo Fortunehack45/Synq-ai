@@ -25,15 +25,12 @@ function LoginPageContent() {
   const { toast } = useToast();
 
   useEffect(() => {
+    // This effect now only handles post-connection routing for the demo mode
     if (!loading && address) {
-      const onboardingComplete = localStorage.getItem(`onboarding_complete_${address}`);
-      if (onboardingComplete) {
-        router.push("/dashboard");
-      } else {
-        router.push("/onboarding");
-      }
+       router.push("/dashboard");
     }
   }, [address, loading, router]);
+
 
   useEffect(() => {
     if (error) {
@@ -50,10 +47,11 @@ function LoginPageContent() {
     if (walletType === 'walletConnect') {
       toast({
         title: "Coming Soon",
-        description: "WalletConnect support is not yet implemented.",
+        description: "WalletConnect support is under development.",
       });
       return;
     }
+    // The connectWallet function now handles the entire professional flow.
     await connectWallet();
   };
 
@@ -61,8 +59,9 @@ function LoginPageContent() {
     startDemoMode();
   }
 
-  // Show a loading indicator on the login page while the initial check is running
-  if (loading) {
+  // Show a loading indicator on the login page while the initial auth check is running.
+  // The loading state is managed by the WalletProvider.
+  if (loading && !address) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div>
@@ -88,17 +87,20 @@ function LoginPageContent() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <Button className="w-full" size="lg" onClick={() => handleConnect('metaMask')} disabled={loading}>
-              {loading ? "Connecting..." : <> <Icons.metaMask className="mr-2 h-6 w-6" /> Connect with MetaMask</>}
+            <Button className="w-full" size="lg" onClick={() => handleConnect('metaMask')}>
+                <Icons.metaMask className="mr-2 h-6 w-6" /> 
+                Connect with MetaMask
             </Button>
             <Button
               variant="secondary"
-              className="w-full"
+              className="w-full relative"
               size="lg"
               onClick={() => handleConnect('walletConnect')}
+              disabled
             >
               <Icons.walletConnect className="mr-2 h-6 w-6" />
               Connect with WalletConnect
+              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs bg-secondary-foreground/20 text-secondary-foreground py-0.5 px-2 rounded-full">Coming Soon</span>
             </Button>
              <div className="relative">
               <div className="absolute inset-0 flex items-center">
