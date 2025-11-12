@@ -58,7 +58,7 @@ export function UserNav() {
         <DropdownMenuGroup>
           <DropdownMenuItem onClick={() => router.push('/dashboard/profile')}>
             Profile
-            <DropdownMenuShortcut>⌥A</DropdownMenuShortcut>
+            <DropdownMenuShortcut>⌘A</DropdownMenuShortcut>
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => router.push('/dashboard/billing')}>
             Billing
@@ -73,7 +73,7 @@ export function UserNav() {
         <DropdownMenuItem onClick={disconnectWallet}>
           <LogOut className="mr-2 h-4 w-4" />
           Log out
-          <DropdownMenuShortcut>⌥L</DropdownMenuShortcut>
+          <DropdownMenuShortcut>⌘L</DropdownMenuShortcut>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
