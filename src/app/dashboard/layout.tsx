@@ -40,6 +40,7 @@ import { useWallet } from "@/hooks/use-wallet";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 const navItems = [
   { href: "/dashboard", icon: Home, label: "Dashboard" },
@@ -148,7 +149,7 @@ function DashboardLayoutContent({
         <div className="flex h-full max-h-screen flex-col gap-2">
           <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
             <Link href="/" className="flex items-center gap-2 font-semibold">
-              <BotMessageSquare className="h-6 w-6 text-primary" />
+              <Image src="/icon.svg" alt="SynqAI Logo" width={24} height={24} />
               <span className="font-headline text-lg tracking-tight">SynqAI</span>
             </Link>
             <Button variant="ghost" size="icon" className="ml-auto h-8 w-8">
@@ -215,7 +216,7 @@ function DashboardLayoutContent({
                   href="#"
                   className="flex items-center gap-2 text-lg font-semibold mb-4"
                 >
-                  <BotMessageSquare className="h-6 w-6 text-primary" />
+                  <Image src="/icon.svg" alt="SynqAI Logo" width={24} height={24} />
                   <span className="sr-only">SynqAI</span>
                 </Link>
                 {navItems.map((item) => (
