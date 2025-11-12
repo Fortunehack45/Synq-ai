@@ -88,9 +88,10 @@ const mockAnalysis: AICryptoWalletAssistantOutput = {
 
 
 export async function aiCryptoWalletAssistant(input: AICryptoWalletAssistantInput): Promise<AICryptoWalletAssistantOutput> {
+  const loadingTime = Math.random() * (5000 - 3000) + 3000; // Random delay between 3-5 seconds
   if (input.walletAddress.toLowerCase() === mockDemoAddress.toLowerCase()) {
     // For the demo account, return a pre-canned realistic analysis.
-    return new Promise(resolve => setTimeout(() => resolve(mockAnalysis), 1500));
+    return new Promise(resolve => setTimeout(() => resolve(mockAnalysis), loadingTime));
   }
   return aiCryptoWalletAssistantFlow(input);
 }

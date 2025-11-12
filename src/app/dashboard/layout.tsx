@@ -15,6 +15,7 @@ import {
   Settings,
   User,
   Users,
+  WifiOff,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -62,6 +63,7 @@ function DashboardLayoutContent({
   const pathname = usePathname();
   const { disconnectWallet, address, loading } = useWallet();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [showSlowLoadMessage, setShowSlowLoadMessage] = useState(false);
 
   useEffect(() => {
     // Wait until the loading is finished before checking for address
@@ -112,11 +114,33 @@ function DashboardLayoutContent({
     };
   }, [router, disconnectWallet]);
 
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (loading) {
+      timer = setTimeout(() => {
+        setShowSlowLoadMessage(true);
+      }, 15000); // 15 seconds
+    } else {
+      setShowSlowLoadMessage(false);
+    }
+    return () => clearTimeout(timer);
+  }, [loading]);
+
   // While loading, show a loader or null to prevent flashing content
   if (loading || !address) {
     return (
-      <div className="flex h-screen w-full items-center justify-center">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div>
+      <div className="flex h-screen w-full items-center justify-center text-center">
+        {!showSlowLoadMessage ? (
+          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div>
+        ) : (
+          <div className="flex flex-col items-center gap-4 text-muted-foreground">
+             <WifiOff className="h-12 w-12" />
+             <h2 className="text-lg font-semibold text-foreground">Still Connecting...</h2>
+             <p className="max-w-xs">
+                This is taking longer than expected. Please check your internet connection and ensure your API keys in Settings are correct.
+             </p>
+          </div>
+        )}
       </div>
     );
   }

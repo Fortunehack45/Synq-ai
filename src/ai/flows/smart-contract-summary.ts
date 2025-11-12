@@ -35,8 +35,9 @@ const mockSummary: SmartContractSummaryOutput = {
 };
 
 export async function summarizeSmartContract(input: SmartContractSummaryInput): Promise<SmartContractSummaryOutput> {
+  const loadingTime = Math.random() * (5000 - 3000) + 3000; // Random delay between 3-5 seconds
   // For demo purposes, we return a mock summary immediately.
-  return new Promise(resolve => setTimeout(() => resolve(mockSummary), 1000));
+  return new Promise(resolve => setTimeout(() => resolve(mockSummary), loadingTime));
 }
 
 const prompt = ai.definePrompt({
