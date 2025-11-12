@@ -18,7 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useWallet } from "@/hooks/use-wallet";
 import Link from "next/link";
 import { WalletProvider } from "@/context/wallet-provider";
-import { TestTube } from "lucide-react";
+import { Eye } from "lucide-react";
 
 function LoginPageContent() {
   const router = useRouter();
@@ -117,7 +117,7 @@ function LoginPageContent() {
               size="lg"
               onClick={handleDemo}
             >
-              <TestTube className="mr-2 h-5 w-5" />
+              <Eye className="mr-2 h-5 w-5" />
               Continue with Demo
             </Button>
           </div>
