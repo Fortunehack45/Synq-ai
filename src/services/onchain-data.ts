@@ -1,6 +1,5 @@
 
 
-
 'use server';
 
 import { Alchemy, Network, Utils } from 'alchemy-sdk';
@@ -48,6 +47,7 @@ export async function getWalletTransactions(address: string) {
   }
 
   // Always use mainnet for server-side tool calls.
+  // The 'txlist' action requires a GET request with parameters in the URL.
   const url = `https://api.etherscan.io/api?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=10&sort=desc&apikey=${apiKey}`;
 
   try {
@@ -62,11 +62,11 @@ export async function getWalletTransactions(address: string) {
         timeStamp: tx.timeStamp,
       }));
     } else {
-      console.error("Etherscan API error:", data.message, data.result);
+      console.error("Etherscan API error (on server):", data.message, data.result);
       return [];
     }
   } catch (error) {
-    console.error("Failed to fetch transactions from Etherscan:", error);
+    console.error("Failed to fetch transactions from Etherscan (on server):", error);
     return [];
   }
 }
