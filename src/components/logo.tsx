@@ -1,15 +1,15 @@
 import { cn } from "@/lib/utils"
-import { BotMessageSquare } from "lucide-react"
+import Image from "next/image"
 
 export function Logo({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "flex items-center justify-center h-16 w-16 bg-primary text-primary-foreground rounded-2xl",
+        "flex items-center justify-center h-16 w-16",
         className
       )}
     >
-      <BotMessageSquare className="h-8 w-8" />
+      <Image src="/icon.svg" alt="SynqAI Logo" width={64} height={64} />
     </div>
   )
 }
