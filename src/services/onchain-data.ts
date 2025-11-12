@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { Alchemy, Network, Utils } from 'alchemy-sdk';
@@ -107,6 +108,7 @@ export async function getWalletTokenBalances(address: string) {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 
 <<<<<<< HEAD
@@ -124,3 +126,5 @@ export async function getWalletTokenBalances(address: string) {
 =======
     
 >>>>>>> d229963 (Error: Etherscan API error: "NOTOK" "You are using a deprecated V1 endpo)
+=======
+>>>>>>> 9add21b (Try fixing this error: `Console Error: Etherscan API error: "NOTOK" "You)

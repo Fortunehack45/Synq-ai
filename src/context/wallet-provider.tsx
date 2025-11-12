@@ -451,10 +451,17 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
             provider = new AlchemyProvider(ethersNetworkName, alchemyConfig.apiKey);
         } else {
             // This case handles a page refresh where the provider is not immediately available.
-            // We can't proceed without the provider, so we disconnect.
-            setError("Wallet provider not available on page refresh. Please reconnect your wallet.");
-            handleDisconnect();
-            return;
+            const userKey = typeof window !== 'undefined' ? localStorage.getItem('alchemyApiKey') : null;
+            const envKey = process.env.NEXT_PUBLIC_ALCHEMY_KEY;
+            const apiKey = userKey || envKey;
+             if (!apiKey || apiKey === "YOUR_API_KEY_HERE" || apiKey.length < 30) {
+                setError("Alchemy API key not configured. Please add it in Settings to fetch wallet data.");
+                handleDisconnect();
+                return;
+            }
+            // Assume mainnet on refresh if no provider
+            provider = new AlchemyProvider('mainnet', apiKey);
+            network = await provider.getNetwork();
         }
       
       const alchemy = getAlchemy(network.chainId);
@@ -657,6 +664,4 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       {children}
     </WalletContext.Provider>
   );
-}
-
-    
+};
