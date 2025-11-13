@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,13 +17,15 @@ import { useToast } from "@/hooks/use-toast";
 import { useWallet } from "@/hooks/use-wallet";
 import Link from "next/link";
 import { WalletProvider } from "@/context/wallet-provider";
-import { Eye } from "lucide-react";
+import { Eye, ChevronRight } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 function LoginPageContent() {
   const router = useRouter();
   const { connectWallet, address, error, clearError, loading, startDemoMode } = useWallet();
   const { toast } = useToast();
 
+<<<<<<< HEAD
   const handleConnect = async (walletType: 'metaMask' | 'walletConnect') => {
     if (walletType === 'walletConnect') {
       toast({
@@ -32,6 +34,20 @@ function LoginPageContent() {
       });
       return;
     }
+=======
+  useEffect(() => {
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Connection Error",
+        description: error,
+      });
+      clearError();
+    }
+  }, [error, toast, clearError]);
+
+  const handleConnect = async (walletType: 'metaMask' | 'walletConnect') => {
+>>>>>>> 803b280de73c9c24dd7e4aa6a21f825a6b0aeb24
     await connectWallet();
   };
   
@@ -65,6 +81,7 @@ function LoginPageContent() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+<<<<<<< HEAD
             <div className="space-y-4">
                <Button className="w-full justify-between" size="lg" onClick={() => handleConnect('metaMask')} disabled>
                 <div className="flex items-center gap-2">
@@ -97,6 +114,34 @@ function LoginPageContent() {
                     OR
                   </span>
                 </div>
+=======
+          <div className="space-y-4">
+            <Button className="w-full relative" size="lg" onClick={() => handleConnect('metaMask')} disabled={loading}>
+              <span className="flex items-center justify-center flex-1">
+                <Icons.metaMask className="mr-2 h-6 w-6" /> Connect with MetaMask
+              </span>
+            </Button>
+            <Button
+              variant="secondary"
+              className="w-full relative"
+              size="lg"
+              disabled
+            >
+              <span className="flex items-center justify-center flex-1">
+                <Icons.walletConnect className="mr-2 h-6 w-6" />
+                Connect with WalletConnect
+              </span>
+              <Badge variant="outline" className="bg-background/50 border-border absolute right-2">Coming Soon</Badge>
+            </Button>
+             <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-3 text-muted-foreground text-[0.7rem]">
+                  OR
+                </span>
+>>>>>>> 803b280de73c9c24dd7e4aa6a21f825a6b0aeb24
               </div>
 
               <Button

@@ -22,8 +22,13 @@
     --muted: 257 38% 91%;
     --muted-foreground: 256 10% 45%;
 
+<<<<<<< HEAD
     --accent: 258 33% 94%; /* Light Purple Accent */
     --accent-foreground: 258 33% 48%; /* Deep Purple for text on accent */
+=======
+    --accent: 257 38% 91%;
+    --accent-foreground: 256 10% 10%;
+>>>>>>> 803b280de73c9c24dd7e4aa6a21f825a6b0aeb24
     
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
@@ -60,8 +65,13 @@
     --muted: 256 10% 12%;
     --muted-foreground: 256 10% 65%;
 
+<<<<<<< HEAD
     --accent: 258 33% 15%; /* Dark Purple Accent */
     --accent-foreground: 258 33% 80%;
+=======
+    --accent: 256 10% 12%;
+    --accent-foreground: 256 10% 96%;
+>>>>>>> 803b280de73c9c24dd7e4aa6a21f825a6b0aeb24
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
