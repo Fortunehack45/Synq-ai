@@ -23,8 +23,7 @@ import { useTheme } from "next-themes";
 import { useWallet } from "@/hooks/use-wallet";
 import { toast } from "@/hooks/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Bell, KeyRound, Palette, ShieldCheck, Trash2, LogOut, Info, User, Save, AlertTriangle } from 'lucide-react';
-import { Separator } from "@/components/ui/separator";
+import { KeyRound, Palette, ShieldCheck, Trash2, LogOut, User, Save } from 'lucide-react';
 import { useEffect, useState, useActionState, Suspense } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { saveProfile, type ProfileState } from "./actions";
@@ -161,11 +160,6 @@ function SettingsPageContent() {
     });
   }
 
-  const formatAddress = (addr: string | null) => {
-    if (!addr) return "Not Connected";
-    return `${addr.substring(0, 10)}...${addr.substring(addr.length - 8)}`;
-  };
-
   return (
     <>
       <div className="flex flex-col items-start mb-8">
@@ -176,12 +170,12 @@ function SettingsPageContent() {
       </div>
 
       <Tabs defaultValue={activeTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 mb-6">
-          <TabsTrigger value="general"><Palette className="mr-2 h-4 w-4"/>Appearance</TabsTrigger>
-          <TabsTrigger value="profile"><User className="mr-2 h-4 w-4"/>Profile</TabsTrigger>
-          <TabsTrigger value="security"><ShieldCheck className="mr-2 h-4 w-4"/>Security</TabsTrigger>
-          <TabsTrigger value="api"><KeyRound className="mr-2 h-4 w-4"/>API Keys</TabsTrigger>
-          <TabsTrigger value="advanced"><Trash2 className="mr-2 h-4 w-4"/>Advanced</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-5 mb-6 h-auto">
+          <TabsTrigger value="general" className="py-2"><Palette className="mr-2 h-4 w-4"/>Appearance</TabsTrigger>
+          <TabsTrigger value="profile" className="py-2"><User className="mr-2 h-4 w-4"/>Profile</TabsTrigger>
+          <TabsTrigger value="security" className="py-2"><ShieldCheck className="mr-2 h-4 w-4"/>Security</TabsTrigger>
+          <TabsTrigger value="api" className="py-2"><KeyRound className="mr-2 h-4 w-4"/>API Keys</TabsTrigger>
+          <TabsTrigger value="advanced" className="py-2"><Trash2 className="mr-2 h-4 w-4"/>Advanced</TabsTrigger>
         </TabsList>
         
         <TabsContent value="general">
@@ -195,7 +189,7 @@ function SettingsPageContent() {
             <CardContent className="space-y-6">
               <div className="space-y-2">
                 <Label>Theme</Label>
-                 <RadioGroup onValueChange={(value) => setTheme(value)} defaultValue={theme} className="grid grid-cols-2 md:grid-cols-3 gap-4 pt-2">
+                 <RadioGroup onValueChange={(value) => setTheme(value)} defaultValue={theme} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pt-2">
                   <div>
                     <RadioGroupItem value="light" id="light" className="peer sr-only" />
                     <Label htmlFor="light" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
@@ -210,7 +204,7 @@ function SettingsPageContent() {
                       Dark
                     </Label>
                   </div>
-                   <div>
+                   <div className="col-span-1 sm:col-span-2 md:col-span-1">
                     <RadioGroupItem value="system" id="system" className="peer sr-only" />
                     <Label htmlFor="system" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
                       <LaptopIcon className="mb-3 h-6 w-6" />
@@ -282,12 +276,12 @@ function SettingsPageContent() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center justify-between rounded-lg border p-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between rounded-lg border p-4 gap-4">
                 <div>
                   <h3 className="text-base font-medium">Connected Wallet</h3>
-                  <p className="text-sm text-muted-foreground font-mono">{formatAddress(address)}</p>
+                  <p className="text-sm text-muted-foreground font-mono break-all">{address}</p>
                 </div>
-                <Button variant="destructive" size="sm" onClick={disconnectWallet}>
+                <Button variant="destructive" size="sm" onClick={disconnectWallet} className="w-full sm:w-auto">
                   <LogOut className="mr-2 h-4 w-4" /> Disconnect
                 </Button>
               </div>
@@ -328,23 +322,23 @@ function SettingsPageContent() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-               <div className="flex items-center justify-between rounded-lg border border-border p-4">
+               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between rounded-lg border border-border p-4 gap-4">
                 <div>
                   <h3 className="text-base font-medium">Clear Local Cache</h3>
                   <p className="text-sm text-muted-foreground">This will clear application data, but preserve API keys and theme.</p>
                 </div>
-                <Button variant="outline" onClick={handleClearCache}>
+                <Button variant="outline" onClick={handleClearCache} className="w-full sm:w-auto">
                   Clear Cache
                 </Button>
               </div>
-               <div className="flex items-center justify-between rounded-lg border border-destructive/50 p-4">
+               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between rounded-lg border border-destructive/50 p-4 gap-4">
                 <div>
                   <h3 className="text-base font-medium text-destructive">Delete Account</h3>
                   <p className="text-sm text-muted-foreground">Permanently delete all your local data and log out.</p>
                 </div>
                  <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="destructive">
+                    <Button variant="destructive" className="w-full sm:w-auto">
                       <Trash2 className="mr-2 h-4 w-4" /> Delete Account
                     </Button>
                   </AlertDialogTrigger>
@@ -446,3 +440,5 @@ function SunIcon(props: React.SVGProps<SVGSVGElement>) {
     </svg>
   )
 }
+
+    

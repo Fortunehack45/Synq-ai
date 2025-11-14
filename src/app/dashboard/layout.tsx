@@ -17,6 +17,10 @@ import {
   WifiOff,
   X,
   Bot,
+<<<<<<< HEAD
+=======
+  BotMessageSquare,
+>>>>>>> a9ab394 (jpp)
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -43,6 +47,34 @@ import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/logo";
 import { Skeleton } from "@/components/ui/skeleton";
+<<<<<<< HEAD
+=======
+import { ChatInterface } from "@/app/dashboard/assistant/components/chat-interface";
+
+function FloatingAssistant() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
+        <Button
+          className="fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-lg z-50"
+          size="icon"
+        >
+          <BotMessageSquare className="h-8 w-8" />
+        </Button>
+      </SheetTrigger>
+      <SheetContent className="w-full max-w-full sm:max-w-4xl p-0 glass" side="right">
+        <SheetHeader>
+            <SheetTitle className="sr-only">AI Assistant</SheetTitle>
+        </SheetHeader>
+        <ChatInterface />
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+>>>>>>> a9ab394 (jpp)
 
 const navItems = [
   { href: "/dashboard", icon: Home, label: "Dashboard" },
@@ -295,6 +327,7 @@ function DashboardLayoutContent({
         <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 overflow-x-hidden">
           {children}
         </main>
+        <FloatingAssistant />
       </div>
     </div>
   );

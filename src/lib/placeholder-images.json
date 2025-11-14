@@ -53,6 +53,14 @@
       "description": "User Avatar",
       "imageUrl": "https://images.unsplash.com/photo-1650963310446-011fc6a28367?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxwaXhlbCUyMGFydHxlbnwwfHx8fDE3NjI4MjQ3MDJ8MA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "pixel art"
+    },
+    {
+      "id": "profile-banner",
+      "description": "Profile Banner Image",
+      "imageUrl": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxhYnN0cmFjdCUyMGJhbm5lcnxlbnwwfHx8fDE3NjM3NjQwNDB8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "abstract banner"
     }
   ]
 }
+
+    
