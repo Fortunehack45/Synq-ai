@@ -16,6 +16,7 @@ import {
   MessageSquare,
   WifiOff,
   X,
+  Bot,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -41,13 +42,13 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/logo";
-import { FloatingAssistant } from "@/app/dashboard/assistant/components/floating-assistant";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const navItems = [
   { href: "/dashboard", icon: Home, label: "Dashboard" },
   { href: "/dashboard/transactions", icon: Package, label: "Transactions" },
   { href: "/dashboard/trade", icon: Repeat, label: "Trade" },
+  { href: "/dashboard/assistant", icon: Bot, label: "AI Assistant" },
   { href: "/dashboard/coin-scan", icon: ScanLine, label: "Coin Scan" },
   { href: "/dashboard/meme-coins", icon: Dog, label: "Meme Coins" },
   { href: "/dashboard/social/fyp", icon: MessageSquare, label: "Social" },
@@ -294,7 +295,6 @@ function DashboardLayoutContent({
         <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 overflow-x-hidden">
           {children}
         </main>
-        <FloatingAssistant />
       </div>
     </div>
   );
