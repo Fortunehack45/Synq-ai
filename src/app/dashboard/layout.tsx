@@ -41,7 +41,7 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/logo";
-import { FloatingAssistant } from "./assistant/components/floating-assistant";
+import { FloatingAssistant } from "@/app/dashboard/assistant/components/floating-assistant";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const navItems = [
