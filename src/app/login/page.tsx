@@ -48,11 +48,7 @@ function LoginPageContent() {
     }
   }, [error, toast, clearError]);
 
-<<<<<<< HEAD
   const handleConnect = async () => {
-=======
-  const handleConnect = async (walletType: 'metaMask' | 'walletConnect') => {
->>>>>>> a9ab394 (jpp)
     await connectWallet();
   };
   
@@ -188,3 +184,5 @@ export default function LoginPage() {
     </WalletProvider>
   )
 }
+
+    

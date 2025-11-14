@@ -17,10 +17,7 @@ import {
   WifiOff,
   X,
   Bot,
-<<<<<<< HEAD
-=======
   BotMessageSquare,
->>>>>>> a9ab394 (jpp)
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -47,8 +44,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/logo";
 import { Skeleton } from "@/components/ui/skeleton";
-<<<<<<< HEAD
-=======
 import { ChatInterface } from "@/app/dashboard/assistant/components/chat-interface";
 
 function FloatingAssistant() {
@@ -73,8 +68,6 @@ function FloatingAssistant() {
     </Sheet>
   );
 }
-
->>>>>>> a9ab394 (jpp)
 
 const navItems = [
   { href: "/dashboard", icon: Home, label: "Dashboard" },
@@ -344,3 +337,5 @@ export default function DashboardLayout({
     </WalletProvider>
   )
 }
+
+    
