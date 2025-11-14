@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,24 +17,26 @@ import { useToast } from "@/hooks/use-toast";
 import { useWallet } from "@/hooks/use-wallet";
 import Link from "next/link";
 import { WalletProvider } from "@/context/wallet-provider";
-import { Eye, ChevronRight } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Eye, Wallet } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 function LoginPageContent() {
   const router = useRouter();
   const { connectWallet, address, error, clearError, loading, startDemoMode } = useWallet();
   const { toast } = useToast();
 
-<<<<<<< HEAD
-  const handleConnect = async (walletType: 'metaMask' | 'walletConnect') => {
-    if (walletType === 'walletConnect') {
-      toast({
-        title: "Coming Soon",
-        description: "WalletConnect support is under development.",
-      });
-      return;
+  useEffect(() => {
+    if (address) {
+      const onboardingComplete = localStorage.getItem(`onboarding_complete_${address}`);
+      if (onboardingComplete) {
+        router.push('/dashboard');
+      } else {
+        router.push('/onboarding');
+      }
     }
-=======
+  }, [address, router]);
+
+
   useEffect(() => {
     if (error) {
       toast({
@@ -46,8 +48,7 @@ function LoginPageContent() {
     }
   }, [error, toast, clearError]);
 
-  const handleConnect = async (walletType: 'metaMask' | 'walletConnect') => {
->>>>>>> 803b280de73c9c24dd7e4aa6a21f825a6b0aeb24
+  const handleConnect = async () => {
     await connectWallet();
   };
   
@@ -55,11 +56,22 @@ function LoginPageContent() {
     startDemoMode();
   }
 
-  // Show a loading indicator on the login page while the initial auth check is running.
-  if (loading) {
+  const handleComingSoon = () => {
+    toast({
+      title: "Coming Soon!",
+      description: "This connection method is currently in development.",
+    });
+  }
+
+  // Show a loading indicator on the login page while the initial check is running
+  if (loading && !error) {
     return (
-      <div className="flex h-screen w-full items-center justify-center">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div>
+      <div className="flex h-screen w-full items-center justify-center text-center">
+        <div className="flex flex-col items-center gap-4 text-muted-foreground">
+          <Logo className="h-16 w-16 mb-2 animate-pulse" />
+          <h2 className="text-lg font-semibold text-foreground">Loading SynqAI...</h2>
+          <Skeleton className="h-4 w-48" />
+        </div>
       </div>
     );
   }
@@ -81,42 +93,8 @@ function LoginPageContent() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-<<<<<<< HEAD
-            <div className="space-y-4">
-               <Button className="w-full justify-between" size="lg" onClick={() => handleConnect('metaMask')} disabled>
-                <div className="flex items-center gap-2">
-                  <Icons.metaMask className="mr-2 h-6 w-6" /> 
-                  Connect with MetaMask
-                </div>
-                <span className="text-xs bg-primary/20 text-primary-foreground py-0.5 px-2 rounded-full">Coming Soon</span>
-              </Button>
-
-              <Button
-                variant="secondary"
-                className="w-full justify-between"
-                size="lg"
-                onClick={() => handleConnect('walletConnect')}
-                disabled
-              >
-                 <div className="flex items-center gap-2">
-                  <Icons.walletConnect className="mr-2 h-6 w-6" />
-                  Connect with WalletConnect
-                </div>
-                 <span className="text-xs bg-secondary-foreground/20 text-secondary-foreground py-0.5 px-2 rounded-full">Coming Soon</span>
-              </Button>
-
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-3 text-muted-foreground text-[0.7rem]">
-                    OR
-                  </span>
-                </div>
-=======
           <div className="space-y-4">
-            <Button className="w-full relative" size="lg" onClick={() => handleConnect('metaMask')} disabled={loading}>
+            <Button className="w-full relative" size="lg" onClick={handleConnect} disabled={loading}>
               <span className="flex items-center justify-center flex-1">
                 <Icons.metaMask className="mr-2 h-6 w-6" /> Connect with MetaMask
               </span>
@@ -125,15 +103,25 @@ function LoginPageContent() {
               variant="secondary"
               className="w-full relative"
               size="lg"
-              disabled
+              onClick={handleComingSoon}
             >
               <span className="flex items-center justify-center flex-1">
                 <Icons.walletConnect className="mr-2 h-6 w-6" />
                 Connect with WalletConnect
               </span>
-              <Badge variant="outline" className="bg-background/50 border-border absolute right-2">Coming Soon</Badge>
             </Button>
-             <div className="relative">
+             <Button
+              variant="secondary"
+              className="w-full relative"
+              size="lg"
+              onClick={handleComingSoon}
+            >
+              <span className="flex items-center justify-center flex-1">
+                <Wallet className="mr-2 h-5 w-5" />
+                Connect Other Wallets
+              </span>
+            </Button>
+             <div className="relative pt-4">
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t" />
               </div>
@@ -141,9 +129,8 @@ function LoginPageContent() {
                 <span className="bg-background px-3 text-muted-foreground text-[0.7rem]">
                   OR
                 </span>
->>>>>>> 803b280de73c9c24dd7e4aa6a21f825a6b0aeb24
               </div>
-
+            </div>
               <Button
                 variant="outline"
                 className="w-full"
@@ -153,8 +140,9 @@ function LoginPageContent() {
                 <Eye className="mr-2 h-5 w-5" />
                 Continue with Demo
               </Button>
-            </div>
+            
 
+          </div>
           <p className="mt-6 px-8 text-center text-xs text-muted-foreground">
             By connecting, you agree to our{" "}
             <Link

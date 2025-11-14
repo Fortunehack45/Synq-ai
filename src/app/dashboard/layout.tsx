@@ -13,8 +13,9 @@ import {
   ScanLine,
   Settings,
   User,
-  Users,
+  MessageSquare,
   WifiOff,
+  X,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -39,21 +40,49 @@ import { useWallet } from "@/hooks/use-wallet";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import Image from "next/image";
 import { Logo } from "@/components/logo";
+import { FloatingAssistant } from "./assistant/components/floating-assistant";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const navItems = [
   { href: "/dashboard", icon: Home, label: "Dashboard" },
-  { href: "/dashboard/assistant", icon: User, label: "AI Assistant" },
   { href: "/dashboard/transactions", icon: Package, label: "Transactions" },
   { href: "/dashboard/trade", icon: Repeat, label: "Trade" },
   { href: "/dashboard/coin-scan", icon: ScanLine, label: "Coin Scan" },
   { href: "/dashboard/meme-coins", icon: Dog, label: "Meme Coins" },
-  { href: "/dashboard/community", icon: Users, label: "Community" },
+  { href: "/dashboard/social/fyp", icon: MessageSquare, label: "Social" },
   { href: "/dashboard/profile", icon: User, label: "Profile" },
   { href: "/dashboard/billing", icon: CreditCard, label: "Billing" },
   { href: "/dashboard/settings", icon: Settings, label: "Settings" },
 ];
+
+function LoadingSkeleton() {
+  return (
+    <div className="flex h-screen w-full items-center justify-center text-center">
+      <div className="flex flex-col items-center gap-4 text-muted-foreground">
+        <Logo className="h-16 w-16 mb-2 animate-pulse" />
+        <h2 className="text-lg font-semibold text-foreground">Connecting to Wallet...</h2>
+        <p className="max-w-xs">Please wait while we sync your on-chain data.</p>
+        <Skeleton className="h-4 w-48 mt-2" />
+      </div>
+    </div>
+  )
+}
+
+function SlowLoadMessage() {
+  return (
+      <div className="flex h-screen w-full items-center justify-center text-center">
+          <div className="flex flex-col items-center gap-4 text-muted-foreground">
+             <WifiOff className="h-12 w-12" />
+             <h2 className="text-lg font-semibold text-foreground">Still Connecting...</h2>
+             <p className="max-w-xs">
+                This is taking longer than expected. Please check your internet connection and ensure your API keys in Settings are correct.
+             </p>
+          </div>
+      </div>
+  )
+}
+
 
 function DashboardLayoutContent({
   children,
@@ -65,16 +94,35 @@ function DashboardLayoutContent({
   const { disconnectWallet, address, loading } = useWallet();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [showSlowLoadMessage, setShowSlowLoadMessage] = useState(false);
+  const [isUpgradeCardVisible, setIsUpgradeCardVisible] = useState(false);
 
   useEffect(() => {
-    // Wait until the loading is finished before checking for address
-    if (!loading && !address) {
-      router.push('/login');
-      return;
+    // Check if the card was dismissed previously
+    const isCardDismissed = localStorage.getItem("upgradeCardDismissed");
+    if (isCardDismissed !== "true") {
+      setIsUpgradeCardVisible(true);
     }
-    if (!loading && address) {
+  }, []);
+
+  const handleDismissUpgradeCard = () => {
+    // Hide the card and save the state to localStorage
+    setIsUpgradeCardVisible(false);
+    localStorage.setItem("upgradeCardDismissed", "true");
+  };
+
+
+  useEffect(() => {
+    // This effect handles route protection for the dashboard.
+    if (!loading) {
+      if (!address) {
+        // If not logged in, redirect to login page.
+        router.push('/login');
+        return;
+      }
+      
       const onboardingComplete = localStorage.getItem(`onboarding_complete_${address}`);
       if (!onboardingComplete) {
+        // If logged in but onboarding is not complete, redirect to onboarding.
         router.push('/onboarding');
       }
     }
@@ -124,23 +172,10 @@ function DashboardLayoutContent({
     return () => clearTimeout(timer);
   }, [loading]);
 
-  // While loading, show a loader or null to prevent flashing content
-  if (loading || !address) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center text-center">
-        {!showSlowLoadMessage ? (
-          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div>
-        ) : (
-          <div className="flex flex-col items-center gap-4 text-muted-foreground">
-             <WifiOff className="h-12 w-12" />
-             <h2 className="text-lg font-semibold text-foreground">Still Connecting...</h2>
-             <p className="max-w-xs">
-                This is taking longer than expected. Please check your internet connection and ensure your API keys in Settings are correct.
-             </p>
-          </div>
-        )}
-      </div>
-    );
+  // While loading or if the user is not properly authenticated/onboarded, show a loader.
+  // The useEffect hook above will handle the redirection.
+  if (loading || !address || !localStorage.getItem(`onboarding_complete_${address}`)) {
+    return showSlowLoadMessage ? <SlowLoadMessage /> : <LoadingSkeleton />;
   }
 
   return (
@@ -165,7 +200,7 @@ function DashboardLayoutContent({
                   href={item.href}
                   className={cn(
                     "flex items-center gap-3 rounded-lg px-3 py-2 transition-all active:scale-95",
-                    pathname === item.href
+                     pathname === item.href || (pathname.startsWith(item.href) && item.href !== '/dashboard' && !item.href.includes('/social')) || (item.href === '/dashboard/social/fyp' && pathname.startsWith('/dashboard/social'))
                       ? "bg-accent text-accent-foreground"
                       : "text-muted-foreground hover:text-primary"
                   )}
@@ -176,22 +211,33 @@ function DashboardLayoutContent({
               ))}
             </nav>
           </div>
-          <div className="mt-auto p-4">
-            <Card className="bg-transparent">
-              <CardHeader className="p-2 pt-0 md:p-4">
-                <CardTitle>Upgrade to Pro</CardTitle>
-                <CardDescription>
-                  Unlock all features and get unlimited access to our support
-                  team.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-2 pt-0 md:p-4 md:pt-0">
-                <Button size="sm" className="w-full" onClick={() => router.push('/dashboard/billing')}>
-                  Upgrade
+          {isUpgradeCardVisible && (
+            <div className="mt-auto p-4 relative animate-in fade-in-50 slide-in-from-bottom-2">
+              <Card className="bg-transparent">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute top-2 right-2 h-6 w-6"
+                  onClick={handleDismissUpgradeCard}
+                >
+                  <X className="h-4 w-4" />
+                  <span className="sr-only">Dismiss</span>
                 </Button>
-              </CardContent>
-            </Card>
-          </div>
+                <CardHeader className="p-2 pt-0 md:p-4">
+                  <CardTitle>Upgrade to Pro</CardTitle>
+                  <CardDescription>
+                    Unlock all features and get unlimited access to our support
+                    team.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="p-2 pt-0 md:p-4 md:pt-0">
+                  <Button size="sm" className="w-full" onClick={() => router.push('/dashboard/billing')}>
+                    Upgrade
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </div>
       </div>
       <div className="flex flex-col">
@@ -208,17 +254,18 @@ function DashboardLayoutContent({
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="flex flex-col glass p-0">
-               <SheetHeader className="p-6">
-                <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
-              </SheetHeader>
-              <nav className="grid gap-2 text-lg font-medium p-6 pt-0">
-                <Link
-                  href="#"
-                  className="flex items-center gap-2 text-lg font-semibold mb-4"
-                >
-                  <Logo className="h-6 w-6" />
-                  <span className="sr-only">SynqAI</span>
-                </Link>
+               <SheetHeader className="p-6 pb-0">
+                 <SheetTitle>
+                   <Link
+                    href="#"
+                    className="flex items-center gap-2 text-lg font-semibold mb-4"
+                  >
+                    <Logo className="h-6 w-6" />
+                    <span>SynqAI</span>
+                  </Link>
+                 </SheetTitle>
+               </SheetHeader>
+              <nav className="grid gap-2 text-lg font-medium p-6">
                 {navItems.map((item) => (
                   <Link
                     key={item.href}
@@ -226,7 +273,7 @@ function DashboardLayoutContent({
                     onClick={() => setIsSheetOpen(false)}
                     className={cn(
                       "mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 transition-all active:scale-95",
-                      pathname === item.href
+                       pathname.startsWith(item.href) && item.href !== '/dashboard' || pathname === item.href
                         ? "bg-muted text-foreground"
                         : "text-muted-foreground hover:text-foreground"
                     )}
@@ -244,9 +291,10 @@ function DashboardLayoutContent({
           <ThemeToggle />
           <UserNav />
         </header>
-        <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 overflow-y-auto">
+        <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 overflow-x-hidden">
           {children}
         </main>
+        <FloatingAssistant />
       </div>
     </div>
   );

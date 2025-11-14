@@ -17,14 +17,19 @@ function getAlchemy(): Alchemy | null {
   return new Alchemy({ apiKey, network: Network.ETH_MAINNET });
 }
 
-function getEtherscanApiKey(): string | null {
+function getEtherscanConfig(): { apiUrl: string, apiKey: string } | null {
   const apiKey = process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY;
   if (!apiKey || apiKey === "YOUR_API_KEY_HERE" || apiKey.length < 30) {
     console.warn("Etherscan API key not found or invalid in server context. Transaction history will not be available.");
     return null;
   }
-  return apiKey;
+  
+  return {
+    apiUrl: `https://api.etherscan.io/api`,
+    apiKey: apiKey,
+  };
 }
+
 
 export async function getWalletBalance(address: string): Promise<string> {
   const alchemy = getAlchemy();
@@ -41,15 +46,14 @@ export async function getWalletBalance(address: string): Promise<string> {
 }
 
 export async function getWalletTransactions(address: string) {
-  const apiKey = getEtherscanApiKey();
-  if (!apiKey || !ethers.isAddress(address)) {
+  const etherscanConfig = getEtherscanConfig();
+  if (!etherscanConfig || !ethers.isAddress(address)) {
     return [];
   }
+  
+  const { apiUrl, apiKey } = etherscanConfig;
 
-  // Always use the mainnet API endpoint for server-side tool calls.
-  // The 'txlist' action requires a GET request with parameters in the URL.
-  const url = `https://api.etherscan.io/api?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=10&sort=desc&apikey=${apiKey}`;
-
+  const url = `${apiUrl}?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=10&sort=desc&apikey=${apiKey}`;
   try {
     const response = await fetch(url);
     if (!response.ok) {
@@ -103,35 +107,3 @@ export async function getWalletTokenBalances(address: string) {
     return [];
   }
 }
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-
-<<<<<<< HEAD
-    
-<<<<<<< HEAD
->>>>>>> b3298fc (Try fixing this error: `Console Error: Etherscan API error: "NOTOK" "You)
-=======
->>>>>>> 2ad3dc5 (Try fixing this error: `Console Error: Etherscan API error: "NOTOK" "You)
-=======
-
-    
->>>>>>> b204695 (Error: Etherscan API error: "NOTOK" "You are using a deprecated V1 endpo)
-=======
->>>>>>> 023ff16 (Try fixing this error: `Console Error: Etherscan API error: "NOTOK" "You)
-=======
-    
->>>>>>> d229963 (Error: Etherscan API error: "NOTOK" "You are using a deprecated V1 endpo)
-=======
->>>>>>> 9add21b (Try fixing this error: `Console Error: Etherscan API error: "NOTOK" "You)
-=======
-
-    
-    
->>>>>>> 2aa5d23 (I'm getting this runtime error:)
-=======
->>>>>>> aa04012 (I’m still getting this runtime error:)

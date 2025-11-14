@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useActionState } from "react";
@@ -39,9 +40,9 @@ export function ChatInterface() {
   const [state, formAction] = useActionState(getWalletAnalysis, initialState);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 items-start">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 items-start h-full overflow-y-auto p-6">
       <div className="md:col-span-1">
-        <Card className="glass sticky top-20">
+        <Card className="glass sticky top-6">
           <CardHeader>
             <CardTitle>Wallet Analysis</CardTitle>
             <CardDescription>
@@ -86,7 +87,7 @@ export function ChatInterface() {
           <CardContent>
             {!state.data && !state.error && (
               <div className="flex flex-col items-center justify-center text-center text-muted-foreground h-96">
-                <Logo className="h-16 w-16 mb-4 text-primary/50" />
+                <Logo className="h-16 w-16 mb-4 opacity-30" />
                 <p className="text-lg">Your analysis will appear here.</p>
                 <p className="text-sm">Submit a query to get started.</p>
               </div>

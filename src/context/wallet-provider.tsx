@@ -9,23 +9,11 @@ import React, {
   ReactNode,
   useMemo,
 } from "react";
-<<<<<<< HEAD
 import { useRouter, usePathname } from "next/navigation";
-import { ethers, BrowserProvider, AlchemyProvider } from "ethers";
+import { ethers, BrowserProvider, BigNumberish } from "ethers";
 import { Alchemy, Network, OwnedNft, TokenBalance, TokenMetadataResponse } from "alchemy-sdk";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
-<<<<<<< HEAD
-import { ComingSoonDialog } from "@/components/coming-soon-dialog";
-=======
 import { toast } from "@/hooks/use-toast";
->>>>>>> c447b51 (When I click on back to login page it takes me to the login page then to)
-=======
-import { useRouter } from "next/navigation";
-import { ethers, BrowserProvider, BigNumberish, AlchemyProvider } from "ethers";
-import { Alchemy, Network, OwnedNft, TokenBalance, TokenMetadataResponse } from "alchemy-sdk";
-import { PlaceHolderImages } from "@/lib/placeholder-images";
-import { ComingSoonDialog } from "@/components/coming-soon-dialog";
->>>>>>> 803b280de73c9c24dd7e4aa6a21f825a6b0aeb24
 
 interface FormattedTransaction {
   hash: string;
@@ -83,7 +71,6 @@ const getAlchemyConfig = (chainId: bigint): { apiKey: string, network: Network }
         return null;
     }
 
-<<<<<<< HEAD
     const chainIdNumber = Number(chainId);
     let network: Network;
 
@@ -101,42 +88,6 @@ const getAlchemyConfig = (chainId: bigint): { apiKey: string, network: Network }
 
     return { apiKey, network };
 };
-=======
-  // Etherscan API V2 uses a single endpoint for all networks
-  return `https://api.etherscan.io/api`;
-}
->>>>>>> 803b280de73c9c24dd7e4aa6a21f825a6b0aeb24
-
-const getAlchemyConfig = (chainId: bigint): { apiKey: string, network: Network } | null => {
-    const userKey = typeof window !== 'undefined' ? localStorage.getItem('alchemyApiKey') : null;
-    const envKey = process.env.NEXT_PUBLIC_ALCHEMY_KEY;
-    const apiKey = userKey || envKey;
-
-    if (!apiKey || apiKey === "YOUR_API_KEY_HERE" || apiKey.length < 30) {
-        if (!userKey) {
-        console.warn("Alchemy API key not found or invalid. Some features may not be available.");
-        }
-        return null;
-    }
-
-    const chainIdNumber = Number(chainId);
-    let network: Network;
-
-    switch (chainIdNumber) {
-        case 1:
-        network = Network.ETH_MAINNET;
-        break;
-        case 11155111:
-        network = Network.ETH_SEPOLIA;
-        break;
-        default:
-        console.warn(`Unsupported network for Alchemy: ${chainIdNumber}.`);
-        return null;
-    }
-
-    return { apiKey, network };
-};
-
 
 const getAlchemy = (chainId: bigint) => {
   const config = getAlchemyConfig(chainId);
@@ -393,7 +344,6 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
   const [portfolioChange, setPortfolioChange] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showComingSoonModal, setShowComingSoonModal] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -412,12 +362,43 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     }
     setLoading(false);
   }, []);
-
-  const disconnectWallet = useCallback(() => {
-    handleDisconnect();
-    router.push("/login");
-  }, [router, handleDisconnect]);
   
+  const startDemoMode = useCallback(() => {
+    setLoading(true);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("walletAddress", mockAddress);
+    }
+    const ethPrice = 3150;
+    const mockHistory = createMockPortfolioHistory();
+    const mockChange = calculatePortfolioChange(mockHistory);
+    
+    const ethLogo = PlaceHolderImages.find(img => img.id === 'eth-logo');
+    const usdcLogo = PlaceHolderImages.find(img => img.id === 'usdc-logo');
+    const wbtcLogo = PlaceHolderImages.find(img => img.id === 'wbtc-logo');
+    const uniLogo = PlaceHolderImages.find(img => img.id === 'uni-logo');
+
+    const ethToken: FormattedTokenBalance = {
+        name: 'Ethereum', symbol: 'ETH', balance: parseFloat(mockBalance).toFixed(4),
+        value: (parseFloat(mockBalance) * ethPrice).toLocaleString('en-US', { style: 'currency', currency: 'USD' }),
+        iconUrl: ethLogo?.imageUrl, iconHint: ethLogo?.imageHint, contractAddress: 'eth',
+    };
+    const demoTokens: FormattedTokenBalance[] = [
+        { name: 'USD Coin', symbol: 'USDC', balance: '5000.00', value: '$5,000.00', iconUrl: usdcLogo?.imageUrl, iconHint: usdcLogo?.imageHint, contractAddress: 'usdc' },
+        { name: 'Wrapped BTC', symbol: 'WBTC', balance: '0.05', value: '$3,500.00', iconUrl: wbtcLogo?.imageUrl, iconHint: wbtcLogo?.imageHint, contractAddress: 'wbtc' },
+        { name: 'Uniswap', symbol: 'UNI', balance: '250.00', value: '$2,500.00', iconUrl: uniLogo?.imageUrl, iconHint: uniLogo?.imageHint, contractAddress: 'uni' },
+    ];
+
+    setAddress(mockAddress);
+    setBalance(mockBalance);
+    setTransactions(createMockTransactions(mockAddress));
+    setNfts(createMockNfts());
+    setPortfolioHistory(mockHistory);
+    setPortfolioChange(mockChange);
+    setTokens([ethToken, ...demoTokens]); 
+    setLoading(false);
+    router.push('/dashboard');
+  }, [router]);
+
   const updateWalletState = useCallback(async (currentAddress: string, externalProvider?: BrowserProvider) => {
     setLoading(true);
     const ethPrice = 3150; // Static price for now
@@ -427,86 +408,49 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       handleDisconnect();
       return;
     }
-
-    // Force demo mode for any connected wallet
-    if (currentAddress) {
-      const mockHistory = createMockPortfolioHistory();
-      const mockChange = calculatePortfolioChange(mockHistory);
-      
-      const ethLogo = PlaceHolderImages.find(img => img.id === 'eth-logo');
-      const usdcLogo = PlaceHolderImages.find(img => img.id === 'usdc-logo');
-      const wbtcLogo = PlaceHolderImages.find(img => img.id === 'wbtc-logo');
-      const uniLogo = PlaceHolderImages.find(img => img.id === 'uni-logo');
-
-      const ethToken: FormattedTokenBalance = {
-          name: 'Ethereum', symbol: 'ETH', balance: parseFloat(mockBalance).toFixed(4),
-          value: (parseFloat(mockBalance) * ethPrice).toLocaleString('en-US', { style: 'currency', currency: 'USD' }),
-          iconUrl: ethLogo?.imageUrl, iconHint: ethLogo?.imageHint, contractAddress: 'eth',
-      };
-      const demoTokens: FormattedTokenBalance[] = [
-          { name: 'USD Coin', symbol: 'USDC', balance: '5000.00', value: '$5,000.00', iconUrl: usdcLogo?.imageUrl, iconHint: usdcLogo?.imageHint, contractAddress: 'usdc' },
-          { name: 'Wrapped BTC', symbol: 'WBTC', balance: '0.05', value: '$3,500.00', iconUrl: wbtcLogo?.imageUrl, iconHint: wbtcLogo?.imageHint, contractAddress: 'wbtc' },
-          { name: 'Uniswap', symbol: 'UNI', balance: '250.00', value: '$2,500.00', iconUrl: uniLogo?.imageUrl, iconHint: uniLogo?.imageHint, contractAddress: 'uni' },
-      ];
-
-      setAddress(mockAddress);
-      setBalance(mockBalance);
-      setTransactions(createMockTransactions(mockAddress));
-      setNfts(createMockNfts());
-      setPortfolioHistory(mockHistory);
-      setPortfolioChange(mockChange);
-      setTokens([ethToken, ...demoTokens]); 
-      setError(null);
-      
-      if (typeof window !== "undefined") {
-        // We store the mock address to signify we are in demo mode.
-        localStorage.setItem("walletAddress", mockAddress);
-      }
-      setLoading(false);
+    
+    if (currentAddress.toLowerCase() === mockAddress.toLowerCase() && localStorage.getItem('walletAddress')?.toLowerCase() === mockAddress.toLowerCase()) {
+      startDemoMode();
       return;
     }
-<<<<<<< HEAD
-  }, [handleDisconnect]);
-
-<<<<<<< HEAD
-  const startDemoMode = useCallback(() => {
-    setLoading(true);
-    setShowComingSoonModal(false);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("walletAddress", mockAddress);
-    }
-    // We just need to call updateWalletState with the mock address
-    updateWalletState(mockAddress);
-    router.push('/dashboard');
-  }, [router, updateWalletState]);
-
-=======
->>>>>>> c447b51 (When I click on back to login page it takes me to the login page then to)
-=======
 
     try {
-        let provider;
-        if (externalProvider) {
-            const network = await externalProvider.getNetwork();
-            const alchemyConfig = getAlchemyConfig(network.chainId);
-            if (!alchemyConfig) {
-                setError("Alchemy API key not configured. Please add it in Settings to fetch wallet data.");
-                handleDisconnect();
-                return;
-            }
-             // Map alchemy-sdk Network to a name ethers.js understands
-            const ethersNetworkName = alchemyConfig.network.replace('eth-', '');
-            provider = new AlchemyProvider(ethersNetworkName, alchemyConfig.apiKey);
-        } else {
-            throw new Error("MetaMask provider not detected.");
+        let provider: BrowserProvider | null = externalProvider || null;
+        if (!provider && (window as any).ethereum) {
+            provider = new BrowserProvider((window as any).ethereum);
         }
-      
-      const network = await provider.getNetwork();
-      const alchemy = getAlchemy(network.chainId);
+
+        if (!provider) {
+             setError("Wallet provider not found. Please ensure MetaMask or a similar wallet is installed.");
+             handleDisconnect();
+             return;
+        }
+
+        let network: ethers.Network;
+
+        try {
+            network = await provider.getNetwork();
+        } catch (e: any) {
+            console.error("A wallet connection error occurred while getting network. This can happen if the connection is interrupted or the network is switched.", e);
+            setError("Could not get network from wallet. Your connection may have been interrupted.");
+            handleDisconnect();
+            return;
+        }
+        
+        const alchemy = getAlchemy(network.chainId);
+        if (!alchemy) {
+            toast({
+              variant: "destructive",
+              title: "Unsupported Network",
+              description: "Please switch to Ethereum Mainnet or Sepolia. Meanwhile, you can explore the demo.",
+            })
+            startDemoMode();
+            return;
+        }
       
       let balanceWei;
       try {
-        balanceWei = await provider.getBalance(currentAddress);
+        balanceWei = await alchemy.core.getBalance(currentAddress);
       } catch (e: any) {
         console.error("A wallet connection error occurred while fetching balance. This can happen if the connection is interrupted or the network is switched.", e);
          if (e.code === -32002) {
@@ -540,7 +484,6 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       const formattedTokens: FormattedTokenBalance[] = tokenBalances.map((token, i) => {
         const metadata = tokenMetadata[i];
         const balance = parseFloat(ethers.formatUnits(token.tokenBalance!, metadata.decimals || 18));
-        // Placeholder for token value - requires price API
         const tokenValue = metadata.symbol === 'USDC' || metadata.symbol === 'USDT' ? balance : 0; 
         return {
           name: metadata.name || 'Unknown Token',
@@ -576,9 +519,13 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setLoading(false);
     }
-  }, [handleDisconnect]);
+  }, [handleDisconnect, startDemoMode]);
+  
+  const disconnectWallet = useCallback(() => {
+    handleDisconnect();
+    router.push("/login");
+  }, [router, handleDisconnect]);
 
->>>>>>> 803b280de73c9c24dd7e4aa6a21f825a6b0aeb24
   const connectWallet = useCallback(async () => {
     if (typeof window === "undefined" || !(window as any).ethereum) {
       setError("MetaMask not detected. Please install the extension.");
@@ -592,26 +539,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       const accounts = await browserProvider.send("eth_requestAccounts", []);
       
       if (accounts && accounts.length > 0) {
-<<<<<<< HEAD
-<<<<<<< HEAD
-        localStorage.setItem('walletAddress', accounts[0]);
-        setShowComingSoonModal(true);
-        setLoading(false);
-=======
-        toast({
-          title: "Connection Successful!",
-          description: "Live data import is coming soon. Welcome to the SynqAI demo experience.",
-        });
-        // After connecting, immediately force the app into demo mode.
-        await updateWalletState(mockAddress);
-        router.push('/dashboard');
-
->>>>>>> c447b51 (When I click on back to login page it takes me to the login page then to)
-=======
-        localStorage.setItem('walletAddress', accounts[0]);
-        setShowComingSoonModal(true);
-        setLoading(false);
->>>>>>> 803b280de73c9c24dd7e4aa6a21f825a6b0aeb24
+        await updateWalletState(accounts[0], browserProvider);
       } else {
         setError("No accounts found. Please connect an account in MetaMask.");
         setLoading(false);
@@ -625,72 +553,20 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       }
       setLoading(false);
     }
-<<<<<<< HEAD
-  }, [updateWalletState, router]);
-
-<<<<<<< HEAD
+  }, [updateWalletState]);
 
   useEffect(() => {
     const path = window.location.pathname;
-    if (path.startsWith('/login') || path.startsWith('/onboarding')) {
-      setLoading(false);
-      return;
-    }
-    
-    setLoading(true);
-    const storedAddress = localStorage.getItem("walletAddress");
-=======
-   const startDemoMode = useCallback(async () => {
-    setLoading(true);
-    await updateWalletState(mockAddress);
-=======
-  }, []);
-
-  const startDemoMode = useCallback(() => {
-    setLoading(true);
-    setShowComingSoonModal(false);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("walletAddress", mockAddress);
-    }
-    updateWalletState(mockAddress);
->>>>>>> 803b280de73c9c24dd7e4aa6a21f825a6b0aeb24
-    router.push('/dashboard');
-  }, [router, updateWalletState]);
-
-  useEffect(() => {
-<<<<<<< HEAD
-    const isLoginPage = pathname.startsWith('/login');
-    const isOnboardingPage = pathname.startsWith('/onboarding');
->>>>>>> c447b51 (When I click on back to login page it takes me to the login page then to)
-    
-    // Only attempt auto-reconnection if we are not on the login/onboarding pages
-    if (!isLoginPage && !isOnboardingPage) {
-      setLoading(true);
-      const storedAddress = localStorage.getItem("walletAddress");
-      if (storedAddress && ethers.isAddress(storedAddress)) {
-        updateWalletState(storedAddress, (window as any).ethereum ? new BrowserProvider((window as any).ethereum) : undefined);
-      } else {
-=======
-    const path = window.location.pathname;
-    if (path.startsWith('/login') || path.startsWith('/onboarding')) {
-      setLoading(false);
-      return;
+    if (path.startsWith('/login') || path.startsWith('/onboarding') || path === '/') {
+        setLoading(false);
+        return;
     }
     
     setLoading(true);
     const storedAddress = localStorage.getItem("walletAddress");
     
     if (storedAddress && ethers.isAddress(storedAddress)) {
-      if ((window as any).ethereum) {
-         updateWalletState(storedAddress, new BrowserProvider((window as any).ethereum));
-      } else if (storedAddress.toLowerCase() === mockAddress.toLowerCase()){
-         updateWalletState(storedAddress);
-      } else {
-        // If no provider but address is stored, it's likely a hard refresh on a real wallet.
-        // We can't proceed without the provider, so we disconnect.
->>>>>>> 803b280de73c9c24dd7e4aa6a21f825a6b0aeb24
-        handleDisconnect();
-      }
+      updateWalletState(storedAddress);
     } else {
       setLoading(false);
     }
@@ -698,14 +574,8 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     const ethereum = (window as any).ethereum;
     if (ethereum?.isMetaMask) {
       const handleAccountsChanged = (accounts: string[]) => {
-<<<<<<< HEAD
-        if (accounts.length > 0) {
-          // Re-trigger the connection flow to show toast and guide to demo
-          connectWallet();
-=======
         if (accounts.length > 0 && ethers.isAddress(accounts[0])) {
           updateWalletState(accounts[0], new BrowserProvider(ethereum));
->>>>>>> 803b280de73c9c24dd7e4aa6a21f825a6b0aeb24
         } else {
           handleDisconnect();
           router.push('/login');
@@ -750,11 +620,6 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <WalletContext.Provider value={value}>
-       <ComingSoonDialog
-        open={showComingSoonModal}
-        onOpenChange={setShowComingSoonModal}
-        onContinue={startDemoMode}
-      />
       {children}
     </WalletContext.Provider>
   );
