@@ -462,7 +462,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      const balanceEth = ethers.formatEther(balanceWei);
+      const balanceEth = ethers.formatEther(balanceWei as any);
       const history = await fetchTransactionHistory(currentAddress, network.chainId);
       const userNfts = await fetchNfts(currentAddress, alchemy);
       const portfolioHistoryData = await fetchPortfolioHistory(currentAddress, alchemy);
@@ -624,5 +624,3 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     </WalletContext.Provider>
   );
 };
-
-    
