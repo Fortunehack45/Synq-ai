@@ -23,23 +23,23 @@ export async function GET(request: Request) {
   }
 
   const apiSubdomain = chainId === '11155111' ? 'api-sepolia' : 'api';
-  const url = `https://${apiSubdomain}.etherscan.io/api?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=25&sort=desc&apikey=${apiKey}`;
+  // V2 API requires the key in the header, not as a query parameter.
+  const url = `https://${apiSubdomain}.etherscan.io/api?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=25&sort=desc`;
   
   try {
     const response = await fetch(url, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        'X-APIKEY': apiKey, // Etherscan V2 requires key in header
       },
     });
 
-    // Read the body once, regardless of status
     const data = await response.json();
 
     if (!response.ok || data.status !== '1') {
        const errorMessage = data.result || data.message || `Etherscan API request failed with status ${response.status}`;
        console.error("Etherscan API error response:", errorMessage);
-       // Ensure status code is a valid number, default to 500
        const status = typeof response.status === 'number' && response.status >= 100 && response.status < 600 ? response.status : 500;
        return NextResponse.json({error: `Etherscan API Error: ${errorMessage}`}, {status});
     }
