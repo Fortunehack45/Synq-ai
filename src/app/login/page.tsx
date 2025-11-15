@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,20 +19,20 @@ import Link from "next/link";
 import { WalletProvider } from "@/context/wallet-provider";
 import { Eye, Wallet } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ComingSoonDialog } from "@/components/coming-soon-dialog";
+
 
 function LoginPageContent() {
   const router = useRouter();
-  const { connectWallet, address, error, clearError, loading, startDemoMode } = useWallet();
+  const [showComingSoon, setShowComingSoon] = useState(false);
+  const { connectWallet, address, error, clearError, loading, startDemoMode } = useWallet({
+    setShowComingSoon,
+  });
   const { toast } = useToast();
 
   useEffect(() => {
-    if (address) {
-      const onboardingComplete = localStorage.getItem(`onboarding_complete_${address}`);
-      if (onboardingComplete) {
-        router.push('/dashboard');
-      } else {
-        router.push('/onboarding');
-      }
+    if (address && localStorage.getItem(`onboarding_complete_${address}`)) {
+      router.push('/dashboard');
     }
   }, [address, router]);
 
@@ -55,6 +55,12 @@ function LoginPageContent() {
   const handleDemo = () => {
     startDemoMode();
   }
+  
+  const handleContinueToDemo = () => {
+    setShowComingSoon(false);
+    startDemoMode();
+  }
+
 
   const handleComingSoon = () => {
     toast({
@@ -82,6 +88,7 @@ function LoginPageContent() {
        <div className="absolute top-1/2 left-1/2 -z-10 -translate-x-1/2 -translate-y-1/2">
         <div className="animate-blob h-[30rem] w-[30rem] rounded-full bg-primary/20 blur-3xl filter" />
       </div>
+      <ComingSoonDialog open={showComingSoon} onOpenChange={setShowComingSoon} onContinue={handleContinueToDemo} />
       <Card className="w-full max-w-md glass shadow-2xl">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4">

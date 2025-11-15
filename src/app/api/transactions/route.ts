@@ -4,7 +4,7 @@ import {ethers} from 'ethers';
 
 /**
  * API route to fetch transaction history from Etherscan.
- * This acts as a secure, server-side proxy to handle the API key and avoid CORS issues.
+ * This acts as a server-side proxy to securely handle the API key and avoid CORS issues.
  */
 export async function GET(request: Request) {
   const {searchParams} = new URL(request.url);
@@ -17,49 +17,38 @@ export async function GET(request: Request) {
 
   const apiKey = process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY;
 
-  if (!apiKey || apiKey.includes('YOUR_API_KEY')) {
+  if (!apiKey || apiKey.includes('YOUR_API_KEY') || !apiKey.trim() || apiKey === 'SZP2BWBAXPA5QBRS7E3KHUQHG54H6XVYKI' && !process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY) {
     console.error('Etherscan API key not configured on the server.');
-    return NextResponse.json({error: 'Server API service is not configured.'}, {status: 500});
+    return NextResponse.json({error: 'Server API service is not configured. Please add an Etherscan API key.'}, {status: 500});
   }
-  
-  // Etherscan's 'txlist' action uses the api.etherscan.io endpoint for mainnet,
-  // and network-specific subdomains for testnets.
-  const getApiSubdomain = (id: string) => {
-    switch (id) {
-      case '11155111': return 'api-sepolia';
-      case '1': return 'api';
-      default: return 'api'; // Default to mainnet for others
-    }
-  }
-  
-  const apiSubdomain = getApiSubdomain(chainId);
+
+  const apiSubdomain = chainId === '11155111' ? 'api-sepolia' : 'api';
+  // Etherscan V2 for `txlist` requires the API key as a query parameter.
   const url = `https://${apiSubdomain}.etherscan.io/api?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=25&sort=desc&apikey=${apiKey}`;
   
   try {
-    const response = await fetch(url);
-
-    if (!response.ok) {
-       const errorText = await response.text();
-       console.error(`Etherscan API request failed with status ${response.status}: ${errorText}`);
-       return NextResponse.json({error: `Etherscan API request failed: ${errorText}`}, {status: response.status});
-    }
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
 
     const data = await response.json();
-    
-    // Etherscan returns status "0" for errors, with the specific error message in `result` or `message`.
-    if (data.status !== '1') {
-      const errorMessage = data.result || data.message || 'An unknown Etherscan API error occurred.';
-      console.error("Etherscan API error response:", errorMessage);
-      // Return a structured error to the client
-      return NextResponse.json({error: `Etherscan API Error: ${errorMessage}`}, {status: 500});
+
+    if (!response.ok || data.status !== '1') {
+       const errorMessage = data.result || data.message || `Etherscan API request failed with status ${response.status}`;
+       console.error("Etherscan API error response:", errorMessage);
+       // Use a specific status code if available, otherwise default to 500
+       const status = typeof response.status === 'number' && response.status >= 100 && response.status < 600 ? response.status : 500;
+       return NextResponse.json({error: `Etherscan API Error: ${errorMessage}`}, {status});
     }
 
-    // Successfully fetched data, return the result array.
     return NextResponse.json({result: data.result});
     
   } catch (error) {
     console.error('Error in /api/transactions:', error);
-    const errorMessage = error instanceof Error ? error.message : 'An unknown server error occurred.';
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
     return NextResponse.json({error: errorMessage}, {status: 500});
   }
 }

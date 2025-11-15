@@ -8,12 +8,15 @@ import React, {
   useEffect,
   ReactNode,
   useMemo,
+  Dispatch,
+  SetStateAction,
 } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { ethers, BrowserProvider, BigNumberish } from "ethers";
+import { ethers, BrowserProvider } from "ethers";
 import { Alchemy, Network, OwnedNft, TokenBalance, TokenMetadataResponse } from "alchemy-sdk";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import { toast } from "@/hooks/use-toast";
+import { fetchTransactionHistory as fetchEtherscanTransactions } from "@/services/etherscan";
 
 interface FormattedTransaction {
   hash: string;
@@ -59,6 +62,13 @@ export const WalletContext = createContext<WalletContextType | undefined>(
   undefined
 );
 
+interface WalletProviderProps {
+  children: ReactNode;
+  pageProps?: {
+    setShowComingSoon: Dispatch<SetStateAction<boolean>>;
+  };
+}
+
 const getAlchemyConfig = (chainId: bigint): { apiKey: string, network: Network } | null => {
     const userKey = typeof window !== 'undefined' ? localStorage.getItem('alchemyApiKey') : null;
     const envKey = process.env.NEXT_PUBLIC_ALCHEMY_KEY;
@@ -96,36 +106,26 @@ const getAlchemy = (chainId: bigint) => {
 };
 
 const fetchTransactionHistory = async (address: string, chainId: bigint): Promise<FormattedTransaction[]> => {
-  const url = `/api/transactions?address=${address}&chainId=${String(chainId)}`;
-
-  try {
-    const response = await fetch(url);
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || `API request failed with status ${response.status}`);
+    try {
+        const result = await fetchEtherscanTransactions(address, String(chainId));
+        if (result && Array.isArray(result)) {
+            return result.map((tx: any) => ({
+                hash: tx.hash,
+                from: tx.from,
+                to: tx.to,
+                value: ethers.formatEther(tx.value),
+                timeStamp: tx.timeStamp ? parseInt(tx.timeStamp, 10) : undefined,
+                type: tx.from.toLowerCase() === address.toLowerCase() ? 'Send' : 'Receive'
+            }));
+        } else {
+            console.error("Parsed transaction history is not an array:", result);
+            return [];
+        }
+    } catch (error) {
+        console.error("Failed to fetch or parse transaction history:", error);
+        // We throw the error so it can be caught and displayed in the UI if needed
+        throw error;
     }
-
-    const data = await response.json();
-
-    if (data.result) {
-      return data.result.map((tx: any) => ({
-        hash: tx.hash,
-        from: tx.from,
-        to: tx.to,
-        value: ethers.formatEther(tx.value),
-        timeStamp: parseInt(tx.timeStamp, 10),
-        type: tx.from.toLowerCase() === address.toLowerCase() ? 'Send' : 'Receive'
-      }));
-    } else if (data.error) {
-       throw new Error(data.error);
-    } else {
-      return [];
-    }
-  } catch (error) {
-    console.error("Failed to fetch transaction history from internal API:", error);
-    throw error;
-  }
 };
 
 
@@ -283,10 +283,10 @@ const fetchPortfolioHistory = async (address: string, alchemy: Alchemy | null): 
         alchemy.core
           .getBalance(address, blockNumber)
           .then((balanceWei) => {
-            const balanceBigInt = (balanceWei as any)._hex ? BigInt((balanceWei as any)._hex) : BigInt(0);
+            const balanceString = (balanceWei as any)._hex ? (balanceWei as any)._hex : balanceWei.toString();
             return {
               date: date.toISOString().split("T")[0],
-              balance: parseFloat(ethers.formatEther(balanceBigInt)),
+              balance: parseFloat(ethers.formatEther(balanceString)),
             };
           })
           .catch((e) => {
@@ -334,7 +334,7 @@ const calculatePortfolioChange = (history: PortfolioHistoryPoint[]): number => {
 const mockAddress = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"; // Vitalik's address for fun
 const mockBalance = "12.3456";
 
-export const WalletProvider = ({ children }: { children: ReactNode }) => {
+export const WalletProvider = ({ children, pageProps }: WalletProviderProps) => {
   const [address, setAddress] = useState<string | null>(null);
   const [balance, setBalance] = useState<string | null>(null);
   const [tokens, setTokens] = useState<FormattedTokenBalance[]>([]);
@@ -346,6 +346,8 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
+  const setShowComingSoon = pageProps?.setShowComingSoon;
+
 
   const clearError = useCallback(() => setError(null), []);
 
@@ -396,10 +398,18 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     setPortfolioChange(mockChange);
     setTokens([ethToken, ...demoTokens]); 
     setLoading(false);
-    router.push('/dashboard');
+
+    const onboardingComplete = localStorage.getItem(`onboarding_complete_${mockAddress}`);
+    if (onboardingComplete) {
+      router.push('/dashboard');
+    } else {
+      router.push('/onboarding');
+    }
+
   }, [router]);
 
   const updateWalletState = useCallback(async (currentAddress: string, externalProvider?: BrowserProvider) => {
+<<<<<<< HEAD
     setLoading(true);
     const ethPrice = 3150; // Static price for now
 
@@ -520,13 +530,18 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       setLoading(false);
     }
   }, [handleDisconnect, startDemoMode]);
+=======
+    // Live data fetching is currently disabled.
+    console.log("Live data fetching is currently disabled.");
+  }, []);
+>>>>>>> 15acd57 (veddd)
   
   const disconnectWallet = useCallback(() => {
     handleDisconnect();
     router.push("/login");
   }, [router, handleDisconnect]);
 
-  const connectWallet = useCallback(async () => {
+  const connectWallet = useCallback(async (): Promise<void> => {
     if (typeof window === "undefined" || !(window as any).ethereum) {
       setError("MetaMask not detected. Please install the extension.");
       setLoading(false);
@@ -539,7 +554,13 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       const accounts = await browserProvider.send("eth_requestAccounts", []);
       
       if (accounts && accounts.length > 0) {
-        await updateWalletState(accounts[0], browserProvider);
+        const userAddress = accounts[0];
+        setAddress(userAddress);
+        if (typeof window !== "undefined") {
+          localStorage.setItem("walletAddress", userAddress);
+        }
+        setLoading(false);
+        setShowComingSoon?.(true); // Trigger the dialog
       } else {
         setError("No accounts found. Please connect an account in MetaMask.");
         setLoading(false);
@@ -553,33 +574,35 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       }
       setLoading(false);
     }
-  }, [updateWalletState]);
+  }, [setShowComingSoon]);
 
   useEffect(() => {
     const path = window.location.pathname;
+    // Don't auto-load data on login/onboarding pages
     if (path.startsWith('/login') || path.startsWith('/onboarding') || path === '/') {
+        const storedAddress = localStorage.getItem("walletAddress");
+        if (storedAddress) {
+            handleDisconnect();
+        }
         setLoading(false);
         return;
     }
     
-    setLoading(true);
     const storedAddress = localStorage.getItem("walletAddress");
     
     if (storedAddress && ethers.isAddress(storedAddress)) {
-      updateWalletState(storedAddress);
+      // Always default to demo mode on page load/refresh for now
+      startDemoMode();
     } else {
-      setLoading(false);
+       // If no address, we should not be on a dashboard page. The layout will redirect.
+       setLoading(false);
     }
 
     const ethereum = (window as any).ethereum;
     if (ethereum?.isMetaMask) {
       const handleAccountsChanged = (accounts: string[]) => {
-        if (accounts.length > 0 && ethers.isAddress(accounts[0])) {
-          updateWalletState(accounts[0], new BrowserProvider(ethereum));
-        } else {
-          handleDisconnect();
-          router.push('/login');
-        }
+          // On account change, disconnect and force re-login.
+          disconnectWallet();
       };
       
       const handleChainChanged = () => {
@@ -597,7 +620,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       };
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname]);
+  }, [pathname, disconnectWallet, startDemoMode]);
 
   const value = useMemo(() => ({
     address,
