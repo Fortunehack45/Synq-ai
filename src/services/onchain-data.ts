@@ -3,6 +3,7 @@
 
 import { Alchemy, Network, Utils } from 'alchemy-sdk';
 import { ethers } from 'ethers';
+import { fetchTransactionHistory } from './etherscan';
 
 // This function needs to be callable from the server, but it might not have window context.
 // We'll prioritize env vars and accept that localStorage won't work here.
@@ -15,20 +16,6 @@ function getAlchemy(): Alchemy | null {
   // Default to mainnet for server-side tool calls
   return new Alchemy({ apiKey, network: Network.ETH_MAINNET });
 }
-
-function getEtherscanConfig(): { apiUrl: string, apiKey: string } | null {
-  const apiKey = process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY;
-  if (!apiKey || apiKey === "YOUR_API_KEY_HERE" || apiKey.length < 30) {
-    console.warn("Etherscan API key not found or invalid in server context. Transaction history will not be available.");
-    return null;
-  }
-  
-  return {
-    apiUrl: `https://api.etherscan.io/api`,
-    apiKey: apiKey,
-  };
-}
-
 
 export async function getWalletBalance(address: string): Promise<string> {
   const alchemy = getAlchemy();
@@ -45,35 +32,22 @@ export async function getWalletBalance(address: string): Promise<string> {
 }
 
 export async function getWalletTransactions(address: string) {
-  const etherscanConfig = getEtherscanConfig();
-  if (!etherscanConfig || !ethers.isAddress(address)) {
+  if (!ethers.isAddress(address)) {
     return [];
   }
   
-  const { apiUrl, apiKey } = etherscanConfig;
-  const url = `${apiUrl}?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=10&sort=desc&apikey=${apiKey}`;
   try {
-    const response = await fetch(url);
-    if (!response.ok) {
-        console.error(`Etherscan API error (on server): ${response.status} ${response.statusText}`);
-        return [];
-    }
-    const data = await response.json();
-
-    if (data.status === '1') {
-      return data.result.map((tx: any) => ({
+    // Always use mainnet '1' for the Genkit tool context
+    const transactions = await fetchTransactionHistory(address, '1');
+    return transactions.slice(0, 10).map((tx: any) => ({
         hash: tx.hash,
         from: tx.from,
         to: tx.to,
         value: Utils.formatEther(tx.value),
         timeStamp: tx.timeStamp,
       }));
-    } else {
-      console.error("Etherscan API error (on server):", data.message, data.result);
-      return [];
-    }
   } catch (error) {
-    console.error("Failed to fetch transactions from Etherscan (on server):", error);
+    console.error("Failed to fetch transactions from Etherscan service (on server):", error);
     return [];
   }
 }
@@ -105,5 +79,3 @@ export async function getWalletTokenBalances(address: string) {
     return [];
   }
 }
-
-    

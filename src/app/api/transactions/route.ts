@@ -17,22 +17,31 @@ export async function GET(request: Request) {
 
   const apiKey = process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY;
 
-  if (!apiKey || apiKey.includes('YOUR_API_KEY')) {
+  if (!apiKey || apiKey.includes('YOUR_API_KEY') || !apiKey.trim() || apiKey === 'SZP2BWBAXPA5QBRS7E3KHUQHG54H6XVYKI' && !process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY) {
     console.error('Etherscan API key not configured on the server.');
-    return NextResponse.json({error: 'Server API service is not configured.'}, {status: 500});
+    return NextResponse.json({error: 'Server API service is not configured. Please add an Etherscan API key.'}, {status: 500});
   }
 
+<<<<<<< HEAD
   // Etherscan V2 endpoint structure.
   // Note: The base URL is different for testnets vs mainnet.
   const apiSubdomain = chainId === '11155111' ? 'api-sepolia' : 'api';
   const url = `https://${apiSubdomain}.etherscan.io/api?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=25&sort=desc`;
+=======
+  const apiSubdomain = chainId === '11155111' ? 'api-sepolia' : 'api';
+  // Etherscan V2 for `txlist` requires the API key as a query parameter.
+  const url = `https://${apiSubdomain}.etherscan.io/api?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=25&sort=desc&apikey=${apiKey}`;
+>>>>>>> 97b41a99bbe1e440470f72af90c0a4d247fcd7fa
   
   try {
     const response = await fetch(url, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+<<<<<<< HEAD
         'X-APIKEY': apiKey, // Etherscan V2 requires key in header
+=======
+>>>>>>> 97b41a99bbe1e440470f72af90c0a4d247fcd7fa
       },
     });
 
@@ -41,6 +50,10 @@ export async function GET(request: Request) {
     if (!response.ok || data.status !== '1') {
        const errorMessage = data.result || data.message || `Etherscan API request failed with status ${response.status}`;
        console.error("Etherscan API error response:", errorMessage);
+<<<<<<< HEAD
+=======
+       // Use a specific status code if available, otherwise default to 500
+>>>>>>> 97b41a99bbe1e440470f72af90c0a4d247fcd7fa
        const status = typeof response.status === 'number' && response.status >= 100 && response.status < 600 ? response.status : 500;
        return NextResponse.json({error: `Etherscan API Error: ${errorMessage}`}, {status});
     }
