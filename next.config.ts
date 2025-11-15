@@ -11,6 +11,7 @@ const pwa = createPwa({
 });
 
 const nextConfig: NextConfig = {
+  swcMinify: true,
   /* config options here */
   images: {
     remotePatterns: [
