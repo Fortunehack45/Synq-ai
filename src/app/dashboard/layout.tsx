@@ -65,7 +65,9 @@ const FloatingAssistant = dynamic(() => Promise.resolve(function FloatingAssista
         <SheetHeader>
             <SheetTitle className="sr-only">AI Assistant</SheetTitle>
         </SheetHeader>
-        <ChatInterface />
+        <div className="h-full overflow-y-auto">
+          <ChatInterface />
+        </div>
       </SheetContent>
     </Sheet>
   );
@@ -207,6 +209,16 @@ function DashboardLayoutContent({
     return showSlowLoadMessage ? <SlowLoadMessage /> : <LoadingSkeleton />;
   }
 
+  const isLinkActive = (href: string) => {
+    if (href === '/dashboard') {
+      return pathname === href;
+    }
+    if (href === '/dashboard/social/fyp') {
+      return pathname.startsWith('/dashboard/social');
+    }
+    return pathname.startsWith(href);
+  };
+
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[240px_1fr] lg:grid-cols-[280px_1fr]">
       <div className="hidden border-r bg-muted/20 md:block glass sticky top-0 h-screen">
@@ -230,7 +242,7 @@ function DashboardLayoutContent({
                   prefetch={false}
                   className={cn(
                     "flex items-center gap-3 rounded-lg px-3 py-2 transition-all active:scale-95",
-                     pathname === item.href || (pathname.startsWith(item.href) && item.href !== '/dashboard' && !item.href.includes('/social')) || (item.href === '/dashboard/social/fyp' && pathname.startsWith('/dashboard/social'))
+                     isLinkActive(item.href)
                       ? "bg-accent text-accent-foreground"
                       : "text-muted-foreground hover:text-primary"
                   )}
@@ -305,7 +317,7 @@ function DashboardLayoutContent({
                     onClick={() => setIsSheetOpen(false)}
                     className={cn(
                       "mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 transition-all active:scale-95",
-                       pathname.startsWith(item.href) && item.href !== '/dashboard' || pathname === item.href
+                       isLinkActive(item.href)
                         ? "bg-muted text-foreground"
                         : "text-muted-foreground hover:text-foreground"
                     )}

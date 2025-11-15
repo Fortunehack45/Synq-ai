@@ -13,10 +13,8 @@ import React, {
 } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { ethers, BrowserProvider } from "ethers";
-import { Alchemy, Network, OwnedNft, TokenBalance, TokenMetadataResponse } from "alchemy-sdk";
+import { Alchemy, Network, OwnedNft } from "alchemy-sdk";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
-import { toast } from "@/hooks/use-toast";
-import { fetchTransactionHistory as fetchEtherscanTransactions } from "@/services/etherscan";
 
 interface FormattedTransaction {
   hash: string;
@@ -69,6 +67,7 @@ interface WalletProviderProps {
   };
 }
 
+<<<<<<< HEAD
 const getAlchemyConfig = (chainId: bigint): { apiKey: string, network: Network } | null => {
     const userKey = typeof window !== 'undefined' ? localStorage.getItem('alchemyApiKey') : null;
     const envKey = process.env.NEXT_PUBLIC_ALCHEMY_KEY;
@@ -200,6 +199,8 @@ const fetchNfts = async (address: string, alchemy: Alchemy | null): Promise<Owne
   }
 }
 
+=======
+>>>>>>> 0673e7e (llwk)
 const createMockTransactions = (mockAddress: string): FormattedTransaction[] => {
   const now = Math.floor(Date.now() / 1000);
   const randomHex = (length: number) => "0x" + [...Array(length)].map(() => Math.floor(Math.random() * 16).toString(16)).join('');
@@ -268,6 +269,7 @@ const createMockPortfolioHistory = (): PortfolioHistoryPoint[] => {
   return data;
 };
 
+<<<<<<< HEAD
 const fetchHistoricalPrices = async (): Promise<Map<string, number>> => {
   try {
     const response = await fetch('https://api.coingecko.com/api/v3/coins/ethereum/market_chart?vs_currency=usd&days=30&interval=daily');
@@ -352,6 +354,8 @@ const fetchPortfolioHistory = async (address: string, alchemy: Alchemy | null): 
 };
 
 
+=======
+>>>>>>> 0673e7e (llwk)
 const calculatePortfolioChange = (history: PortfolioHistoryPoint[]): number => {
   if (history.length < 2) {
     return 0;
@@ -383,7 +387,6 @@ export const WalletProvider = ({ children, pageProps }: WalletProviderProps) => 
   const router = useRouter();
   const pathname = usePathname();
   const setShowComingSoon = pageProps?.setShowComingSoon;
-
 
   const clearError = useCallback(() => setError(null), []);
 
@@ -444,6 +447,7 @@ export const WalletProvider = ({ children, pageProps }: WalletProviderProps) => 
 
   }, [router]);
 
+<<<<<<< HEAD
   const updateWalletState = useCallback(async (currentAddress: string, externalProvider?: BrowserProvider) => {
 <<<<<<< HEAD
     setLoading(true);
@@ -572,6 +576,8 @@ export const WalletProvider = ({ children, pageProps }: WalletProviderProps) => 
   }, []);
 >>>>>>> 15acd57 (veddd)
   
+=======
+>>>>>>> 0673e7e (llwk)
   const disconnectWallet = useCallback(() => {
     handleDisconnect();
     router.push("/login");
@@ -596,7 +602,13 @@ export const WalletProvider = ({ children, pageProps }: WalletProviderProps) => 
           localStorage.setItem("walletAddress", userAddress);
         }
         setLoading(false);
-        setShowComingSoon?.(true); // Trigger the dialog
+        // Instead of fetching data, trigger the "Coming Soon" dialog.
+        if (setShowComingSoon) {
+          setShowComingSoon(true);
+        } else {
+          // Fallback if the dialog setter isn't available from the page
+          startDemoMode();
+        }
       } else {
         setError("No accounts found. Please connect an account in MetaMask.");
         setLoading(false);
@@ -610,7 +622,7 @@ export const WalletProvider = ({ children, pageProps }: WalletProviderProps) => 
       }
       setLoading(false);
     }
-  }, [setShowComingSoon]);
+  }, [setShowComingSoon, startDemoMode]);
 
   useEffect(() => {
     const path = window.location.pathname;

@@ -62,7 +62,7 @@ function LoginPageContent() {
   }
 
 
-  const handleComingSoon = () => {
+  const handleComingSoonToast = () => {
     toast({
       title: "Coming Soon!",
       description: "This connection method is currently in development.",
@@ -110,7 +110,7 @@ function LoginPageContent() {
               variant="secondary"
               className="w-full relative"
               size="lg"
-              onClick={handleComingSoon}
+              onClick={handleComingSoonToast}
             >
               <span className="flex items-center justify-center flex-1">
                 <Icons.walletConnect className="mr-2 h-6 w-6" />
@@ -121,7 +121,7 @@ function LoginPageContent() {
               variant="secondary"
               className="w-full relative"
               size="lg"
-              onClick={handleComingSoon}
+              onClick={handleComingSoonToast}
             >
               <span className="flex items-center justify-center flex-1">
                 <Wallet className="mr-2 h-5 w-5" />
