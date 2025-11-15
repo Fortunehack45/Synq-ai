@@ -22,8 +22,9 @@ export async function GET(request: Request) {
     return NextResponse.json({error: 'Server API service is not configured.'}, {status: 500});
   }
 
+  // Etherscan V2 endpoint structure.
+  // Note: The base URL is different for testnets vs mainnet.
   const apiSubdomain = chainId === '11155111' ? 'api-sepolia' : 'api';
-  // V2 API requires the key in the header, not as a query parameter.
   const url = `https://${apiSubdomain}.etherscan.io/api?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=25&sort=desc`;
   
   try {
