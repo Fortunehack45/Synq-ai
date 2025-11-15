@@ -3,7 +3,7 @@ import {NextResponse} from 'next/server';
 import {ethers} from 'ethers';
 
 /**
- * API route to fetch transaction history from Etherscan.
+ * API route to fetch transaction history from Etherscan API V2.
  * This acts as a secure, server-side proxy to handle the API key and avoid CORS issues.
  */
 export async function GET(request: Request) {
@@ -22,8 +22,6 @@ export async function GET(request: Request) {
     return NextResponse.json({error: 'Server API service is not configured.'}, {status: 500});
   }
   
-  // Etherscan's 'txlist' action uses the api.etherscan.io endpoint for mainnet,
-  // and network-specific subdomains for testnets.
   const getApiSubdomain = (id: string) => {
     switch (id) {
       case '11155111': return 'api-sepolia';
@@ -33,28 +31,35 @@ export async function GET(request: Request) {
   }
   
   const apiSubdomain = getApiSubdomain(chainId);
-  const url = `https://${apiSubdomain}.etherscan.io/api?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=25&sort=desc&apikey=${apiKey}`;
+  // Using Etherscan API V2. The action 'txlist' still uses this URL structure.
+  const url = `https://${apiSubdomain}.etherscan.io/api?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=25&sort=desc`;
   
   try {
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      headers: {
+        'Accept': 'application/json',
+        // V2 requires API key in the header.
+        'X-APIKEY': apiKey,
+      }
+    });
 
     if (!response.ok) {
        const errorText = await response.text();
        console.error(`Etherscan API request failed with status ${response.status}: ${errorText}`);
+       // Don't try to parse JSON if the response is not ok
        return NextResponse.json({error: `Etherscan API request failed: ${errorText}`}, {status: response.status});
     }
 
     const data = await response.json();
     
-    // Etherscan returns status "0" for errors, with the specific error message in `result` or `message`.
+    // Etherscan API returns status "0" on error.
     if (data.status !== '1') {
       const errorMessage = data.result || data.message || 'An unknown Etherscan API error occurred.';
       console.error("Etherscan API error response:", errorMessage);
-      // Return a structured error to the client
       return NextResponse.json({error: `Etherscan API Error: ${errorMessage}`}, {status: 500});
     }
 
-    // Successfully fetched data, return the result array.
+    // Success, return the results
     return NextResponse.json({result: data.result});
     
   } catch (error) {

@@ -102,19 +102,25 @@ const fetchTransactionHistory = async (address: string, chainId: bigint): Promis
     const response = await fetch(url);
     
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || `API request failed with status ${response.status}`);
+      // Try to parse the error, but fallback to a generic message
+      try {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `API request failed with status ${response.status}`);
+      } catch (e) {
+        const errorText = await response.text();
+        throw new Error(`Etherscan API request failed: ${errorText}`);
+      }
     }
 
     const data = await response.json();
 
-    if (data.result) {
+    if (data.result && Array.isArray(data.result)) {
       return data.result.map((tx: any) => ({
         hash: tx.hash,
         from: tx.from,
         to: tx.to,
         value: ethers.formatEther(tx.value),
-        timeStamp: parseInt(tx.timeStamp, 10),
+        timeStamp: tx.timeStamp ? parseInt(tx.timeStamp, 10) : undefined,
         type: tx.from.toLowerCase() === address.toLowerCase() ? 'Send' : 'Receive'
       }));
     } else if (data.error) {
@@ -283,7 +289,7 @@ const fetchPortfolioHistory = async (address: string, alchemy: Alchemy | null): 
         alchemy.core
           .getBalance(address, blockNumber)
           .then((balanceWei) => {
-            const balanceString = balanceWei.toString();
+            const balanceString = (balanceWei as any)._hex ? (balanceWei as any)._hex : balanceWei.toString();
             return {
               date: date.toISOString().split("T")[0],
               balance: parseFloat(ethers.formatEther(balanceString)),
@@ -461,7 +467,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
         handleDisconnect();
         return;
       }
-
+      
       const balanceEth = ethers.formatEther(balanceWei.toString());
       const history = await fetchTransactionHistory(currentAddress, network.chainId);
       const userNfts = await fetchNfts(currentAddress, alchemy);
