@@ -100,19 +100,11 @@ const fetchTransactionHistory = async (address: string, chainId: bigint): Promis
 
   try {
     const response = await fetch(url);
+    const data = await response.json();
     
     if (!response.ok) {
-      // Try to parse the error, but fallback to a generic message
-      try {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `API request failed with status ${response.status}`);
-      } catch (e) {
-        const errorText = await response.text();
-        throw new Error(`Etherscan API request failed: ${errorText}`);
-      }
+        throw new Error(data.error || `API request failed with status ${response.status}`);
     }
-
-    const data = await response.json();
 
     if (data.result && Array.isArray(data.result)) {
       return data.result.map((tx: any) => ({
@@ -123,10 +115,9 @@ const fetchTransactionHistory = async (address: string, chainId: bigint): Promis
         timeStamp: tx.timeStamp ? parseInt(tx.timeStamp, 10) : undefined,
         type: tx.from.toLowerCase() === address.toLowerCase() ? 'Send' : 'Receive'
       }));
-    } else if (data.error) {
-       throw new Error(data.error);
     } else {
-      return [];
+      // Handle cases where response is ok but there's a logical error in the result
+      throw new Error(data.error || 'Failed to parse transaction history.');
     }
   } catch (error) {
     console.error("Failed to fetch transaction history from internal API:", error);
@@ -289,10 +280,9 @@ const fetchPortfolioHistory = async (address: string, alchemy: Alchemy | null): 
         alchemy.core
           .getBalance(address, blockNumber)
           .then((balanceWei) => {
-            const balanceString = (balanceWei as any)._hex ? (balanceWei as any)._hex : balanceWei.toString();
             return {
               date: date.toISOString().split("T")[0],
-              balance: parseFloat(ethers.formatEther(balanceString)),
+              balance: parseFloat(ethers.formatEther(balanceWei.toString())),
             };
           })
           .catch((e) => {
