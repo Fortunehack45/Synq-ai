@@ -22,50 +22,40 @@ export async function GET(request: Request) {
     return NextResponse.json({error: 'Server API service is not configured.'}, {status: 500});
   }
   
-  // Etherscan V2 uses different base URLs for different networks.
-  const getApiBaseUrl = (id: string) => {
+  // Etherscan's 'txlist' action uses the api.etherscan.io endpoint for mainnet,
+  // and network-specific subdomains for testnets.
+  const getApiSubdomain = (id: string) => {
     switch (id) {
-      case '11155111': return 'https://api-sepolia.etherscan.io';
-      case '1': return 'https://api.etherscan.io';
-      default: return 'https://api.etherscan.io'; // Default to mainnet for others
+      case '11155111': return 'api-sepolia';
+      case '1': return 'api';
+      default: return 'api'; // Default to mainnet for others
     }
   }
   
-  const apiBaseUrl = getApiBaseUrl(chainId);
-  const url = `${apiBaseUrl}/api/v2/accounts/${address}/transactions`;
+  const apiSubdomain = getApiSubdomain(chainId);
+  const url = `https://${apiSubdomain}.etherscan.io/api?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=25&sort=desc&apikey=${apiKey}`;
   
   try {
-    const response = await fetch(url, {
-      headers: {
-        'accept': 'application/json',
-        'X-Etherscan-Api-Key': apiKey,
-      }
-    });
+    const response = await fetch(url);
 
     if (!response.ok) {
        const errorText = await response.text();
-       let errorJson;
-       try {
-        errorJson = JSON.parse(errorText);
-       } catch (e) {
-        // Not a JSON error response
-       }
-       const errorMessage = errorJson?.message || `Etherscan API request failed: ${errorText}`;
-       console.error(`Etherscan API request failed with status ${response.status}: ${errorMessage}`);
-       return NextResponse.json({error: errorMessage}, {status: response.status});
+       console.error(`Etherscan API request failed with status ${response.status}: ${errorText}`);
+       return NextResponse.json({error: `Etherscan API request failed: ${errorText}`}, {status: response.status});
     }
 
     const data = await response.json();
     
-    // Etherscan V2 has a different success structure
-    if (data.status !== '1' && !data.items) {
-      const errorMessage = data.message || data.result || 'An unknown Etherscan API error occurred.';
+    // Etherscan returns status "0" for errors, with the specific error message in `result` or `message`.
+    if (data.status !== '1') {
+      const errorMessage = data.result || data.message || 'An unknown Etherscan API error occurred.';
       console.error("Etherscan API error response:", errorMessage);
+      // Return a structured error to the client
       return NextResponse.json({error: `Etherscan API Error: ${errorMessage}`}, {status: 500});
     }
 
-    // Successfully fetched data, return the result array. The V2 response is in `items`.
-    return NextResponse.json({result: data.items});
+    // Successfully fetched data, return the result array.
+    return NextResponse.json({result: data.result});
     
   } catch (error) {
     console.error('Error in /api/transactions:', error);

@@ -513,7 +513,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
              setError("The network is busy or rate-limited. Please try again in a few minutes.");
         } else {
             console.error("Failed to update wallet state:", err);
-            setError("Failed to fetch wallet data. Please check your connection and that your API keys are correct.");
+            setError(`Failed to fetch wallet data: ${err.message}`);
         }
        handleDisconnect();
     } finally {
