@@ -14,12 +14,10 @@ import {
   Settings,
   User,
   MessageSquare,
-  WifiOff,
   X,
   Bot,
   BotMessageSquare,
 } from "lucide-react";
-
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -41,37 +39,10 @@ import { WalletProvider } from "@/context/wallet-provider";
 import { useWallet } from "@/hooks/use-wallet";
 import { useEffect, useState, Suspense } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import dynamic from 'next/dynamic';
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/logo";
-import { Skeleton } from "@/components/ui/skeleton";
 import { ChatInterface } from "@/app/dashboard/assistant/components/chat-interface";
-
-
-const FloatingAssistant = dynamic(() => Promise.resolve(function FloatingAssistant() {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <Button
-          className="fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-lg z-50"
-          size="icon"
-        >
-          <BotMessageSquare className="h-8 w-8" />
-        </Button>
-      </SheetTrigger>
-      <SheetContent className="w-full max-w-full sm:max-w-4xl p-0 glass" side="right">
-        <SheetHeader>
-            <SheetTitle className="sr-only">AI Assistant</SheetTitle>
-        </SheetHeader>
-        <div className="h-full overflow-y-auto">
-          <ChatInterface />
-        </div>
-      </SheetContent>
-    </Sheet>
-  );
-}), { ssr: false });
+import { AuthGuard } from "@/components/auth-guard";
 
 
 const navItems = [
@@ -87,34 +58,6 @@ const navItems = [
   { href: "/dashboard/settings", icon: Settings, label: "Settings" },
 ];
 
-function LoadingSkeleton() {
-  return (
-    <div className="flex h-screen w-full items-center justify-center text-center">
-      <div className="flex flex-col items-center gap-4 text-muted-foreground">
-        <Logo className="h-16 w-16 mb-2 animate-pulse" />
-        <h2 className="text-lg font-semibold text-foreground">Connecting to Wallet...</h2>
-        <p className="max-w-xs">Please wait while we sync your on-chain data.</p>
-        <Skeleton className="h-4 w-48 mt-2" />
-      </div>
-    </div>
-  )
-}
-
-function SlowLoadMessage() {
-  return (
-      <div className="flex h-screen w-full items-center justify-center text-center">
-          <div className="flex flex-col items-center gap-4 text-muted-foreground">
-             <WifiOff className="h-12 w-12" />
-             <h2 className="text-lg font-semibold text-foreground">Still Connecting...</h2>
-             <p className="max-w-xs">
-                This is taking longer than expected. Please check your internet connection and ensure your API keys in Settings are correct.
-             </p>
-          </div>
-      </div>
-  )
-}
-
-
 function DashboardLayoutContent({
   children,
 }: {
@@ -122,48 +65,21 @@ function DashboardLayoutContent({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { disconnectWallet, address, loading } = useWallet();
+  const { disconnectWallet } = useWallet();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [showSlowLoadMessage, setShowSlowLoadMessage] = useState(false);
-  const [isUpgradeCardVisible, setIsUpgradeCardVisible] = useState(false);
+  const [isAssistantOpen, setAssistantOpen] = useState(false);
+  const [isUpgradeCardVisible, setIsUpgradeCardVisible] = useState(true);
 
   useEffect(() => {
-    // Check if the card was dismissed previously
     const isCardDismissed = localStorage.getItem("upgradeCardDismissed");
-    if (isCardDismissed !== "true") {
-      setIsUpgradeCardVisible(true);
+    if (isCardDismissed === "true") {
+      setIsUpgradeCardVisible(false);
     }
   }, []);
-
-  const handleDismissUpgradeCard = () => {
-    // Hide the card and save the state to localStorage
-    setIsUpgradeCardVisible(false);
-    localStorage.setItem("upgradeCardDismissed", "true");
-  };
-
-
-  useEffect(() => {
-    // This effect handles route protection for the dashboard.
-    if (!loading) {
-      if (!address) {
-        // If not logged in, redirect to login page.
-        router.push('/login');
-        return;
-      }
-      
-      const onboardingComplete = localStorage.getItem(`onboarding_complete_${address}`);
-      if (!onboardingComplete) {
-        // If logged in but onboarding is not complete, redirect to onboarding.
-        router.push('/onboarding');
-      }
-    }
-  }, [address, loading, router]);
-
-
+  
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.metaKey || event.ctrlKey) {
-        // Prevent default browser behavior for these shortcuts
         if (["a", "l", "b", "s"].includes(event.key.toLowerCase())) {
           event.preventDefault();
         }
@@ -190,35 +106,12 @@ function DashboardLayoutContent({
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [router, disconnectWallet]);
-
-  useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (loading) {
-      timer = setTimeout(() => {
-        setShowSlowLoadMessage(true);
-      }, 15000); // 15 seconds
-    } else {
-      setShowSlowLoadMessage(false);
-    }
-    return () => clearTimeout(timer);
-  }, [loading]);
-
-  // While loading or if the user is not properly authenticated/onboarded, show a loader.
-  // The useEffect hook above will handle the redirection.
-  if (loading || !address || !localStorage.getItem(`onboarding_complete_${address}`)) {
-    return showSlowLoadMessage ? <SlowLoadMessage /> : <LoadingSkeleton />;
-  }
-
-  const isLinkActive = (href: string) => {
-    if (href === '/dashboard') {
-      return pathname === href;
-    }
-    if (href === '/dashboard/social/fyp') {
-      return pathname.startsWith('/dashboard/social');
-    }
-    return pathname.startsWith(href);
+  
+  const handleDismissUpgradeCard = () => {
+    setIsUpgradeCardVisible(false);
+    localStorage.setItem("upgradeCardDismissed", "true");
   };
-
+  
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[240px_1fr] lg:grid-cols-[280px_1fr]">
       <div className="hidden border-r bg-muted/20 md:block glass sticky top-0 h-screen">
@@ -235,22 +128,30 @@ function DashboardLayoutContent({
           </div>
           <div className="flex-1 overflow-y-auto">
             <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
-              {navItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  prefetch={false}
-                  className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2 transition-all active:scale-95",
-                     isLinkActive(item.href)
-                      ? "bg-accent text-accent-foreground"
-                      : "text-muted-foreground hover:text-primary"
-                  )}
-                >
-                  <item.icon className="h-4 w-4" />
-                  {item.label}
-                </Link>
-              ))}
+              {navItems.map((item) => {
+                  const isActive = item.href === '/dashboard' 
+                    ? pathname === item.href 
+                    : item.href.startsWith('/dashboard/social')
+                    ? pathname.startsWith('/dashboard/social')
+                    : pathname.startsWith(item.href);
+
+                  return (
+                    <Link
+                      key={item.label}
+                      href={item.href}
+                      prefetch={false}
+                      className={cn(
+                        "flex items-center gap-3 rounded-lg px-3 py-2 transition-all active:scale-95",
+                        isActive
+                          ? "bg-accent text-accent-foreground"
+                          : "text-muted-foreground hover:text-primary"
+                      )}
+                    >
+                      <item.icon className="h-4 w-4" />
+                      {item.label}
+                    </Link>
+                  );
+                })}
             </nav>
           </div>
           {isUpgradeCardVisible && (
@@ -309,28 +210,35 @@ function DashboardLayoutContent({
                  </SheetTitle>
                </SheetHeader>
               <nav className="grid gap-2 text-lg font-medium p-6">
-                {navItems.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    prefetch={false}
-                    onClick={() => setIsSheetOpen(false)}
-                    className={cn(
-                      "mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 transition-all active:scale-95",
-                       isLinkActive(item.href)
-                        ? "bg-muted text-foreground"
-                        : "text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    <item.icon className="h-5 w-5" />
-                    {item.label}
-                  </Link>
-                ))}
+                {navItems.map((item) => {
+                  const isActive = item.href === '/dashboard' 
+                    ? pathname === item.href 
+                    : item.href.startsWith('/dashboard/social')
+                    ? pathname.startsWith('/dashboard/social')
+                    : pathname.startsWith(item.href);
+
+                  return (
+                    <Link
+                      key={item.label}
+                      href={item.href}
+                      prefetch={false}
+                      onClick={() => setIsSheetOpen(false)}
+                      className={cn(
+                        "mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 transition-all active:scale-95",
+                        isActive
+                          ? "bg-muted text-foreground"
+                          : "text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      <item.icon className="h-5 w-5" />
+                      {item.label}
+                    </Link>
+                  );
+                })}
               </nav>
             </SheetContent>
           </Sheet>
           <div className="w-full flex-1">
-            {/* Can add a search here if needed */}
           </div>
           <ThemeToggle />
           <UserNav />
@@ -340,7 +248,27 @@ function DashboardLayoutContent({
             {children}
           </Suspense>
         </main>
-        <FloatingAssistant />
+        
+        <Sheet open={isAssistantOpen} onOpenChange={setAssistantOpen}>
+          <SheetTrigger asChild>
+            <Button
+              onClick={() => setAssistantOpen(true)}
+              className="fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-lg z-50"
+              size="icon"
+            >
+              <BotMessageSquare className="h-8 w-8" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent className="w-full max-w-full sm:max-w-4xl p-0 glass" side="right">
+            <SheetHeader>
+                <SheetTitle className="sr-only">AI Assistant</SheetTitle>
+            </SheetHeader>
+            <div className="h-full overflow-y-auto">
+              <ChatInterface />
+            </div>
+          </SheetContent>
+        </Sheet>
+        
       </div>
     </div>
   );
@@ -353,7 +281,9 @@ export default function DashboardLayout({
 }) {
   return (
     <WalletProvider>
-      <DashboardLayoutContent>{children}</DashboardLayoutContent>
+      <AuthGuard>
+        <DashboardLayoutContent>{children}</DashboardLayoutContent>
+      </AuthGuard>
     </WalletProvider>
-  )
+  );
 }

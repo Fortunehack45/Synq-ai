@@ -11,10 +11,11 @@ import React, {
   Dispatch,
   SetStateAction,
 } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { ethers, BrowserProvider } from "ethers";
-import { Alchemy, Network, OwnedNft } from "alchemy-sdk";
+import { Alchemy, Network, OwnedNft, TokenBalance, TokenMetadataResponse } from "alchemy-sdk";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
+import { toast } from "@/hooks/use-toast";
 
 interface FormattedTransaction {
   hash: string;
@@ -54,21 +55,14 @@ interface WalletContextType {
   startDemoMode: () => void;
   error: string | null;
   clearError: () => void;
+  setAddress: Dispatch<SetStateAction<string | null>>;
 }
 
 export const WalletContext = createContext<WalletContextType | undefined>(
   undefined
 );
 
-interface WalletProviderProps {
-  children: ReactNode;
-  pageProps?: {
-    setShowComingSoon: Dispatch<SetStateAction<boolean>>;
-  };
-}
-
-<<<<<<< HEAD
-const getAlchemyConfig = (chainId: bigint): { apiKey: string, network: Network } | null => {
+const getAlchemy = (chainId: bigint) => {
     const userKey = typeof window !== 'undefined' ? localStorage.getItem('alchemyApiKey') : null;
     const envKey = process.env.NEXT_PUBLIC_ALCHEMY_KEY;
     const apiKey = userKey || envKey;
@@ -95,17 +89,10 @@ const getAlchemyConfig = (chainId: bigint): { apiKey: string, network: Network }
         return null;
     }
 
-    return { apiKey, network };
-};
-
-const getAlchemy = (chainId: bigint) => {
-  const config = getAlchemyConfig(chainId);
-  if (!config) return null;
-  return new Alchemy(config);
+    return new Alchemy({ apiKey, network });
 };
 
 const fetchTransactionHistory = async (address: string, chainId: bigint): Promise<FormattedTransaction[]> => {
-<<<<<<< HEAD
   const url = `/api/transactions?address=${address}&chainId=${String(chainId)}`;
 
   try {
@@ -126,35 +113,12 @@ const fetchTransactionHistory = async (address: string, chainId: bigint): Promis
         type: tx.from.toLowerCase() === address.toLowerCase() ? 'Send' : 'Receive'
       }));
     } else {
-      // Handle cases where response is ok but there's a logical error in the result
       throw new Error(data.error || 'Failed to parse transaction history.');
     }
   } catch (error) {
     console.error("Failed to fetch transaction history from internal API:", error);
     throw error;
   }
-=======
-    try {
-        const result = await fetchEtherscanTransactions(address, String(chainId));
-        if (result && Array.isArray(result)) {
-            return result.map((tx: any) => ({
-                hash: tx.hash,
-                from: tx.from,
-                to: tx.to,
-                value: ethers.formatEther(tx.value),
-                timeStamp: tx.timeStamp ? parseInt(tx.timeStamp, 10) : undefined,
-                type: tx.from.toLowerCase() === address.toLowerCase() ? 'Send' : 'Receive'
-            }));
-        } else {
-            console.error("Parsed transaction history is not an array:", result);
-            return [];
-        }
-    } catch (error) {
-        console.error("Failed to fetch or parse transaction history:", error);
-        // We throw the error so it can be caught and displayed in the UI if needed
-        throw error;
-    }
->>>>>>> 97b41a99bbe1e440470f72af90c0a4d247fcd7fa
 };
 
 
@@ -173,18 +137,6 @@ const fetchTokenBalances = async (address: string, alchemy: Alchemy | null): Pro
   }
 }
 
-const fetchTokenMetadata = async (tokenAddresses: string[], alchemy: Alchemy | null): Promise<TokenMetadataResponse[]> => {
-  if (!alchemy) return [];
-
-  try {
-    const metadata = await Promise.all(tokenAddresses.map(address => alchemy.core.getTokenMetadata(address)));
-    return metadata;
-  } catch (error) {
-    console.error("Failed to fetch token metadata from Alchemy:", error);
-    return [];
-  }
-}
-
 const fetchNfts = async (address: string, alchemy: Alchemy | null): Promise<OwnedNft[]> => {
   if (!alchemy) return [];
 
@@ -199,8 +151,6 @@ const fetchNfts = async (address: string, alchemy: Alchemy | null): Promise<Owne
   }
 }
 
-=======
->>>>>>> 0673e7e (llwk)
 const createMockTransactions = (mockAddress: string): FormattedTransaction[] => {
   const now = Math.floor(Date.now() / 1000);
   const randomHex = (length: number) => "0x" + [...Array(length)].map(() => Math.floor(Math.random() * 16).toString(16)).join('');
@@ -236,7 +186,6 @@ const createMockNfts = (): OwnedNft[] => {
   } as OwnedNft))
 };
 
-// Seeded random number generator
 const mulberry32 = (a: number) => {
     return function() {
       a |= 0; a = a + 0x6D2B79F5 | 0;
@@ -249,10 +198,10 @@ const mulberry32 = (a: number) => {
 const createMockPortfolioHistory = (): PortfolioHistoryPoint[] => {
   const data: PortfolioHistoryPoint[] = [];
   const today = new Date();
-  const seed = 12345; // Fixed seed for deterministic results
+  const seed = 12345;
   const random = mulberry32(seed);
   
-  let lastValue = 38587.5; // Approx mockBalance * static eth price
+  let lastValue = 38587.5;
 
   for (let i = 29; i >= 0; i--) {
     const date = new Date(today);
@@ -269,7 +218,6 @@ const createMockPortfolioHistory = (): PortfolioHistoryPoint[] => {
   return data;
 };
 
-<<<<<<< HEAD
 const fetchHistoricalPrices = async (): Promise<Map<string, number>> => {
   try {
     const response = await fetch('https://api.coingecko.com/api/v3/coins/ethereum/market_chart?vs_currency=usd&days=30&interval=daily');
@@ -296,10 +244,10 @@ const fetchPortfolioHistory = async (address: string, alchemy: Alchemy | null): 
   const history: PortfolioHistoryPoint[] = [];
   const today = new Date();
   const prices = await fetchHistoricalPrices();
-  if (prices.size === 0) return []; // Stop if we can't get prices
+  if (prices.size === 0) return [];
 
   const blockPromises: Promise<{ date: string; balance: number } | null>[] = [];
-  const blocksPerDay = 7200; // Approx blocks per day on Ethereum
+  const blocksPerDay = 7200;
 
   try {
     const latestBlock = await alchemy.core.getBlockNumber();
@@ -315,16 +263,10 @@ const fetchPortfolioHistory = async (address: string, alchemy: Alchemy | null): 
         alchemy.core
           .getBalance(address, blockNumber)
           .then((balanceWei) => {
-<<<<<<< HEAD
-            return {
-              date: date.toISOString().split("T")[0],
-              balance: parseFloat(ethers.formatEther(balanceWei.toString())),
-=======
             const balanceString = (balanceWei as any)._hex ? (balanceWei as any)._hex : balanceWei.toString();
             return {
               date: date.toISOString().split("T")[0],
               balance: parseFloat(ethers.formatEther(balanceString)),
->>>>>>> 97b41a99bbe1e440470f72af90c0a4d247fcd7fa
             };
           })
           .catch((e) => {
@@ -354,8 +296,6 @@ const fetchPortfolioHistory = async (address: string, alchemy: Alchemy | null): 
 };
 
 
-=======
->>>>>>> 0673e7e (llwk)
 const calculatePortfolioChange = (history: PortfolioHistoryPoint[]): number => {
   if (history.length < 2) {
     return 0;
@@ -371,10 +311,13 @@ const calculatePortfolioChange = (history: PortfolioHistoryPoint[]): number => {
   return change;
 };
 
-const mockAddress = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"; // Vitalik's address for fun
+const mockAddress = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045";
 const mockBalance = "12.3456";
+interface WalletProviderProps {
+  children: ReactNode;
+}
 
-export const WalletProvider = ({ children, pageProps }: WalletProviderProps) => {
+export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
   const [address, setAddress] = useState<string | null>(null);
   const [balance, setBalance] = useState<string | null>(null);
   const [tokens, setTokens] = useState<FormattedTokenBalance[]>([]);
@@ -384,13 +327,12 @@ export const WalletProvider = ({ children, pageProps }: WalletProviderProps) => 
   const [portfolioChange, setPortfolioChange] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  
   const router = useRouter();
-  const pathname = usePathname();
-  const setShowComingSoon = pageProps?.setShowComingSoon;
 
   const clearError = useCallback(() => setError(null), []);
 
-  const handleDisconnect = useCallback(() => {
+  const resetState = useCallback(() => {
     setAddress(null);
     setBalance(null);
     setTokens([]);
@@ -401,14 +343,14 @@ export const WalletProvider = ({ children, pageProps }: WalletProviderProps) => 
     if (typeof window !== "undefined") {
       localStorage.removeItem("walletAddress");
     }
-    setLoading(false);
   }, []);
   
-  const startDemoMode = useCallback(() => {
-    setLoading(true);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("walletAddress", mockAddress);
-    }
+  const disconnectWallet = useCallback(() => {
+    resetState();
+    router.push("/login");
+  }, [router, resetState]);
+  
+  const fetchDemoData = useCallback(() => {
     const ethPrice = 3150;
     const mockHistory = createMockPortfolioHistory();
     const mockChange = calculatePortfolioChange(mockHistory);
@@ -436,179 +378,29 @@ export const WalletProvider = ({ children, pageProps }: WalletProviderProps) => 
     setPortfolioHistory(mockHistory);
     setPortfolioChange(mockChange);
     setTokens([ethToken, ...demoTokens]); 
-    setLoading(false);
-
-    const onboardingComplete = localStorage.getItem(`onboarding_complete_${mockAddress}`);
-    if (onboardingComplete) {
-      router.push('/dashboard');
-    } else {
-      router.push('/onboarding');
-    }
-
-  }, [router]);
-
-<<<<<<< HEAD
-  const updateWalletState = useCallback(async (currentAddress: string, externalProvider?: BrowserProvider) => {
-<<<<<<< HEAD
-    setLoading(true);
-    const ethPrice = 3150; // Static price for now
-
-    if (!ethers.isAddress(currentAddress)) {
-      console.error("Attempted to update with invalid address:", currentAddress);
-      handleDisconnect();
-      return;
-    }
-    
-    if (currentAddress.toLowerCase() === mockAddress.toLowerCase() && localStorage.getItem('walletAddress')?.toLowerCase() === mockAddress.toLowerCase()) {
-      startDemoMode();
-      return;
-    }
-
-    try {
-        let provider: BrowserProvider | null = externalProvider || null;
-        if (!provider && (window as any).ethereum) {
-            provider = new BrowserProvider((window as any).ethereum);
-        }
-
-        if (!provider) {
-             setError("Wallet provider not found. Please ensure MetaMask or a similar wallet is installed.");
-             handleDisconnect();
-             return;
-        }
-
-        let network: ethers.Network;
-
-        try {
-            network = await provider.getNetwork();
-        } catch (e: any) {
-            console.error("A wallet connection error occurred while getting network. This can happen if the connection is interrupted or the network is switched.", e);
-            setError("Could not get network from wallet. Your connection may have been interrupted.");
-            handleDisconnect();
-            return;
-        }
-        
-        const alchemy = getAlchemy(network.chainId);
-        if (!alchemy) {
-            toast({
-              variant: "destructive",
-              title: "Unsupported Network",
-              description: "Please switch to Ethereum Mainnet or Sepolia. Meanwhile, you can explore the demo.",
-            })
-            startDemoMode();
-            return;
-        }
-      
-      let balanceWei;
-      try {
-        balanceWei = await alchemy.core.getBalance(currentAddress);
-      } catch (e: any) {
-        console.error("A wallet connection error occurred while fetching balance. This can happen if the connection is interrupted or the network is switched.", e);
-         if (e.code === -32002) {
-             setError("The network is busy or rate-limited by your wallet provider. Please try again in a few minutes.");
-         } else {
-             setError("Could not fetch wallet balance. Your wallet connection may have been interrupted.");
-         }
-        handleDisconnect();
-        return;
-      }
-      
-      const balanceEth = ethers.formatEther(balanceWei.toString());
-      const history = await fetchTransactionHistory(currentAddress, network.chainId);
-      const userNfts = await fetchNfts(currentAddress, alchemy);
-      const portfolioHistoryData = await fetchPortfolioHistory(currentAddress, alchemy);
-      
-      const tokenBalances = await fetchTokenBalances(currentAddress, alchemy);
-      const tokenMetadata = await fetchTokenMetadata(tokenBalances.map(t => t.contractAddress), alchemy);
-
-      const ethLogo = PlaceHolderImages.find(img => img.id === 'eth-logo');
-      const ethToken: FormattedTokenBalance = {
-        name: 'Ethereum',
-        symbol: 'ETH',
-        balance: parseFloat(balanceEth).toFixed(4),
-        value: (parseFloat(balanceEth) * ethPrice).toLocaleString('en-US', { style: 'currency', currency: 'USD' }),
-        iconUrl: ethLogo?.imageUrl,
-        iconHint: ethLogo?.imageHint,
-        contractAddress: 'eth',
-      };
-
-      const formattedTokens: FormattedTokenBalance[] = tokenBalances.map((token, i) => {
-        const metadata = tokenMetadata[i];
-        const balance = parseFloat(ethers.formatUnits(token.tokenBalance!, metadata.decimals || 18));
-        const tokenValue = metadata.symbol === 'USDC' || metadata.symbol === 'USDT' ? balance : 0; 
-        return {
-          name: metadata.name || 'Unknown Token',
-          symbol: metadata.symbol || '???',
-          balance: balance.toFixed(4),
-          value: tokenValue > 0 ? tokenValue.toLocaleString('en-US', { style: 'currency', currency: 'USD' }) : '$0.00',
-          iconUrl: metadata.logo,
-          iconHint: `${metadata.name} logo`,
-          contractAddress: token.contractAddress,
-        }
-      });
-      
-      setAddress(currentAddress);
-      setBalance(balanceEth);
-      setTokens([ethToken, ...formattedTokens]);
-      setTransactions(history);
-      setNfts(userNfts);
-      setPortfolioHistory(portfolioHistoryData);
-      setPortfolioChange(calculatePortfolioChange(portfolioHistoryData));
-      setError(null);
-
-      if (typeof window !== "undefined") {
-        localStorage.setItem("walletAddress", currentAddress);
-      }
-    } catch (err: any) {
-        if (err.code === -32002) {
-             setError("The network is busy or rate-limited. Please try again in a few minutes.");
-        } else {
-            console.error("Failed to update wallet state:", err);
-            setError(`Failed to fetch wallet data: ${err.message}`);
-        }
-       handleDisconnect();
-    } finally {
-      setLoading(false);
-    }
-  }, [handleDisconnect, startDemoMode]);
-=======
-    // Live data fetching is currently disabled.
-    console.log("Live data fetching is currently disabled.");
   }, []);
->>>>>>> 15acd57 (veddd)
-  
-=======
->>>>>>> 0673e7e (llwk)
-  const disconnectWallet = useCallback(() => {
-    handleDisconnect();
-    router.push("/login");
-  }, [router, handleDisconnect]);
+
+  const startDemoMode = useCallback(() => {
+    setLoading(true);
+    localStorage.setItem("walletAddress", mockAddress);
+    fetchDemoData();
+    setLoading(false);
+    // DO NOT PUSH TO ROUTER HERE
+  }, [fetchDemoData]);
 
   const connectWallet = useCallback(async (): Promise<void> => {
     if (typeof window === "undefined" || !(window as any).ethereum) {
       setError("MetaMask not detected. Please install the extension.");
-      setLoading(false);
       return;
     }
     
     setLoading(true);
     try {
-      const browserProvider = new BrowserProvider((window as any).ethereum);
-      const accounts = await browserProvider.send("eth_requestAccounts", []);
+      const accounts = await (window as any).ethereum.request({ method: 'eth_requestAccounts' });
       
       if (accounts && accounts.length > 0) {
-        const userAddress = accounts[0];
-        setAddress(userAddress);
-        if (typeof window !== "undefined") {
-          localStorage.setItem("walletAddress", userAddress);
-        }
-        setLoading(false);
-        // Instead of fetching data, trigger the "Coming Soon" dialog.
-        if (setShowComingSoon) {
-          setShowComingSoon(true);
-        } else {
-          // Fallback if the dialog setter isn't available from the page
-          startDemoMode();
-        }
+        localStorage.setItem("walletAddress", accounts[0]);
+        setAddress(accounts[0]);
       } else {
         setError("No accounts found. Please connect an account in MetaMask.");
         setLoading(false);
@@ -622,53 +414,127 @@ export const WalletProvider = ({ children, pageProps }: WalletProviderProps) => 
       }
       setLoading(false);
     }
-  }, [setShowComingSoon, startDemoMode]);
+  }, []);
 
   useEffect(() => {
-    const path = window.location.pathname;
-    // Don't auto-load data on login/onboarding pages
-    if (path.startsWith('/login') || path.startsWith('/onboarding') || path === '/') {
-        const storedAddress = localStorage.getItem("walletAddress");
-        if (storedAddress) {
-            handleDisconnect();
-        }
+    const fetchWalletData = async (walletAddress: string) => {
+      setLoading(true);
+
+      if (walletAddress.toLowerCase() === mockAddress.toLowerCase()) {
+        fetchDemoData();
         setLoading(false);
         return;
-    }
+      }
+
+      try {
+        const provider = new BrowserProvider((window as any).ethereum);
+        const network = await provider.getNetwork();
+        const alchemy = getAlchemy(network.chainId);
+
+        if (!alchemy) {
+          toast({
+            variant: "destructive",
+            title: "Unsupported Network or API Key Error",
+            description: "Please switch to a supported network (Mainnet, Sepolia). Switching to demo mode.",
+          });
+          startDemoMode();
+          return;
+        }
+
+        const balanceWei = await alchemy.core.getBalance(walletAddress);
+        const balanceEth = ethers.formatEther(balanceWei);
+        const history = await fetchTransactionHistory(walletAddress, network.chainId);
+        const userNfts = await fetchNfts(walletAddress, alchemy);
+        const portfolioHistoryData = await fetchPortfolioHistory(walletAddress, alchemy);
+        
+        const tokenBalances = await fetchTokenBalances(walletAddress, alchemy);
+        const tokenMetadata: TokenMetadataResponse[] = await Promise.all(
+          tokenBalances.map(token => alchemy.core.getTokenMetadata(token.contractAddress))
+        );
+
+        const ethPrice = 3150; // Fallback static price
+        const ethLogo = PlaceHolderImages.find(img => img.id === 'eth-logo');
+        const ethToken: FormattedTokenBalance = {
+          name: 'Ethereum',
+          symbol: 'ETH',
+          balance: parseFloat(balanceEth).toFixed(4),
+          value: (parseFloat(balanceEth) * ethPrice).toLocaleString('en-US', { style: 'currency', currency: 'USD' }),
+          iconUrl: ethLogo?.imageUrl,
+          iconHint: ethLogo?.imageHint,
+          contractAddress: 'eth',
+        };
+
+        const formattedTokens: FormattedTokenBalance[] = tokenBalances.map((token, i) => {
+          const metadata = tokenMetadata[i];
+          const balance = parseFloat(ethers.formatUnits(token.tokenBalance!, metadata.decimals || 18));
+          const tokenValue = metadata.symbol === 'USDC' || metadata.symbol === 'USDT' ? balance : 0; 
+          return {
+            name: metadata.name || 'Unknown Token',
+            symbol: metadata.symbol || '???',
+            balance: balance.toFixed(4),
+            value: tokenValue > 0 ? tokenValue.toLocaleString('en-US', { style: 'currency', currency: 'USD' }) : '$0.00',
+            iconUrl: metadata.logo,
+            iconHint: `${metadata.name} logo`,
+            contractAddress: token.contractAddress,
+          };
+        });
+
+        setBalance(balanceEth);
+        setTokens([ethToken, ...formattedTokens]);
+        setTransactions(history);
+        setNfts(userNfts);
+        setPortfolioHistory(portfolioHistoryData);
+        setPortfolioChange(calculatePortfolioChange(portfolioHistoryData));
+        setError(null);
+      } catch (err: any) {
+        console.error("Failed to fetch wallet data:", err);
+        toast({
+          variant: "destructive",
+          title: "Data Fetching Error",
+          description: `Could not fetch live wallet data: ${err.message}. Switching to demo mode.`,
+        });
+        startDemoMode();
+      } finally {
+        setLoading(false);
+      }
+    };
     
+    // This effect runs ONCE on mount to check for a stored address.
+    // It is the main entry point for hydrating the wallet state.
     const storedAddress = localStorage.getItem("walletAddress");
-    
-    if (storedAddress && ethers.isAddress(storedAddress)) {
-      // Always default to demo mode on page load/refresh for now
-      startDemoMode();
+    if (storedAddress) {
+        setAddress(storedAddress);
+        fetchWalletData(storedAddress);
     } else {
-       // If no address, we should not be on a dashboard page. The layout will redirect.
-       setLoading(false);
+        setLoading(false); // If no address, we're not loading data.
     }
+
+    const handleAccountsChanged = (accounts: string[]) => {
+      if (accounts.length > 0 && accounts[0] !== address) {
+        localStorage.setItem('walletAddress', accounts[0]);
+        setAddress(accounts[0]);
+        fetchWalletData(accounts[0]);
+      } else if (accounts.length === 0) {
+        disconnectWallet();
+      }
+    };
+
+    const handleChainChanged = () => {
+      window.location.reload();
+    };
 
     const ethereum = (window as any).ethereum;
-    if (ethereum?.isMetaMask) {
-      const handleAccountsChanged = (accounts: string[]) => {
-          // On account change, disconnect and force re-login.
-          disconnectWallet();
-      };
-      
-      const handleChainChanged = () => {
-        window.location.reload();
-      };
-
+    if (ethereum) {
       ethereum.on("accountsChanged", handleAccountsChanged);
       ethereum.on("chainChanged", handleChainChanged);
 
       return () => {
-        if (ethereum.removeListener) {
-          ethereum.removeListener("accountsChanged", handleAccountsChanged);
-          ethereum.removeListener("chainChanged", handleChainChanged);
-        }
+        ethereum.removeListener("accountsChanged", handleAccountsChanged);
+        ethereum.removeListener("chainChanged", handleChainChanged);
       };
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname, disconnectWallet, startDemoMode]);
+  }, []); // <-- EMPTY dependency array. This is critical.
+
 
   const value = useMemo(() => ({
     address,
@@ -683,12 +549,13 @@ export const WalletProvider = ({ children, pageProps }: WalletProviderProps) => 
     disconnectWallet,
     startDemoMode,
     error,
-    clearError
+    clearError,
+    setAddress,
   }), [
     address, balance, tokens, transactions, nfts, portfolioHistory, portfolioChange,
     loading, connectWallet, disconnectWallet, startDemoMode, error, clearError
   ]);
-
+  
   return (
     <WalletContext.Provider value={value}>
       {children}

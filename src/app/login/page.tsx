@@ -24,15 +24,18 @@ import { ComingSoonDialog } from "@/components/coming-soon-dialog";
 
 function LoginPageContent() {
   const router = useRouter();
-  const [showComingSoon, setShowComingSoon] = useState(false);
-  const { connectWallet, address, error, clearError, loading, startDemoMode } = useWallet({
-    setShowComingSoon,
-  });
+  const { connectWallet, address, error, clearError, loading, startDemoMode } = useWallet();
   const { toast } = useToast();
+  const [isConnecting, setIsConnecting] = useState(false);
 
   useEffect(() => {
-    if (address && localStorage.getItem(`onboarding_complete_${address}`)) {
-      router.push('/dashboard');
+    if (address) {
+      const onboardingComplete = localStorage.getItem(`onboarding_complete_${address}`);
+      if (onboardingComplete) {
+        router.push('/dashboard');
+      } else {
+        router.push('/onboarding');
+      }
     }
   }, [address, router]);
 
@@ -44,42 +47,25 @@ function LoginPageContent() {
         title: "Connection Error",
         description: error,
       });
+      setIsConnecting(false);
       clearError();
     }
   }, [error, toast, clearError]);
 
   const handleConnect = async () => {
+    setIsConnecting(true);
     await connectWallet();
   };
   
   const handleDemo = () => {
     startDemoMode();
-  }
+  };
   
-  const handleContinueToDemo = () => {
-    setShowComingSoon(false);
-    startDemoMode();
-  }
-
-
   const handleComingSoonToast = () => {
     toast({
       title: "Coming Soon!",
       description: "This connection method is currently in development.",
     });
-  }
-
-  // Show a loading indicator on the login page while the initial check is running
-  if (loading && !error) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center text-center">
-        <div className="flex flex-col items-center gap-4 text-muted-foreground">
-          <Logo className="h-16 w-16 mb-2 animate-pulse" />
-          <h2 className="text-lg font-semibold text-foreground">Loading SynqAI...</h2>
-          <Skeleton className="h-4 w-48" />
-        </div>
-      </div>
-    );
   }
 
   return (
@@ -88,7 +74,6 @@ function LoginPageContent() {
        <div className="absolute top-1/2 left-1/2 -z-10 -translate-x-1/2 -translate-y-1/2">
         <div className="animate-blob h-[30rem] w-[30rem] rounded-full bg-primary/20 blur-3xl filter" />
       </div>
-      <ComingSoonDialog open={showComingSoon} onOpenChange={setShowComingSoon} onContinue={handleContinueToDemo} />
       <Card className="w-full max-w-md glass shadow-2xl">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4">
@@ -101,9 +86,9 @@ function LoginPageContent() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <Button className="w-full relative" size="lg" onClick={handleConnect} disabled={loading}>
+            <Button className="w-full relative" size="lg" onClick={handleConnect} disabled={isConnecting}>
               <span className="flex items-center justify-center flex-1">
-                <Icons.metaMask className="mr-2 h-6 w-6" /> Connect with MetaMask
+                {isConnecting ? "Connecting..." : <><Icons.metaMask className="mr-2 h-6 w-6" /> Connect with MetaMask</>}
               </span>
             </Button>
             <Button
