@@ -147,6 +147,7 @@ function LoginPageContent() {
             By connecting, you agree to our{" "}
             <Link
               href="/terms"
+              prefetch={false}
               className="underline underline-offset-4 hover:text-primary"
             >
               Terms
@@ -154,6 +155,7 @@ function LoginPageContent() {
             &{" "}
             <Link
               href="/privacy"
+              prefetch={false}
               className="underline underline-offset-4 hover:text-primary"
             >
               Privacy Policy
@@ -184,5 +186,3 @@ export default function LoginPage() {
     </WalletProvider>
   )
 }
-
-    

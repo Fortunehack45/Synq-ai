@@ -39,14 +39,16 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { UserNav } from "@/components/user-nav";
 import { WalletProvider } from "@/context/wallet-provider";
 import { useWallet } from "@/hooks/use-wallet";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import dynamic from 'next/dynamic';
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/logo";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChatInterface } from "@/app/dashboard/assistant/components/chat-interface";
 
-function FloatingAssistant() {
+
+const FloatingAssistant = dynamic(() => Promise.resolve(function FloatingAssistant() {
   const [open, setOpen] = useState(false);
 
   return (
@@ -67,7 +69,8 @@ function FloatingAssistant() {
       </SheetContent>
     </Sheet>
   );
-}
+}), { ssr: false });
+
 
 const navItems = [
   { href: "/dashboard", icon: Home, label: "Dashboard" },
@@ -209,7 +212,7 @@ function DashboardLayoutContent({
       <div className="hidden border-r bg-muted/20 md:block glass sticky top-0 h-screen">
         <div className="flex h-full max-h-screen flex-col gap-2">
           <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
-            <Link href="/" className="flex items-center gap-2 font-semibold">
+            <Link href="/" className="flex items-center gap-2 font-semibold" prefetch={false}>
               <Logo className="h-6 w-6" />
               <span className="font-headline text-lg tracking-tight">SynqAI</span>
             </Link>
@@ -224,6 +227,7 @@ function DashboardLayoutContent({
                 <Link
                   key={item.href}
                   href={item.href}
+                  prefetch={false}
                   className={cn(
                     "flex items-center gap-3 rounded-lg px-3 py-2 transition-all active:scale-95",
                      pathname === item.href || (pathname.startsWith(item.href) && item.href !== '/dashboard' && !item.href.includes('/social')) || (item.href === '/dashboard/social/fyp' && pathname.startsWith('/dashboard/social'))
@@ -284,6 +288,7 @@ function DashboardLayoutContent({
                  <SheetTitle>
                    <Link
                     href="#"
+                    prefetch={false}
                     className="flex items-center gap-2 text-lg font-semibold mb-4"
                   >
                     <Logo className="h-6 w-6" />
@@ -296,6 +301,7 @@ function DashboardLayoutContent({
                   <Link
                     key={item.href}
                     href={item.href}
+                    prefetch={false}
                     onClick={() => setIsSheetOpen(false)}
                     className={cn(
                       "mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 transition-all active:scale-95",
@@ -318,7 +324,9 @@ function DashboardLayoutContent({
           <UserNav />
         </header>
         <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 overflow-x-hidden">
-          {children}
+          <Suspense>
+            {children}
+          </Suspense>
         </main>
         <FloatingAssistant />
       </div>
@@ -337,5 +345,3 @@ export default function DashboardLayout({
     </WalletProvider>
   )
 }
-
-    
