@@ -385,7 +385,6 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
     localStorage.setItem("walletAddress", mockAddress);
     fetchDemoData();
     setLoading(false);
-    // DO NOT PUSH TO ROUTER HERE
   }, [fetchDemoData]);
 
   const connectWallet = useCallback(async (): Promise<void> => {
@@ -442,7 +441,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
         }
 
         const balanceWei = await alchemy.core.getBalance(walletAddress);
-        const balanceEth = ethers.formatEther(balanceWei);
+        const balanceEth = ethers.formatEther(balanceWei.toString());
         const history = await fetchTransactionHistory(walletAddress, network.chainId);
         const userNfts = await fetchNfts(walletAddress, alchemy);
         const portfolioHistoryData = await fetchPortfolioHistory(walletAddress, alchemy);
