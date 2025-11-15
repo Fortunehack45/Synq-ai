@@ -283,10 +283,10 @@ const fetchPortfolioHistory = async (address: string, alchemy: Alchemy | null): 
         alchemy.core
           .getBalance(address, blockNumber)
           .then((balanceWei) => {
-            const balanceBigInt = (balanceWei as any)._hex ? BigInt((balanceWei as any)._hex) : BigInt(0);
+            const balanceString = balanceWei.toString();
             return {
               date: date.toISOString().split("T")[0],
-              balance: parseFloat(ethers.formatEther(balanceBigInt)),
+              balance: parseFloat(ethers.formatEther(balanceString)),
             };
           })
           .catch((e) => {
@@ -462,7 +462,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      const balanceEth = ethers.formatEther(balanceWei as any);
+      const balanceEth = ethers.formatEther(balanceWei.toString());
       const history = await fetchTransactionHistory(currentAddress, network.chainId);
       const userNfts = await fetchNfts(currentAddress, alchemy);
       const portfolioHistoryData = await fetchPortfolioHistory(currentAddress, alchemy);
