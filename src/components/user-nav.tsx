@@ -18,6 +18,7 @@ import { useWallet } from "@/hooks/use-wallet";
 import { LogOut } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 export function UserNav() {
   const userAvatar = PlaceHolderImages.find((img) => img.id === "user-avatar");
@@ -33,7 +34,7 @@ export function UserNav() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-          <Avatar className="h-9 w-9">
+          <Avatar className="h-9 w-9 border-2 border-primary/50">
             {userAvatar && (
               <AvatarImage
                 src={userAvatar.imageUrl}

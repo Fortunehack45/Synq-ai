@@ -1,5 +1,4 @@
 
-
 'use server';
 
 import { Alchemy, Network, Utils } from 'alchemy-sdk';
@@ -52,7 +51,6 @@ export async function getWalletTransactions(address: string) {
   }
   
   const { apiUrl, apiKey } = etherscanConfig;
-
   const url = `${apiUrl}?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=10&sort=desc&apikey=${apiKey}`;
   try {
     const response = await fetch(url);
@@ -107,3 +105,5 @@ export async function getWalletTokenBalances(address: string) {
     return [];
   }
 }
+
+    

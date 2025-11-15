@@ -4,6 +4,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import {
   Card,
   CardContent,
@@ -72,10 +73,10 @@ function PostCard({ post, authorName, authorHandle }: { post: typeof mockPosts[0
             <AvatarFallback><User className="h-5 w-5"/></AvatarFallback>
           </Avatar>
           <div className="w-full">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <p className="font-bold">{authorName}</p>
               <p className="text-sm text-muted-foreground">@{authorHandle}</p>
-              <span className="text-sm text-muted-foreground">·</span>
+              <span className="text-sm text-muted-foreground hidden sm:inline">·</span>
               <p className="text-sm text-muted-foreground">{post.timestamp}</p>
             </div>
             <p className="mt-1 text-sm">{post.content}</p>
@@ -107,6 +108,7 @@ export default function ProfilePage() {
   const { address } = useWallet();
   const router = useRouter();
   const userAvatar = PlaceHolderImages.find((img) => img.id === "user-avatar");
+  const bannerImage = PlaceHolderImages.find((img) => img.id === "profile-banner");
   
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
@@ -143,26 +145,38 @@ export default function ProfilePage() {
   return (
     <>
       <div className="flex items-center mb-4">
-        <h1 className="text-lg font-semibold md:text-2xl">Profile</h1>
+        <h1 className="text-lg font-semibold md:text-2xl">Social Profile</h1>
       </div>
       <div className="grid gap-6">
-        <Card className="glass">
-          <CardHeader>
-            <div className="flex flex-col md:flex-row items-center gap-6 text-center md:text-left">
-              <Avatar className="h-24 w-24 border-2 border-primary/50">
-                {userAvatar && <AvatarImage src={userAvatar.imageUrl} alt="User Avatar" data-ai-hint={userAvatar.imageHint}/>}
-                <AvatarFallback>
-                  <User className="h-10 w-10"/>
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1">
-                <div className="flex items-center gap-2 justify-center md:justify-start">
-                  <h2 className="text-2xl font-bold font-headline">{name}</h2>
-                </div>
-                 <div className="flex items-center gap-2 mt-1 justify-center md:justify-start">
-                  <p className="text-sm text-muted-foreground">@{username}</p>
-                </div>
-                <div className="flex items-center gap-2 mt-1 justify-center md:justify-start">
+        <Card className="glass overflow-hidden">
+           <div className="relative">
+             {bannerImage && (
+                <Image 
+                    src={bannerImage.imageUrl} 
+                    alt="Profile Banner"
+                    width={1200}
+                    height={300}
+                    className="h-32 sm:h-48 w-full object-cover"
+                    data-ai-hint={bannerImage.imageHint}
+                />
+             )}
+             <div className="absolute -bottom-10 sm:-bottom-12 left-4 sm:left-6">
+                <Avatar className="h-24 w-24 sm:h-28 sm:w-28 border-4 border-background">
+                    {userAvatar && <AvatarImage src={userAvatar.imageUrl} alt="User Avatar" data-ai-hint={userAvatar.imageHint}/>}
+                    <AvatarFallback>
+                    <User className="h-12 w-12"/>
+                    </AvatarFallback>
+                </Avatar>
+             </div>
+           </div>
+          <CardHeader className="pt-16 sm:pt-20 pb-4 px-4 sm:px-6">
+            <div className="flex justify-end">
+                <Button onClick={() => router.push('/dashboard/settings?tab=profile')}><Pencil className="mr-2 h-4 w-4"/>Edit Profile</Button>
+            </div>
+            <div className="mt-2">
+                <h2 className="text-2xl font-bold font-headline">{name}</h2>
+                <p className="text-sm text-muted-foreground">@{username}</p>
+                 <div className="flex items-center gap-2 mt-1">
                   <p className="text-muted-foreground font-mono text-sm">
                     {formatAddress(address)}
                   </p>
@@ -173,22 +187,18 @@ export default function ProfilePage() {
                     </Button>
                   )}
                 </div>
-                <p className="text-muted-foreground pt-2 max-w-xl text-center md:text-left">{bio}</p>
-              </div>
-              <div className="flex gap-2">
-                 <Button onClick={() => router.push('/dashboard/settings?tab=profile')}><Pencil className="mr-2 h-4 w-4"/>Edit Profile</Button>
-              </div>
+                <p className="text-muted-foreground pt-2 max-w-xl">{bio}</p>
             </div>
-             <div className="flex gap-6 pt-4 justify-center md:justify-start">
-                <div className="text-center md:text-left">
+             <div className="flex gap-4 sm:gap-6 pt-4">
+                <div>
                   <p className="font-bold">{isDemoUser ? '1,234' : '0'}</p>
                   <p className="text-sm text-muted-foreground">Following</p>
                 </div>
-                <div className="text-center md:text-left">
+                <div>
                   <p className="font-bold">{isDemoUser ? '5,678' : '0'}</p>
                   <p className="text-sm text-muted-foreground">Followers</p>
                 </div>
-                 <div className="text-center md:text-left">
+                 <div>
                   <p className="font-bold">{isDemoUser ? mockPosts.length : '0'}</p>
                   <p className="text-sm text-muted-foreground">Posts</p>
                 </div>
@@ -197,7 +207,7 @@ export default function ProfilePage() {
         </Card>
         
         <Tabs defaultValue="posts" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
             <TabsTrigger value="posts">Posts</TabsTrigger>
             <TabsTrigger value="replies">Replies</TabsTrigger>
             <TabsTrigger value="highlights">Highlights</TabsTrigger>
